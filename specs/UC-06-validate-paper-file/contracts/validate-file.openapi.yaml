@@ -1,0 +1,68 @@
+openapi: 3.0.3
+info:
+  title: CMS File Validation API
+  version: 1.0.0
+  description: Contracts for validating manuscript files (UC-06).
+paths:
+  /papers/file/validate:
+    post:
+      summary: Validate manuscript file format and size
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - filename
+                - content_base64
+              properties:
+                filename:
+                  type: string
+                content_base64:
+                  type: string
+      responses:
+        "200":
+          description: File validation success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Unsupported file format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: File cannot be processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Validation service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string

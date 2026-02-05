@@ -6,6 +6,7 @@ Auto-generated from all feature plans. Last updated: 2026-02-05
 - Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks) (UC-01-register-user-account)
 - Relational database (unspecified) (UC-01-register-user-account)
 - Relational database (unspecified) and file storage service (UC-04-submit-paper-manuscript)
+- File storage service (validation only) (UC-06-validate-paper-file)
 
 - HTML, CSS, JavaScript (vanilla) + None (no frameworks) (UC-01-register-user-account)
 
@@ -26,9 +27,9 @@ npm test && npm run lint
 HTML, CSS, JavaScript (vanilla): Follow standard conventions
 
 ## Recent Changes
+- UC-06-validate-paper-file: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 - UC-05-save-paper-submission-draft: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 - UC-04-submit-paper-manuscript: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
-- UC-03-change-user-password: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 
 
 <!-- MANUAL ADDITIONS START -->
