@@ -1,0 +1,68 @@
+openapi: 3.0.3
+info:
+  title: CMS Registration API
+  version: 1.0.0
+  description: Contracts for user registration flow (US-01).
+paths:
+  /register:
+    get:
+      summary: Display registration form
+      responses:
+        "200":
+          description: Registration form rendered
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      summary: Submit registration form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        "302":
+          description: Registration successful; redirect to login
+          headers:
+            Location:
+              schema:
+                type: string
+              description: /login
+        "400":
+          description: Validation error (missing fields, invalid email, weak password)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Email validation service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
