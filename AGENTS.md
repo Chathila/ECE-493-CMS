@@ -5,6 +5,7 @@ Auto-generated from all feature plans. Last updated: 2026-02-05
 ## Active Technologies
 - Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks) (UC-01-register-user-account)
 - Relational database (unspecified) (UC-01-register-user-account)
+- Relational database (unspecified) and file storage service (UC-04-submit-paper-manuscript)
 
 - HTML, CSS, JavaScript (vanilla) + None (no frameworks) (UC-01-register-user-account)
 
@@ -25,9 +26,9 @@ npm test && npm run lint
 HTML, CSS, JavaScript (vanilla): Follow standard conventions
 
 ## Recent Changes
+- UC-04-submit-paper-manuscript: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 - UC-03-change-user-password: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 - UC-03-change-user-password: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
-- UC-02-user-login: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 
 
 <!-- MANUAL ADDITIONS START -->

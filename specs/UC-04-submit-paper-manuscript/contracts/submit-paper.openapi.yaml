@@ -1,0 +1,106 @@
+openapi: 3.0.3
+info:
+  title: CMS Paper Submission API
+  version: 1.0.0
+  description: Contracts for paper submission flow (UC-04).
+paths:
+  /papers/submit:
+    get:
+      summary: Display paper submission form
+      responses:
+        "200":
+          description: Submission form rendered
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      summary: Submit paper manuscript
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - authors
+                - affiliations
+                - abstract
+                - keywords
+                - contact_details
+                - manuscript_file
+              properties:
+                title:
+                  type: string
+                authors:
+                  type: array
+                  items:
+                    type: string
+                affiliations:
+                  type: array
+                  items:
+                    type: string
+                abstract:
+                  type: string
+                keywords:
+                  type: array
+                  items:
+                    type: string
+                contact_details:
+                  type: string
+                manuscript_file:
+                  type: object
+                  required:
+                    - filename
+                    - content_base64
+                  properties:
+                    filename:
+                      type: string
+                    content_base64:
+                      type: string
+      responses:
+        "200":
+          description: Submission successful
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Validation error (missing/invalid metadata)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: File size exceeds maximum limit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Unsupported file format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: File upload/storage unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
