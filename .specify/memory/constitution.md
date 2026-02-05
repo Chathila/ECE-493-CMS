@@ -81,6 +81,9 @@ All interfaces and interactions must be documented via simple, clear contracts a
   - `tasks.md`
 - Each `/speckit.analyze` run must save its report as `analysis.md` in the use
   case’s feature directory.
+- Each `/speckit.clarify` run must save a clarification report as
+  `clarifications.md` in the use case’s feature directory, listing each question
+  and the selected answer.
 - Any interaction contracts or interface definitions should be placed under a `contracts/` directory when required.
 
 ---
@@ -93,6 +96,6 @@ Any deviation requires:
 2. Re-synchronizing project context
 3. Regenerating all affected downstream artifacts
 
-**Version**: 1.2  
+**Version**: 1.3  
 **Ratified**: 2026-02-05  
 **Last Amended**: 2026-02-05  
