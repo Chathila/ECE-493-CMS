@@ -50,7 +50,7 @@ No artifacts may introduce functionality outside this defined scope.
 ---
 
 ### 6) Architecture and implementation constraints
-The system shall be designed using an **MVC (Model–View–Controller) architecture** with **vanilla HTML, CSS, and JavaScript**.
+The system shall be designed using an **MVC (Model–View–Controller) architecture** with **vanilla HTML, CSS, Java, and JavaScript**.
 
 Planning and design artifacts must:
 - Remain implementation-agnostic
