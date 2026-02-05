@@ -25,8 +25,8 @@ npm test && npm run lint
 HTML, CSS, JavaScript (vanilla): Follow standard conventions
 
 ## Recent Changes
-- UC-02-user-login: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
-- UC-02-user-login: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
+- UC-03-change-user-password: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
+- UC-03-change-user-password: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 - UC-02-user-login: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 
 
