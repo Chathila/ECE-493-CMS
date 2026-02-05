@@ -1,8 +1,8 @@
 # Tasks: Register User Account
 
-**Branch**: `001-user-registration`  
-**Plan**: /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/specs/001-user-registration/plan.md  
-**Spec**: /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/specs/001-user-registration/spec.md  
+**Branch**: `UC-01-register-user-account`  
+**Plan**: /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/specs/UC-01-register-user-account/plan.md  
+**Spec**: /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/specs/UC-01-register-user-account/spec.md  
 **Date**: 2026-02-05
 
 ## Dependencies

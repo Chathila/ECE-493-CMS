@@ -1,6 +1,6 @@
 # Feature Specification: Register User Account
 
-**Feature Branch**: `001-user-registration`  
+**Feature Branch**: `UC-01-register-user-account`  
 **Created**: 2026-02-05  
 **Status**: Draft  
 **Input**: User description: "Let start with the first use case, which is US-01_use_case.md"

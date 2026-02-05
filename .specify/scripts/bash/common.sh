@@ -44,6 +44,13 @@ get_current_branch() {
                         highest=$number
                         latest_feature=$dirname
                     fi
+                elif [[ "$dirname" =~ ^UC-([0-9]{2})- ]]; then
+                    local number=${BASH_REMATCH[1]}
+                    number=$((10#$number))
+                    if [[ "$number" -gt "$highest" ]]; then
+                        highest=$number
+                        latest_feature=$dirname
+                    fi
                 fi
             fi
         done
@@ -72,9 +79,9 @@ check_feature_branch() {
         return 0
     fi
 
-    if [[ ! "$branch" =~ ^[0-9]{3}- ]]; then
+    if [[ ! "$branch" =~ ^([0-9]{3}|UC-[0-9]{2})- ]]; then
         echo "ERROR: Not on a feature branch. Current branch: $branch" >&2
-        echo "Feature branches should be named like: 001-feature-name" >&2
+        echo "Feature branches should be named like: 001-feature-name or UC-02-feature-name" >&2
         return 1
     fi
 
@@ -90,14 +97,16 @@ find_feature_dir_by_prefix() {
     local branch_name="$2"
     local specs_dir="$repo_root/specs"
 
-    # Extract numeric prefix from branch (e.g., "004" from "004-whatever")
-    if [[ ! "$branch_name" =~ ^([0-9]{3})- ]]; then
+    # Extract prefix from branch (e.g., "004" from "004-whatever" or "UC-02" from "UC-02-whatever")
+    if [[ "$branch_name" =~ ^([0-9]{3})- ]]; then
+        local prefix="${BASH_REMATCH[1]}"
+    elif [[ "$branch_name" =~ ^(UC-[0-9]{2})- ]]; then
+        local prefix="${BASH_REMATCH[1]}"
+    else
         # If branch doesn't have numeric prefix, fall back to exact match
         echo "$specs_dir/$branch_name"
         return
     fi
-
-    local prefix="${BASH_REMATCH[1]}"
 
     # Search for directories in specs/ that start with this prefix
     local matches=()
@@ -153,4 +162,3 @@ EOF
 
 check_file() { [[ -f "$1" ]] && echo "  ✓ $2" || echo "  ✗ $2"; }
 check_dir() { [[ -d "$1" && -n $(ls -A "$1" 2>/dev/null) ]] && echo "  ✓ $2" || echo "  ✗ $2"; }
-

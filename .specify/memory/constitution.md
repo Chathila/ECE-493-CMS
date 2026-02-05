@@ -20,6 +20,8 @@ All functional requirements must be extracted directly from the use-case flows a
 
 ### 3) One feature per use case
 Each use case is treated as an independent feature and must be specified, planned, and decomposed in its own git branch.
+Branch naming MUST follow the pattern `UC-XX-<short-title>` matching the use case
+number (e.g., `UC-02-user-login`).
 
 Rework of shared artifacts across branches is allowed when required to support additional use cases, provided existing behavior is preserved.
 
@@ -77,6 +79,8 @@ All interfaces and interactions must be documented via simple, clear contracts a
   - `spec.md`
   - `plan.md`
   - `tasks.md`
+- Each `/speckit.analyze` run must save its report as `analysis.md` in the use
+  case’s feature directory.
 - Any interaction contracts or interface definitions should be placed under a `contracts/` directory when required.
 
 ---
@@ -89,5 +93,6 @@ Any deviation requires:
 2. Re-synchronizing project context
 3. Regenerating all affected downstream artifacts
 
-**Version**: 1.1  
+**Version**: 1.2  
 **Ratified**: 2026-02-05  
+**Last Amended**: 2026-02-05  

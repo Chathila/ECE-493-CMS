@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Register User Account
+# Specification Quality Checklist: User Login
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-02-05
@@ -31,4 +31,4 @@
 
 ## Notes
 
-- All checklist items pass based on spec content in `specs/001-user-registration/spec.md`.
+- All checklist items pass based on spec content in `specs/UC-02-user-login/spec.md`.

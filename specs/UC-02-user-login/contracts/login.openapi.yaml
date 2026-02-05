@@ -1,0 +1,74 @@
+openapi: 3.0.3
+info:
+  title: CMS Login API
+  version: 1.0.0
+  description: Contracts for user login flow (UC-02).
+paths:
+  /login:
+    get:
+      summary: Display login form
+      responses:
+        "200":
+          description: Login form rendered
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      summary: Submit login form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        "302":
+          description: Login successful; redirect to authorized home page
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Authorized home page
+        "400":
+          description: Validation error (missing fields)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Authentication failure (incorrect credentials)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Account inactive or locked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Authentication service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
