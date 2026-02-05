@@ -1,13 +1,10 @@
 <!--
 Sync Impact Report
-- Version change: 1.2 → 1.3
+- Version change: 1.3 → 1.4
 - Modified principles: None
 - Added sections: None
 - Removed sections: None
-- Templates requiring updates:
-  - ✅ .specify/templates/spec-template.md
-  - ✅ .specify/templates/plan-template.md
-  - ✅ .specify/templates/tasks-template.md
+- Templates requiring updates: None
 - Follow-up TODOs: None
 -->
 # CMS Project Constitution
@@ -96,6 +93,8 @@ All interfaces and interactions must be documented via simple, clear contracts a
 - Each `/speckit.clarify` run must save a clarification report as
   `clarifications.md` in the use case’s feature directory, listing each question
   and the selected answer.
+- Each `/speckit.checklist` run must save its checklist as
+  `checklists/UC-XX-checklist.md` in the use case’s feature directory.
 - Any interaction contracts or interface definitions should be placed under a `contracts/` directory when required.
 
 ---
@@ -108,6 +107,6 @@ Any deviation requires:
 2. Re-synchronizing project context
 3. Regenerating all affected downstream artifacts
 
-**Version**: 1.3  
+**Version**: 1.4  
 **Ratified**: 2026-02-05  
 **Last Amended**: 2026-02-05  
