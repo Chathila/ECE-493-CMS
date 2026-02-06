@@ -1,0 +1,54 @@
+openapi: 3.0.3
+info:
+  title: CMS Reviewer Workload Check API
+  version: 1.0.0
+  description: Contracts for enforcing reviewer workload limits (UC-08).
+paths:
+  /reviewers/{reviewer_id}/workload/check:
+    get:
+      summary: Check reviewer workload before assignment
+      parameters:
+        - in: path
+          name: reviewer_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Workload within limit
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - can_assign
+                  - assigned_count
+                  - workload_limit
+                properties:
+                  can_assign:
+                    type: boolean
+                  assigned_count:
+                    type: integer
+                  workload_limit:
+                    type: integer
+        "409":
+          description: Workload limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Workload retrieval failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
