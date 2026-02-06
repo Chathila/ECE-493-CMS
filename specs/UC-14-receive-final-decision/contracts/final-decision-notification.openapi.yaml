@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: CMS Final Decision Notification API
+  version: 1.0.0
+  description: Contracts for notifying authors of final decisions (UC-14).
+paths:
+  /papers/{paper_id}/decision/notify:
+    post:
+      summary: Trigger final decision notification
+      parameters:
+        - in: path
+          name: paper_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Notification dispatched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationStatus"
+        "500":
+          description: Notification delivery failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /papers/{paper_id}/decision:
+    get:
+      summary: Retrieve decision status for author view
+      parameters:
+        - in: path
+          name: paper_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Decision status returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionStatus"
+components:
+  schemas:
+    NotificationStatus:
+      type: object
+      required:
+        - paper_id
+        - status
+      properties:
+        paper_id:
+          type: string
+        status:
+          type: string
+          enum: [queued, sent, failed]
+    DecisionStatus:
+      type: object
+      required:
+        - paper_id
+        - decision
+      properties:
+        paper_id:
+          type: string
+        decision:
+          type: string
+          enum: [accept, reject]
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
