@@ -1,0 +1,68 @@
+openapi: 3.0.3
+info:
+  title: CMS Final Paper Decision API
+  version: 1.0.0
+  description: Contracts for final paper decisions (UC-13).
+paths:
+  /papers/{paper_id}/decision:
+    post:
+      summary: Submit final accept/reject decision for a paper
+      parameters:
+        - in: path
+          name: paper_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FinalDecision"
+      responses:
+        "201":
+          description: Decision recorded and author notified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionStatus"
+        "409":
+          description: Reviews incomplete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Database error, retry later
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    FinalDecision:
+      type: object
+      required:
+        - decision
+      properties:
+        decision:
+          type: string
+          enum: [accept, reject]
+    DecisionStatus:
+      type: object
+      required:
+        - paper_id
+        - decision
+      properties:
+        paper_id:
+          type: string
+        decision:
+          type: string
+          enum: [accept, reject]
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
