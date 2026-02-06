@@ -1,0 +1,81 @@
+openapi: 3.0.3
+info:
+  title: CMS Schedule Edit API
+  version: 1.0.0
+  description: Contracts for editing conference schedules (UC-16).
+paths:
+  /schedule/{schedule_id}:
+    put:
+      summary: Update conference schedule
+      parameters:
+        - in: path
+          name: schedule_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleUpdate"
+      responses:
+        "200":
+          description: Schedule updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleStatus"
+        "400":
+          description: Validation error (conflicts or missing data)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        "500":
+          description: Database error, retry later
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    ScheduleUpdate:
+      type: object
+      required:
+        - sessions
+      properties:
+        sessions:
+          type: array
+          items:
+            type: object
+    ScheduleStatus:
+      type: object
+      required:
+        - schedule_id
+        - status
+      properties:
+        schedule_id:
+          type: string
+        status:
+          type: string
+          enum: [updated]
+    ValidationError:
+      type: object
+      required:
+        - message
+        - fields
+      properties:
+        message:
+          type: string
+        fields:
+          type: array
+          items:
+            type: string
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
