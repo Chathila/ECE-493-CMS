@@ -1,0 +1,60 @@
+openapi: 3.0.3
+info:
+  title: CMS Review Invitation API
+  version: 1.0.0
+  description: Contracts for sending review invitation emails (UC-09).
+paths:
+  /assignments/{assignment_id}/invitation/send:
+    post:
+      summary: Send review invitation for a referee assignment
+      parameters:
+        - in: path
+          name: assignment_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Invitation accepted for sending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationStatus"
+        "409":
+          description: Duplicate invitation suppressed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          description: Invalid referee email address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Email service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    InvitationStatus:
+      type: object
+      required:
+        - assignment_id
+        - status
+      properties:
+        assignment_id:
+          type: string
+        status:
+          type: string
+          enum: [pending, sent, failed]
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
