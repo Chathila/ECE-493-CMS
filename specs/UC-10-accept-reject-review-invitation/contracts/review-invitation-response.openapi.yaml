@@ -1,0 +1,74 @@
+openapi: 3.0.3
+info:
+  title: CMS Review Invitation Response API
+  version: 1.0.0
+  description: Contracts for responding to review invitations (UC-10).
+paths:
+  /invitations/{invitation_id}/response:
+    post:
+      summary: Submit accept/reject response to a review invitation
+      parameters:
+        - in: path
+          name: invitation_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationResponse"
+      responses:
+        "200":
+          description: Response recorded and assignment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseStatus"
+        "409":
+          description: Invitation already responded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Invitation expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Database error while recording response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    InvitationResponse:
+      type: object
+      required:
+        - decision
+      properties:
+        decision:
+          type: string
+          enum: [accept, reject]
+    ResponseStatus:
+      type: object
+      required:
+        - invitation_id
+        - assignment_status
+      properties:
+        invitation_id:
+          type: string
+        assignment_status:
+          type: string
+          enum: [accepted, rejected]
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
