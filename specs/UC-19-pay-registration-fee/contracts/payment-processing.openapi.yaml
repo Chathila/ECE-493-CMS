@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: CMS Registration Payment API
+  version: 1.0.0
+  description: Contracts for processing registration payments (UC-19).
+paths:
+  /registration/payments:
+    post:
+      summary: Submit registration payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentRequest"
+      responses:
+        "200":
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentStatus"
+        "400":
+          description: Invalid payment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: Payment declined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: Payment service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    PaymentRequest:
+      type: object
+      required:
+        - registration_type
+        - payment_details
+      properties:
+        registration_type:
+          type: string
+        payment_details:
+          type: object
+    PaymentStatus:
+      type: object
+      required:
+        - payment_id
+        - status
+      properties:
+        payment_id:
+          type: string
+        status:
+          type: string
+          enum: [confirmed]
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
