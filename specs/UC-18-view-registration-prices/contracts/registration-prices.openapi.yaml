@@ -1,0 +1,46 @@
+openapi: 3.0.3
+info:
+  title: CMS Registration Prices API
+  version: 1.0.0
+  description: Contracts for viewing registration prices (UC-18).
+paths:
+  /registration/prices:
+    get:
+      summary: Retrieve registration price list
+      responses:
+        "200":
+          description: Price list retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceList"
+        "404":
+          description: Pricing information not available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Database retrieval failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    PriceList:
+      type: object
+      required:
+        - prices
+      properties:
+        prices:
+          type: array
+          items:
+            type: object
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
