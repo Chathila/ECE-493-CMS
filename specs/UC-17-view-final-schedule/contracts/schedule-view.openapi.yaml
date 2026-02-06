@@ -1,0 +1,49 @@
+openapi: 3.0.3
+info:
+  title: CMS Final Schedule View API
+  version: 1.0.0
+  description: Contracts for viewing final conference schedules (UC-17).
+paths:
+  /schedule/final:
+    get:
+      summary: Retrieve final published schedule
+      responses:
+        "200":
+          description: Final schedule retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleView"
+        "404":
+          description: Schedule not published
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Database retrieval failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    ScheduleView:
+      type: object
+      required:
+        - schedule_id
+        - sessions
+      properties:
+        schedule_id:
+          type: string
+        sessions:
+          type: array
+          items:
+            type: object
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
