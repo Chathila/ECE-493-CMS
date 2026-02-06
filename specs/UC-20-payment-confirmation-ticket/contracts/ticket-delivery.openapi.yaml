@@ -1,0 +1,74 @@
+openapi: 3.0.3
+info:
+  title: CMS Payment Confirmation Ticket API
+  version: 1.0.0
+  description: Contracts for confirmation ticket generation and delivery (UC-20).
+paths:
+  /payments/{payment_id}/ticket:
+    post:
+      summary: Generate and deliver confirmation ticket
+      parameters:
+        - in: path
+          name: payment_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Ticket generated and delivery initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketStatus"
+        "500":
+          description: Ticket delivery failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /tickets/{ticket_id}:
+    get:
+      summary: Retrieve confirmation ticket for attendee
+      parameters:
+        - in: path
+          name: ticket_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticket retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketView"
+components:
+  schemas:
+    TicketStatus:
+      type: object
+      required:
+        - ticket_id
+        - status
+      properties:
+        ticket_id:
+          type: string
+        status:
+          type: string
+          enum: [generated, delivered, failed]
+    TicketView:
+      type: object
+      required:
+        - ticket_id
+        - content
+      properties:
+        ticket_id:
+          type: string
+        content:
+          type: string
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string

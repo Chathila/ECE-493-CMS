@@ -27,9 +27,9 @@ npm test && npm run lint
 HTML, CSS, JavaScript (vanilla): Follow standard conventions
 
 ## Recent Changes
+- UC-20-payment-confirmation-ticket: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 - UC-19-pay-registration-fee: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 - UC-18-view-registration-prices: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
-- UC-17-view-final-schedule: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 
 
 <!-- MANUAL ADDITIONS START -->
