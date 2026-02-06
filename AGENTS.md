@@ -27,9 +27,9 @@ npm test && npm run lint
 HTML, CSS, JavaScript (vanilla): Follow standard conventions
 
 ## Recent Changes
+- UC-12-submit-paper-review: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 - UC-11-access-review-form: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
-- UC-10-accept-reject-review-invitation: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
-- UC-09-receive-review-invitation-email: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
+- UC-11-access-review-form: Added Java (backend), HTML/CSS/JavaScript (frontend, vanilla) + None (no frameworks)
 
 
 <!-- MANUAL ADDITIONS START -->
