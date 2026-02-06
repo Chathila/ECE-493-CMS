@@ -1,0 +1,59 @@
+openapi: 3.0.3
+info:
+  title: CMS Review Form Access API
+  version: 1.0.0
+  description: Contracts for accessing review forms (UC-11).
+paths:
+  /assignments/{assignment_id}/review-form:
+    get:
+      summary: Retrieve review form and paper details for a referee assignment
+      parameters:
+        - in: path
+          name: assignment_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Review form and paper details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewFormResponse"
+        "403":
+          description: Access denied for referee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Review form unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: System or database error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    ReviewFormResponse:
+      type: object
+      required:
+        - form
+        - paper
+      properties:
+        form:
+          type: object
+        paper:
+          type: object
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
