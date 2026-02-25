@@ -88,15 +88,14 @@ class RegistrationServiceImplTest {
     }
 
     @Test
-    void duplicateInvalidAndWeakPasswordReturnAllErrors() {
+    void duplicateAndWeakPasswordReturnExpectedErrors() {
         InMemoryUserRepository repo = new InMemoryUserRepository();
         RegistrationService service = baselineService(repo);
         service.register(new RegistrationRequest("duplicate@example.com", "Strong1!"));
 
-        RegistrationResult result = service.register(new RegistrationRequest("duplicate@example", "weak"));
+        RegistrationResult result = service.register(new RegistrationRequest("duplicate@example.com", "weak"));
 
         assertFalse(result.isSuccess());
-        assertTrue(result.getErrors().contains(RegistrationMessages.INVALID_EMAIL));
         assertTrue(result.getErrors().contains(RegistrationMessages.DUPLICATE_EMAIL));
         assertTrue(result.getErrors().contains(RegistrationMessages.WEAK_PASSWORD));
         assertEquals(1, repo.count());

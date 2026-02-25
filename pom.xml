@@ -46,6 +46,11 @@
             <goals>
               <goal>prepare-agent</goal>
             </goals>
+            <configuration>
+              <includes>
+                <include>cms.*</include>
+              </includes>
+            </configuration>
           </execution>
           <execution>
             <id>report</id>

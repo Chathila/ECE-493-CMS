@@ -4,7 +4,8 @@ import java.util.Objects;
 import java.util.function.BooleanSupplier;
 
 public class DefaultEmailValidationService implements EmailValidationService {
-    private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+    // Require a domain with at least one dot (e.g., user@example.com)
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2,}$";
 
     private final BooleanSupplier serviceAvailability;
 
