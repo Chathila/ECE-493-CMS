@@ -1,11 +1,17 @@
 package cms.integration;
 
-import cms.app.CmsApplication;
+import cms.controllers.RegistrationController;
+import cms.persistence.InMemoryUserRepository;
+import cms.services.CmsPasswordPolicyService;
+import cms.services.DefaultEmailValidationService;
+import cms.services.Pbkdf2PasswordHasher;
+import cms.services.RegistrationService;
+import cms.services.RegistrationServiceImpl;
+import cms.views.HtmlPageRenderer;
 
 import org.junit.jupiter.api.Test;
 
-import java.net.http.HttpClient;
-import java.net.http.HttpResponse;
+import java.time.Clock;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,72 +20,64 @@ class RegistrationControllerIntegrationTest {
 
     @Test
     void getRegisterRendersForm() throws Exception {
-        CmsApplication app = HttpTestSupport.startDefaultApp();
-        try {
-            HttpClient client = HttpTestSupport.clientWithoutRedirects();
-            HttpResponse<String> response = HttpTestSupport.get(client, app.baseUrl() + "/register");
+        InMemoryUserRepository repo = new InMemoryUserRepository();
+        RegistrationController controller = controller(repo);
 
-            assertEquals(200, response.statusCode());
-            assertTrue(response.body().contains("Register User Account"));
-            assertTrue(response.body().contains("Email will be used as your username"));
-        } finally {
-            app.stop();
-        }
+        var response = ControllerTestSupport.handle(controller, ControllerTestSupport.get("/register"));
+
+        assertEquals(200, response.getResponseCodeValue());
+        assertTrue(response.getResponseText().contains("Register User Account"));
+        assertTrue(response.getResponseText().contains("Email will be used as your username"));
     }
 
     @Test
     void postRegisterSuccessRedirectsToLoginAndPersists() throws Exception {
-        CmsApplication app = HttpTestSupport.startDefaultApp();
-        try {
-            HttpClient client = HttpTestSupport.clientWithoutRedirects();
-            HttpResponse<String> response = HttpTestSupport.submitRegistration(
-                client,
-                app.baseUrl(),
-                "valid@example.com",
-                "Strong1!"
-            );
+        InMemoryUserRepository repo = new InMemoryUserRepository();
+        RegistrationController controller = controller(repo);
 
-            assertEquals(303, response.statusCode());
-            assertEquals("/login?message=Registration+successful.+You+can+now+log+in.", response.headers().firstValue("Location").orElse(""));
-            assertEquals(1, app.getUserRepository().count());
-        } finally {
-            app.stop();
-        }
+        var response = ControllerTestSupport.handle(
+            controller,
+            ControllerTestSupport.post("/register", "email=valid%40example.com&password=Strong1%21")
+        );
+
+        assertEquals(303, response.getResponseCodeValue());
+        assertEquals("/login?message=Registration+successful.+You+can+now+log+in.", response.getResponseHeaders().getFirst("Location"));
+        assertEquals(1, repo.count());
     }
 
     @Test
     void postRegisterInvalidReturnsErrorAndNoCreate() throws Exception {
-        CmsApplication app = HttpTestSupport.startDefaultApp();
-        try {
-            HttpClient client = HttpTestSupport.clientWithoutRedirects();
-            HttpResponse<String> response = HttpTestSupport.submitRegistration(
-                client,
-                app.baseUrl(),
-                "not-an-email",
-                "Strong1!"
-            );
+        InMemoryUserRepository repo = new InMemoryUserRepository();
+        RegistrationController controller = controller(repo);
 
-            assertEquals(400, response.statusCode());
-            assertTrue(response.body().contains("Please enter a valid email address."));
-            assertEquals(0, app.getUserRepository().count());
-        } finally {
-            app.stop();
-        }
+        var response = ControllerTestSupport.handle(
+            controller,
+            ControllerTestSupport.post("/register", "email=not-an-email&password=Strong1%21")
+        );
+
+        assertEquals(400, response.getResponseCodeValue());
+        assertTrue(response.getResponseText().contains("Please enter a valid email address."));
+        assertEquals(0, repo.count());
     }
 
     @Test
     void unsupportedMethodReturns405() throws Exception {
-        CmsApplication app = HttpTestSupport.startDefaultApp();
-        try {
-            HttpClient client = HttpTestSupport.clientWithoutRedirects();
-            var request = java.net.http.HttpRequest.newBuilder(java.net.URI.create(app.baseUrl() + "/register"))
-                .method("PUT", java.net.http.HttpRequest.BodyPublishers.noBody())
-                .build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        InMemoryUserRepository repo = new InMemoryUserRepository();
+        RegistrationController controller = controller(repo);
 
-            assertEquals(405, response.statusCode());
-        } finally {
-            app.stop();
-        }
+        var response = ControllerTestSupport.handle(controller, ControllerTestSupport.method("PUT", "/register", ""));
+
+        assertEquals(405, response.getResponseCodeValue());
+    }
+
+    private RegistrationController controller(InMemoryUserRepository repo) {
+        RegistrationService service = new RegistrationServiceImpl(
+            repo,
+            new DefaultEmailValidationService(),
+            new CmsPasswordPolicyService(),
+            new Pbkdf2PasswordHasher(),
+            Clock.systemUTC()
+        );
+        return new RegistrationController(service, new HtmlPageRenderer());
     }
 }

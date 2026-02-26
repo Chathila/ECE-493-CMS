@@ -37,6 +37,16 @@ public final class HttpTestSupport {
         return client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
+    public static HttpResponse<String> submitLogin(HttpClient client, String baseUrl, String email, String password)
+        throws IOException, InterruptedException {
+        String body = "email=" + encode(email) + "&password=" + encode(password);
+        HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + "/login"))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
     public static CmsApplication startDefaultApp() throws IOException {
         CmsApplication app = CmsApplication.createDefault(0);
         app.start();

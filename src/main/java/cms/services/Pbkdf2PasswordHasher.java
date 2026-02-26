@@ -27,6 +27,17 @@ public class Pbkdf2PasswordHasher implements PasswordHasher {
     public HashResult hash(String plainTextPassword) {
         byte[] salt = new byte[SALT_BYTES];
         secureRandom.nextBytes(salt);
+        return hashWithSalt(plainTextPassword, salt);
+    }
+
+    @Override
+    public boolean verify(String plainTextPassword, String storedHash, String storedSalt) {
+        byte[] salt = Base64.getDecoder().decode(storedSalt);
+        HashResult recomputed = hashWithSalt(plainTextPassword, salt);
+        return recomputed.hash().equals(storedHash);
+    }
+
+    private HashResult hashWithSalt(String plainTextPassword, byte[] salt) {
 
         try {
             PBEKeySpec keySpec = new PBEKeySpec(plainTextPassword.toCharArray(), salt, ITERATIONS, KEY_LENGTH_BITS);

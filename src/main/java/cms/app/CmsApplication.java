@@ -1,12 +1,16 @@
 package cms.app;
 
+import cms.controllers.DashboardController;
 import cms.controllers.HomeController;
 import cms.controllers.LoginController;
 import cms.controllers.RegistrationController;
 import cms.persistence.InMemoryUserRepository;
 import cms.persistence.UserRepository;
+import cms.services.AuthenticationService;
+import cms.services.AuthenticationServiceImpl;
 import cms.services.CmsPasswordPolicyService;
 import cms.services.DefaultEmailValidationService;
+import cms.services.PasswordHasher;
 import cms.services.Pbkdf2PasswordHasher;
 import cms.services.RegistrationService;
 import cms.services.RegistrationServiceImpl;
@@ -30,24 +34,35 @@ public class CmsApplication {
 
     public static CmsApplication createDefault(int port) throws IOException {
         InMemoryUserRepository repo = new InMemoryUserRepository();
+        PasswordHasher hasher = new Pbkdf2PasswordHasher();
         RegistrationService service = new RegistrationServiceImpl(
             repo,
             new DefaultEmailValidationService(),
             new CmsPasswordPolicyService(),
-            new Pbkdf2PasswordHasher(),
+            hasher,
             Clock.systemUTC()
         );
-        return create(port, service, repo);
+        AuthenticationService authenticationService = new AuthenticationServiceImpl(repo, hasher);
+        return create(port, service, authenticationService, repo);
     }
 
     public static CmsApplication create(int port, RegistrationService registrationService, UserRepository userRepository) throws IOException {
+        AuthenticationService authenticationService = new AuthenticationServiceImpl(userRepository, new Pbkdf2PasswordHasher());
+        return create(port, registrationService, authenticationService, userRepository);
+    }
+
+    public static CmsApplication create(int port,
+                                        RegistrationService registrationService,
+                                        AuthenticationService authenticationService,
+                                        UserRepository userRepository) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.setExecutor(Executors.newCachedThreadPool());
 
         HtmlPageRenderer renderer = new HtmlPageRenderer();
         server.createContext("/", new HomeController(renderer));
         server.createContext("/register", new RegistrationController(registrationService, renderer));
-        server.createContext("/login", new LoginController(renderer));
+        server.createContext("/login", new LoginController(authenticationService, renderer));
+        server.createContext("/dashboard", new DashboardController(renderer));
 
         return new CmsApplication(server, userRepository);
     }

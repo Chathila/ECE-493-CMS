@@ -47,8 +47,17 @@ public class HtmlPageRenderer {
             """;
     }
 
-    public String loginPage(String message) {
+    public String loginPage(String message, List<String> errors) {
         String notice = (message == null || message.isBlank()) ? "" : "<p role=\"status\">" + escapeHtml(message) + "</p>";
+        StringBuilder errorHtml = new StringBuilder();
+        if (errors != null && !errors.isEmpty()) {
+            errorHtml.append("<div role=\"alert\"><ul>");
+            for (String error : errors) {
+                errorHtml.append("<li>").append(escapeHtml(error)).append("</li>");
+            }
+            errorHtml.append("</ul></div>");
+        }
+
         return """
             <!doctype html>
             <html lang="en">
@@ -56,8 +65,30 @@ public class HtmlPageRenderer {
             <body>
               <h1>Login</h1>
             """ + notice + """
-              <p>Login form will be implemented in UC-02.</p>
+            """ + errorHtml + """
+              <p>Email will be used as your username for login.</p>
+              <form method="post" action="/login">
+                <label for="email">Email</label>
+                <input id="email" type="email" name="email" required>
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password" required>
+                <button type="submit">Log In</button>
+              </form>
               <p><a href="/register">Register a new account</a></p>
+            </body>
+            </html>
+            """;
+    }
+
+    public String dashboardPage(String role) {
+        return """
+            <!doctype html>
+            <html lang="en">
+            <head><meta charset="utf-8"><title>Dashboard</title></head>
+            <body>
+              <h1>Authorized Home Page</h1>
+              <p>You are logged in with role: """ + escapeHtml(role == null ? "unknown" : role) + """
+              </p>
             </body>
             </html>
             """;

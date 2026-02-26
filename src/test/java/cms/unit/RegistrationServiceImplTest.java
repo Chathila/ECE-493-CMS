@@ -101,6 +101,42 @@ class RegistrationServiceImplTest {
         assertEquals(1, repo.count());
     }
 
+    @Test
+    void invalidEmailWithStrongPasswordReturnsInvalidEmailOnly() {
+        InMemoryUserRepository repo = new InMemoryUserRepository();
+        RegistrationService service = baselineService(repo);
+
+        RegistrationResult result = service.register(new RegistrationRequest("bad-email", "Strong1!"));
+
+        assertFalse(result.isSuccess());
+        assertEquals(List.of(RegistrationMessages.INVALID_EMAIL), result.getErrors());
+    }
+
+    @Test
+    void nullEmailAndNullPasswordReturnMissingFields() {
+        InMemoryUserRepository repo = new InMemoryUserRepository();
+        RegistrationService service = baselineService(repo);
+
+        RegistrationResult result = service.register(new RegistrationRequest(null, null));
+
+        assertFalse(result.isSuccess());
+        assertEquals(List.of(RegistrationMessages.MISSING_FIELDS), result.getErrors());
+    }
+
+    @Test
+    void blankAndNullPasswordAreRejectedWhenEmailPresent() {
+        InMemoryUserRepository repo = new InMemoryUserRepository();
+        RegistrationService service = baselineService(repo);
+
+        RegistrationResult nullPassword = service.register(new RegistrationRequest("user@example.com", null));
+        RegistrationResult blankPassword = service.register(new RegistrationRequest("user@example.com", "  "));
+
+        assertFalse(nullPassword.isSuccess());
+        assertFalse(blankPassword.isSuccess());
+        assertEquals(List.of(RegistrationMessages.MISSING_FIELDS), nullPassword.getErrors());
+        assertEquals(List.of(RegistrationMessages.MISSING_FIELDS), blankPassword.getErrors());
+    }
+
     private RegistrationService baselineService(InMemoryUserRepository repo) {
         return new RegistrationServiceImpl(
             repo,
