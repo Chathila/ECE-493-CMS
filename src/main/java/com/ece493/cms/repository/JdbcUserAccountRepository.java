@@ -82,6 +82,20 @@ public class JdbcUserAccountRepository implements UserAccountRepository {
     }
 
     @Override
+    public boolean updatePasswordCredentialsByEmail(String email, String passwordHash, String passwordSalt) {
+        String sql = "UPDATE user_accounts SET password_hash = ?, password_salt = ? WHERE email = ?";
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, passwordHash);
+            statement.setString(2, passwordSalt);
+            statement.setString(3, email);
+            return statement.executeUpdate() == 1;
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to update password credentials", e);
+        }
+    }
+
+    @Override
     public long countByEmail(String email) {
         String sql = "SELECT COUNT(1) FROM user_accounts WHERE email = ?";
         try (Connection connection = dataSource.getConnection();

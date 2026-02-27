@@ -61,6 +61,18 @@ class JdbcUserAccountRepositoryTest {
     }
 
     @Test
+    void updatePasswordCredentialsByEmailUpdatesOneRecordAndReturnsFalseForMissing() {
+        DataSource dataSource = Db.createDataSource("jdbc:h2:mem:repo_update;DB_CLOSE_DELAY=-1");
+        Db.runSchema(dataSource);
+        JdbcUserAccountRepository repository = new JdbcUserAccountRepository(dataSource);
+
+        repository.save(user("update@cms.com", "ACTIVE", "AUTHOR"));
+
+        assertTrue(repository.updatePasswordCredentialsByEmail("update@cms.com", "newHash", "newSalt"));
+        assertFalse(repository.updatePasswordCredentialsByEmail("missing@cms.com", "newHash", "newSalt"));
+    }
+
+    @Test
     void existsByEmailWrapsSqlExceptions() {
         JdbcUserAccountRepository repository = new JdbcUserAccountRepository(failingDataSource());
 
@@ -86,6 +98,13 @@ class JdbcUserAccountRepositoryTest {
         JdbcUserAccountRepository repository = new JdbcUserAccountRepository(failingDataSource());
 
         assertThrows(IllegalStateException.class, () -> repository.countByEmail("x@cms.com"));
+    }
+
+    @Test
+    void updatePasswordCredentialsByEmailWrapsSqlExceptions() {
+        JdbcUserAccountRepository repository = new JdbcUserAccountRepository(failingDataSource());
+
+        assertThrows(IllegalStateException.class, () -> repository.updatePasswordCredentialsByEmail("x@cms.com", "h", "s"));
     }
 
     @Test

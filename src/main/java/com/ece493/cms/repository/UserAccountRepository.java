@@ -11,5 +11,7 @@ public interface UserAccountRepository {
 
     void save(UserAccount userAccount);
 
+    boolean updatePasswordCredentialsByEmail(String email, String passwordHash, String passwordSalt);
+
     long countByEmail(String email);
 }

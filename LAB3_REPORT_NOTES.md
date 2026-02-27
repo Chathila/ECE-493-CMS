@@ -80,3 +80,51 @@ Both commands succeed in the final UC-02 state.
 ## Spec-Kit Command Note
 
 - `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-02 was implemented directly from existing spec-kit artifacts.
+
+---
+
+# Lab 3 Report Notes (UC-03 Run)
+
+## Scope Completed
+
+- Implemented UC-03 change-user-password flow from:
+  - `specs/UC-03-change-user-password/spec.md`
+  - `specs/UC-03-change-user-password/plan.md`
+  - `specs/UC-03-change-user-password/tasks.md`
+  - `specs/UC-03-change-user-password/contracts/change-password.openapi.yaml`
+  - `UC-03_tests.md`
+- Added `/account/password` GET/POST endpoint behavior with:
+  - required field validation
+  - current password verification
+  - new password policy enforcement
+  - new password/confirmation match validation
+  - authentication service unavailable handling
+  - success confirmation + session invalidation (re-login required)
+- Added/updated session flow so successful login stores user context used by UC-03.
+- Added/updated UI pages:
+  - change password form page
+  - authorized home page includes change password option
+- Added unit + integration + acceptance tests and UC-03 traceability.
+
+## Commands Run
+
+1. `mvn test`
+2. `mvn verify`
+
+Both commands succeed in the final UC-03 state.
+
+## Coverage
+
+- JaCoCo report directory:
+  - `target/site/jacoco/index.html`
+- Final branch coverage:
+  - `BRANCH missed=0 covered=132 ratio=100.00%`
+
+## Traceability
+
+- `traceability/UC-03-traceability.md` maps AT-01..AT-04 to automated tests.
+
+## Prompt/Spec-Kit Notes
+
+- `prompts/implementation.txt` does not exist in this repository; UC-03 run was executed using `prompts/implementation-rest.txt`.
+- `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-03 was implemented directly from existing spec-kit artifacts.

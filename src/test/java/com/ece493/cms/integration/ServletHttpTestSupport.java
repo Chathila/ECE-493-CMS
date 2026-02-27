@@ -2,6 +2,7 @@ package com.ece493.cms.integration;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
@@ -16,6 +17,10 @@ public final class ServletHttpTestSupport {
     }
 
     public static HttpServletRequest postJsonRequest(String jsonBody) {
+        return postJsonRequest(jsonBody, null);
+    }
+
+    public static HttpServletRequest postJsonRequest(String jsonBody, SessionCapture sessionCapture) {
         return (HttpServletRequest) Proxy.newProxyInstance(
                 ServletHttpTestSupport.class.getClassLoader(),
                 new Class[]{HttpServletRequest.class},
@@ -26,6 +31,13 @@ public final class ServletHttpTestSupport {
                     }
                     if ("getMethod".equals(name)) {
                         return "POST";
+                    }
+                    if ("getSession".equals(name)) {
+                        boolean create = args != null && args.length == 1 && Boolean.TRUE.equals(args[0]);
+                        if (sessionCapture == null) {
+                            return create ? new SessionCapture().asSession() : null;
+                        }
+                        return sessionCapture.asSession();
                     }
                     return defaultValue(method.getReturnType());
                 }
@@ -47,6 +59,10 @@ public final class ServletHttpTestSupport {
 
     public static ResponseCapture responseCapture() {
         return new ResponseCapture();
+    }
+
+    public static SessionCapture sessionCapture() {
+        return new SessionCapture();
     }
 
     public static final class ResponseCapture {
@@ -106,6 +122,45 @@ public final class ServletHttpTestSupport {
 
         public String getContentType() {
             return contentType;
+        }
+    }
+
+    public static final class SessionCapture {
+        private final Map<String, Object> attributes = new HashMap<>();
+        private boolean invalidated;
+
+        public HttpSession asSession() {
+            return (HttpSession) Proxy.newProxyInstance(
+                    ServletHttpTestSupport.class.getClassLoader(),
+                    new Class[]{HttpSession.class},
+                    (proxy, method, args) -> {
+                        String name = method.getName();
+                        if ("getAttribute".equals(name)) {
+                            return attributes.get((String) args[0]);
+                        }
+                        if ("setAttribute".equals(name)) {
+                            attributes.put((String) args[0], args[1]);
+                            return null;
+                        }
+                        if ("invalidate".equals(name)) {
+                            invalidated = true;
+                            attributes.clear();
+                            return null;
+                        }
+                        if ("isNew".equals(name)) {
+                            return false;
+                        }
+                        return defaultValue(method.getReturnType());
+                    }
+            );
+        }
+
+        public Object getAttribute(String key) {
+            return attributes.get(key);
+        }
+
+        public boolean isInvalidated() {
+            return invalidated;
         }
     }
 

@@ -54,7 +54,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         String role = account.getRole() == null ? "USER" : account.getRole();
         String encodedRole = URLEncoder.encode(role, StandardCharsets.UTF_8);
-        return LoginResult.successRedirect("/home?role=" + encodedRole);
+        return LoginResult.successRedirect("/home?role=" + encodedRole, account.getEmail());
     }
 
     private boolean isBlank(String value) {

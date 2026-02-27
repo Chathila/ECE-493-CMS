@@ -130,6 +130,7 @@ class AuthenticationServiceImplTest {
         assertEquals(302, result.getStatusCode());
         assertTrue(result.getRedirectLocation().startsWith("/home?role="));
         assertTrue(result.getRedirectLocation().contains("PROGRAM_CHAIR"));
+        assertEquals("user@cms.com", result.getAuthenticatedEmail());
     }
 
     @Test
@@ -197,6 +198,11 @@ class AuthenticationServiceImplTest {
         @Override
         public void save(UserAccount userAccount) {
             throw new UnsupportedOperationException("Not needed");
+        }
+
+        @Override
+        public boolean updatePasswordCredentialsByEmail(String email, String passwordHash, String passwordSalt) {
+            return false;
         }
 
         @Override

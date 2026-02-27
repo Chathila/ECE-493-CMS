@@ -10,6 +10,8 @@ import com.ece493.cms.service.DefaultAccountStatusService;
 import com.ece493.cms.service.DefaultAuthenticationAvailabilityService;
 import com.ece493.cms.service.DefaultEmailValidationService;
 import com.ece493.cms.service.DefaultPasswordPolicyService;
+import com.ece493.cms.service.PasswordChangeService;
+import com.ece493.cms.service.PasswordChangeServiceImpl;
 import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 import org.eclipse.jetty.server.Server;
@@ -28,8 +30,10 @@ public class CmsAppServer {
     public CmsAppServer(int port, DataSource dataSource) {
         RegistrationService registrationService = createRegistrationService(dataSource);
         AuthenticationService authenticationService = createAuthenticationService(dataSource);
+        PasswordChangeService passwordChangeService = createPasswordChangeService(dataSource);
         String registerHtml = loadRegisterHtml();
         String loginHtml = loadLoginHtml();
+        String changePasswordHtml = loadChangePasswordHtml();
 
         this.server = new Server(port);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -37,6 +41,7 @@ public class CmsAppServer {
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/index.html", "text/html; charset=UTF-8")), "/");
         context.addServlet(new ServletHolder(new RegistrationServlet(registrationService, registerHtml)), "/register");
         context.addServlet(new ServletHolder(new LoginServlet(authenticationService, loginHtml)), "/login");
+        context.addServlet(new ServletHolder(new ChangePasswordServlet(passwordChangeService, changePasswordHtml)), "/account/password");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home/*");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/styles.css", "text/css")), "/styles.css");
@@ -75,6 +80,16 @@ public class CmsAppServer {
         );
     }
 
+    public static PasswordChangeService createPasswordChangeService(DataSource dataSource) {
+        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);
+        return new PasswordChangeServiceImpl(
+                repository,
+                new DefaultPasswordPolicyService(),
+                new PasswordHasher(),
+                new DefaultAuthenticationAvailabilityService()
+        );
+    }
+
     public static void main(String[] args) throws Exception {
         int port = Integer.parseInt(System.getProperty("PORT", System.getenv().getOrDefault("PORT", "8080")));
         DataSource dataSource = Db.createDataSource("jdbc:h2:mem:cms;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
@@ -91,6 +106,10 @@ public class CmsAppServer {
 
     private String loadLoginHtml() {
         return loadHtml("web/login.html", "login");
+    }
+
+    private String loadChangePasswordHtml() {
+        return loadHtml("web/change-password.html", "change-password");
     }
 
     private String loadHtml(String resourcePath, String viewName) {

@@ -54,14 +54,16 @@ class LoginServletTest {
 
     @Test
     void postSuccessSetsRedirect() throws Exception {
-        AuthenticationService service = submission -> LoginResult.successRedirect("/home?role=AUTHOR");
+        AuthenticationService service = submission -> LoginResult.successRedirect("/home?role=AUTHOR", "a@b.com");
         LoginServlet servlet = new LoginServlet(service, "<html></html>");
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        ServletHttpTestSupport.SessionCapture session = ServletHttpTestSupport.sessionCapture();
 
-        servlet.service(ServletHttpTestSupport.postJsonRequest("{\"email\":\"a@b.com\",\"password\":\"x\"}"), response.asResponse());
+        servlet.service(ServletHttpTestSupport.postJsonRequest("{\"email\":\"a@b.com\",\"password\":\"x\"}", session), response.asResponse());
 
         assertEquals(302, response.getStatus());
         assertEquals("/home?role=AUTHOR", response.getHeader("Location"));
+        assertEquals("a@b.com", session.getAttribute("user_email"));
     }
 
     @Test
@@ -75,5 +77,18 @@ class LoginServletTest {
         assertEquals(401, response.getStatus());
         assertEquals("application/json; charset=UTF-8", response.getContentType());
         assertTrue(response.getBody().contains("Bad \\\"credentials\\\""));
+    }
+
+    @Test
+    void postSuccessFallsBackToRequestEmailWhenAuthenticatedEmailMissing() throws Exception {
+        AuthenticationService service = submission -> LoginResult.successRedirect("/home?role=AUTHOR");
+        LoginServlet servlet = new LoginServlet(service, "<html></html>");
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        ServletHttpTestSupport.SessionCapture session = ServletHttpTestSupport.sessionCapture();
+
+        servlet.service(ServletHttpTestSupport.postJsonRequest("{\"email\":\"fallback@cms.com\",\"password\":\"x\"}", session), response.asResponse());
+
+        assertEquals(302, response.getStatus());
+        assertEquals("fallback@cms.com", session.getAttribute("user_email"));
     }
 }

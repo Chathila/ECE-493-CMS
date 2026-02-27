@@ -142,6 +142,11 @@ class RegistrationServiceImplTest {
         }
 
         @Override
+        public boolean updatePasswordCredentialsByEmail(String email, String passwordHash, String passwordSalt) {
+            return false;
+        }
+
+        @Override
         public long countByEmail(String email) {
             return existsByEmail(email) ? 1 : 0;
         }

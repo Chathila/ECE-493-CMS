@@ -6,6 +6,7 @@ import com.ece493.cms.service.AuthenticationService;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,6 +40,8 @@ public class LoginServlet extends HttpServlet {
 
         LoginResult result = authenticationService.authenticate(new LoginSubmission(email, password));
         if (result.isRedirect()) {
+            HttpSession session = req.getSession(true);
+            session.setAttribute("user_email", result.getAuthenticatedEmail() == null ? email : result.getAuthenticatedEmail());
             resp.setStatus(HttpServletResponse.SC_FOUND);
             resp.setHeader("Location", result.getRedirectLocation());
             return;

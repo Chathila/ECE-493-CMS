@@ -54,7 +54,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 <span class="fc bfc" id="L55" title="All 2 branches covered.">        String role = account.getRole() == null ? &quot;USER&quot; : account.getRole();</span>
 <span class="fc" id="L56">        String encodedRole = URLEncoder.encode(role, StandardCharsets.UTF_8);</span>
-<span class="fc" id="L57">        return LoginResult.successRedirect(&quot;/home?role=&quot; + encodedRole);</span>
+<span class="fc" id="L57">        return LoginResult.successRedirect(&quot;/home?role=&quot; + encodedRole, account.getEmail());</span>
     }
 
     private boolean isBlank(String value) {
