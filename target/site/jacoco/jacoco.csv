@@ -1,0 +1,13 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+ece-493-cms,com.ece493.cms.repository,JdbcUserAccountRepository,21,105,0,2,6,28,0,5,0,4
+ece-493-cms,com.ece493.cms.model,RegistrationSubmission,21,0,0,0,8,0,4,0,4,0
+ece-493-cms,com.ece493.cms.model,UserAccount,3,36,0,0,1,13,1,6,1,6
+ece-493-cms,com.ece493.cms.model,RegistrationResult,0,42,0,2,0,11,0,8,0,7
+ece-493-cms,com.ece493.cms.security,PasswordHasher,7,44,0,0,2,10,0,3,0,3
+ece-493-cms,com.ece493.cms.service,DefaultPasswordPolicyService,0,61,0,18,0,14,0,11,0,2
+ece-493-cms,com.ece493.cms.service,RegistrationServiceImpl,0,97,0,16,0,22,0,11,0,3
+ece-493-cms,com.ece493.cms.service,DefaultEmailValidationService,0,20,0,4,0,4,0,6,0,4
+ece-493-cms,com.ece493.cms.controller,CmsAppServer,131,0,0,0,29,0,7,0,7,0
+ece-493-cms,com.ece493.cms.controller,StaticResourceServlet,0,43,0,2,0,14,0,3,0,2
+ece-493-cms,com.ece493.cms.controller,RegistrationServlet,0,124,0,10,0,32,0,12,0,7
+ece-493-cms,com.ece493.cms.db,Db,15,57,0,0,4,15,0,3,0,3

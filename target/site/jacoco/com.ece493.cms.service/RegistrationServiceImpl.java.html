@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegistrationServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.service</a> &gt; <span class="el_source">RegistrationServiceImpl.java</span></div><h1>RegistrationServiceImpl.java</h1><pre class="source lang-java linenums">package com.ece493.cms.service;
+
+import com.ece493.cms.model.RegistrationResult;
+import com.ece493.cms.model.UserAccount;
+import com.ece493.cms.repository.UserAccountRepository;
+import com.ece493.cms.security.PasswordHasher;
+
+import java.time.Instant;
+
+public class RegistrationServiceImpl implements RegistrationService {
+    private final UserAccountRepository userAccountRepository;
+    private final EmailValidationService emailValidationService;
+    private final PasswordPolicyService passwordPolicyService;
+    private final PasswordHasher passwordHasher;
+
+    public RegistrationServiceImpl(
+            UserAccountRepository userAccountRepository,
+            EmailValidationService emailValidationService,
+            PasswordPolicyService passwordPolicyService,
+            PasswordHasher passwordHasher
+<span class="fc" id="L21">    ) {</span>
+<span class="fc" id="L22">        this.userAccountRepository = userAccountRepository;</span>
+<span class="fc" id="L23">        this.emailValidationService = emailValidationService;</span>
+<span class="fc" id="L24">        this.passwordPolicyService = passwordPolicyService;</span>
+<span class="fc" id="L25">        this.passwordHasher = passwordHasher;</span>
+<span class="fc" id="L26">    }</span>
+
+    @Override
+    public RegistrationResult register(String email, String password) {
+<span class="fc bfc" id="L30" title="All 4 branches covered.">        if (isBlank(email) || isBlank(password)) {</span>
+<span class="fc" id="L31">            return RegistrationResult.error(400, &quot;Missing required fields: email and password are required.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (!emailValidationService.isServiceAvailable()) {</span>
+<span class="fc" id="L35">            return RegistrationResult.error(503, &quot;Email validation service unavailable. Please try again later.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (!emailValidationService.isValidFormat(email)) {</span>
+<span class="fc" id="L39">            return RegistrationResult.error(400, &quot;Please provide a valid email address.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (userAccountRepository.existsByEmail(email)) {</span>
+<span class="fc" id="L43">            return RegistrationResult.error(409, &quot;Email address is already registered. Please use a unique email.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (!passwordPolicyService.meetsPolicy(password)) {</span>
+<span class="fc" id="L47">            return RegistrationResult.error(400, &quot;Password does not meet CMS policy. Use at least 8 characters, with uppercase, lowercase, and a digit.&quot;);</span>
+        }
+
+<span class="fc" id="L50">        String salt = passwordHasher.generateSalt();</span>
+<span class="fc" id="L51">        String hash = passwordHasher.hashPassword(password, salt);</span>
+
+<span class="fc" id="L53">        userAccountRepository.save(new UserAccount(</span>
+                0L,
+                email,
+                hash,
+                salt,
+                &quot;ACTIVE&quot;,
+<span class="fc" id="L59">                Instant.now()</span>
+        ));
+
+<span class="fc" id="L62">        return RegistrationResult.successRedirect(&quot;/login&quot;);</span>
+    }
+
+    private boolean isBlank(String value) {
+<span class="fc bfc" id="L66" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

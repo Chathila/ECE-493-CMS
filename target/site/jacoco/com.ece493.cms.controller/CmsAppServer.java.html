@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CmsAppServer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.controller</a> &gt; <span class="el_source">CmsAppServer.java</span></div><h1>CmsAppServer.java</h1><pre class="source lang-java linenums">package com.ece493.cms.controller;
+
+import com.ece493.cms.db.Db;
+import com.ece493.cms.repository.JdbcUserAccountRepository;
+import com.ece493.cms.repository.UserAccountRepository;
+import com.ece493.cms.security.PasswordHasher;
+import com.ece493.cms.service.DefaultEmailValidationService;
+import com.ece493.cms.service.DefaultPasswordPolicyService;
+import com.ece493.cms.service.RegistrationService;
+import com.ece493.cms.service.RegistrationServiceImpl;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+
+public class CmsAppServer {
+    private final Server server;
+
+<span class="nc" id="L24">    public CmsAppServer(int port, DataSource dataSource) {</span>
+<span class="nc" id="L25">        RegistrationService registrationService = createRegistrationService(dataSource);</span>
+<span class="nc" id="L26">        String registerHtml = loadRegisterHtml();</span>
+
+<span class="nc" id="L28">        this.server = new Server(port);</span>
+<span class="nc" id="L29">        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);</span>
+<span class="nc" id="L30">        context.setContextPath(&quot;/&quot;);</span>
+<span class="nc" id="L31">        context.addServlet(new ServletHolder(new RegistrationServlet(registrationService, registerHtml)), &quot;/register&quot;);</span>
+<span class="nc" id="L32">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/styles.css&quot;, &quot;text/css&quot;)), &quot;/styles.css&quot;);</span>
+<span class="nc" id="L33">        server.setHandler(context);</span>
+<span class="nc" id="L34">    }</span>
+
+    public void start() throws Exception {
+<span class="nc" id="L37">        server.start();</span>
+<span class="nc" id="L38">    }</span>
+
+    public void stop() throws Exception {
+<span class="nc" id="L41">        server.stop();</span>
+<span class="nc" id="L42">    }</span>
+
+    public int port() {
+<span class="nc" id="L45">        return server.getURI().getPort();</span>
+    }
+
+    public static RegistrationService createRegistrationService(DataSource dataSource) {
+<span class="nc" id="L49">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
+<span class="nc" id="L50">        return new RegistrationServiceImpl(</span>
+                repository,
+                new DefaultEmailValidationService(),
+                new DefaultPasswordPolicyService(),
+                new PasswordHasher()
+        );
+    }
+
+    public static void main(String[] args) throws Exception {
+<span class="nc" id="L59">        int port = Integer.parseInt(System.getProperty(&quot;PORT&quot;, System.getenv().getOrDefault(&quot;PORT&quot;, &quot;8080&quot;)));</span>
+<span class="nc" id="L60">        DataSource dataSource = Db.createDataSource(&quot;jdbc:h2:mem:cms;MODE=PostgreSQL;DB_CLOSE_DELAY=-1&quot;);</span>
+<span class="nc" id="L61">        Db.runSchema(dataSource);</span>
+
+<span class="nc" id="L63">        CmsAppServer appServer = new CmsAppServer(port, dataSource);</span>
+<span class="nc" id="L64">        appServer.start();</span>
+<span class="nc" id="L65">        appServer.server.join();</span>
+<span class="nc" id="L66">    }</span>
+
+    private String loadRegisterHtml() {
+<span class="nc" id="L69">        try (InputStream stream = Objects.requireNonNull(</span>
+<span class="nc" id="L70">                Thread.currentThread().getContextClassLoader().getResourceAsStream(&quot;web/register.html&quot;),</span>
+                &quot;Missing register view&quot;
+        )) {
+<span class="nc" id="L73">            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);</span>
+<span class="nc" id="L74">        } catch (IOException e) {</span>
+<span class="nc" id="L75">            throw new IllegalStateException(&quot;Failed to read register view&quot;, e);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
