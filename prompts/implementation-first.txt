@@ -1,0 +1,78 @@
+We are in ECE 493 Lab 3. Lab 2 planning is complete under specs/UC-XX-*/ (spec.md, plan.md, tasks.md, analysis.md, checklists, contracts if present). Acceptance tests exist at repo root as UC-XX_tests.md.
+
+ABSOLUTE SOURCE OF TRUTH / CONSTRAINTS:
+- Do not invent requirements. Everything must trace to the CMS SRS and the repo’s use case flows + acceptance tests.
+- Architecture: MVC / three-layer style.
+- Tech stack: Java backend + vanilla HTML/CSS + vanilla JavaScript frontend + relational SQL persistence.
+- Security: passwords must never be stored or transmitted in plaintext (use secure hashing + salt). Provide clear validation and error feedback.
+
+LAB 3 HARD REQUIREMENTS:
+- Generate implementation AND unit + integration tests.
+- Implement the acceptance test suite for UC-01 (convert UC-01_tests.md into automated tests where feasible, otherwise produce strict mapping from each acceptance test to automated test(s)).
+- All tests must pass after debugging.
+- Produce a coverage report showing 100% BRANCH coverage and gate the build on it.
+
+TOOLING CHOICES (MANDATORY):
+- Build tool: Maven.
+- Unit tests: JUnit 5.
+- Integration tests: run the web layer locally (embedded container) and test HTTP flows.
+- Coverage: JaCoCo with BRANCH coverage checking enabled (fail build if branch coverage < 100%).
+
+SANDBOX NOTE:
+Codex runs in a sandbox. Avoid network dependencies in tests. Prefer embedded DB and local-only tests.
+
+SCOPE FOR THIS RUN:
+A) BOOTSTRAP INFRASTRUCTURE ONCE (repo currently has no implementation):
+   1) Initialize a Maven multi-package project or a single Maven project (choose the simplest) consistent with MVC:
+      - controller/ (Java controllers; Servlet-based controller layer is acceptable)
+      - service/ (business logic)
+      - repository/ or dao/ (JDBC)
+      - model/ (entities)
+      - web/ or resources/templates/ (vanilla HTML/CSS/JS assets)
+   2) Add a lightweight relational DB setup:
+      - Prefer an embedded DB for dev/tests (e.g., H2) while still using SQL + JDBC.
+      - Provide schema SQL scripts (and optional simple migration runner) so tests can initialize the DB.
+   3) Configure Maven:
+      - JUnit 5 dependencies and Surefire.
+      - Integration-test phase if needed (Failsafe) OR keep integration tests under Surefire if simpler.
+      - JaCoCo configured for branch coverage report and enforcement at 100%.
+      - Add README or LAB3_REPORT_NOTES.md with exact commands to run tests and coverage.
+   4) Ensure commands work:
+      - `mvn test`
+      - `mvn verify` (or another command that generates JaCoCo report and enforces 100% branch coverage)
+
+B) IMPLEMENT UC-01 (ONLY UC-01):
+   1) Run the Spec-Kit implementation step FIRST for UC-01:
+      - `/speckit.implement`
+   2) Read specs/UC-01-*/spec.md, plan.md, tasks.md, contracts/* and implement tasks in order.
+   3) Implement only what UC-01 requires (do not implement other UCs).
+   4) Add:
+      - Unit tests for service/domain logic and edge cases.
+      - Integration tests that hit the UC-01 endpoints and verify responses + DB effects.
+      - Automated acceptance tests aligned to UC-01_tests.md.
+   5) Ensure branch coverage reaches 100% for all new/changed code.
+
+C) ACCEPTANCE TEST TRACEABILITY:
+   - Create `traceability/UC-01-traceability.md` mapping each acceptance test case in UC-01_tests.md
+     to automated test file(s) + test name(s).
+   - If any acceptance step cannot be automated in this environment, document it clearly and still
+     implement the maximum automatable portion, with rationale.
+
+D) EXECUTE + DEBUG:
+   - Run `mvn test` then `mvn verify` (or the configured coverage command).
+   - Debug until all tests pass and JaCoCo branch coverage enforcement is satisfied.
+
+DELIVERABLES FOR THIS RUN:
+- Maven project scaffold implementing MVC with Java + vanilla HTML/CSS/JS + SQL persistence.
+- UC-01 implemented per Spec-Kit artifacts.
+- Unit + integration tests for UC-01.
+- Automated acceptance tests for UC-01 and the traceability mapping.
+- JaCoCo branch coverage report (100%).
+- LAB3_REPORT_NOTES.md with commands run + report location.
+
+NOW DO IT:
+1) Inspect repo root to see what exists (use cases, UC tests, specs, SRS PDF).
+2) Bootstrap infra exactly once.
+3) Run `/speckit.implement` for UC-01 and implement tasks in order.
+4) Add tests, run tests, run coverage, enforce 100% branch coverage.
+5) Summarize changes and where reports are located.

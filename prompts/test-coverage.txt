@@ -1,0 +1,70 @@
+We are enforcing 100% BRANCH coverage for this Maven-based Java MVC CMS project using JaCoCo.
+
+GOAL:
+- Ensure total branch coverage is exactly 100%.
+- If coverage < 100%, inspect uncovered branches and write additional tests.
+- Re-run coverage and repeat until 100% branch coverage is achieved.
+- Do NOT modify production logic unless a branch is unreachable dead code.
+- Only add tests unless absolutely necessary.
+
+PROCESS:
+
+STEP 1 — Run coverage
+- Execute: mvn clean verify
+- Ensure JaCoCo generates a branch coverage report (HTML + XML).
+- Identify total branch coverage percentage.
+- If it is already 100%, stop and summarize.
+- If it is below 100%, continue.
+
+STEP 2 — Inspect uncovered branches
+- Open JaCoCo XML or HTML report.
+- Identify:
+  - Classes with missed branches
+  - Specific methods with partial coverage
+  - Exact line numbers containing uncovered branches
+- Categorize uncovered branches:
+  - Validation failures
+  - Null checks
+  - Error handling
+  - Edge cases
+  - Conditional logic
+  - Exception paths
+  - Defensive programming branches
+
+STEP 3 — Add targeted tests
+For each uncovered branch:
+- Write the minimum additional unit or integration test required to execute that branch.
+- Prefer unit tests for service/domain logic.
+- Use integration tests for controller-level or DB branches.
+- Avoid duplicating logic from production code.
+- Use embedded DB for DB-related branches.
+- Mock only when necessary.
+- Ensure tests are deterministic and isolated.
+
+STEP 4 — Re-run coverage
+- Execute: mvn verify
+- Re-check total branch coverage.
+- If < 100%, repeat Steps 2–4.
+- Continue until 100% branch coverage is reached.
+
+STEP 5 — Final validation
+- Ensure all tests pass.
+- Confirm JaCoCo branch coverage shows 100%.
+- Ensure no accidental production code changes were introduced just to game coverage.
+- Ensure no redundant or meaningless tests were added.
+
+DELIVERABLES:
+1. Summary of uncovered branches found.
+2. List of new test files / test methods added.
+3. Final branch coverage percentage.
+4. Confirmation that build passes with coverage enforcement.
+5. Brief explanation of any production code changes (if absolutely necessary).
+
+RULES:
+- Do not remove branches to inflate coverage.
+- Do not weaken JaCoCo coverage thresholds.
+- Do not disable tests.
+- Do not modify existing working logic unless unreachable dead code must be removed.
+- Maintain alignment with spec-kit artifacts and acceptance tests.
+
+Now execute this process.

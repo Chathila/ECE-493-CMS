@@ -1,0 +1,56 @@
+Continue ECE 493 Lab 3 incremental implementation.
+
+ABSOLUTE RULES:
+- One feature per use case.
+- Do not invent requirements; trace to CMS SRS + repo use case flow + UC-XX_tests.md.
+- Keep architecture MVC / three-layer style.
+- Java backend + vanilla HTML/CSS/JS frontend + SQL persistence.
+- Passwords never plaintext; validate inputs and show clear errors.
+
+FOR THIS RUN:
+Implement ONLY the next use case: UC-XX.
+
+STEPS:
+1) Run Spec-Kit implementation step FIRST:
+   - `/speckit.implement`
+
+2) Read the UC artifacts:
+   - specs/UC-XX-*/spec.md
+   - specs/UC-XX-*/plan.md
+   - specs/UC-XX-*/tasks.md
+   - specs/UC-XX-*/contracts/* (if any)
+   - repo root: UC-XX_tests.md (acceptance tests)
+
+3) Implement tasks.md strictly in order:
+   - Add/modify controller/service/repository/model/view only as needed for UC-XX.
+   - Extend DB schema only as required by UC-XX data model/contracts.
+   - Preserve existing behavior from previous UCs.
+
+4) Testing requirements (must meet Lab 3):
+   - Unit tests for new business logic branches.
+   - Integration tests for UC-XX endpoints and DB effects.
+   - Automated acceptance tests corresponding to UC-XX_tests.md.
+   - Ensure new/changed code reaches 100% branch coverage under JaCoCo.
+
+5) Traceability:
+   - Create or update `traceability/UC-XX-traceability.md` mapping each acceptance test case to
+     automated test file(s) + test name(s). If any step cannot be automated, document why and
+     what is still automatically verified.
+
+6) Run and debug:
+   - Run `mvn test`
+   - Run `mvn verify` (must produce JaCoCo report and enforce 100% branch coverage)
+   - Debug until all tests pass and branch coverage is still 100%.
+
+7) Update lab notes:
+   - Append to LAB3_REPORT_NOTES.md:
+     - commands run
+     - tests pass status
+     - branch coverage result
+     - report location
+
+DONE CRITERIA:
+- UC-XX feature complete per spec-kit artifacts
+- All tests passing
+- JaCoCo branch coverage enforcement satisfied at 100%
+- Traceability file updated

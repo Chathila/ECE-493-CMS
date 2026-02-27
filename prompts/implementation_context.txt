@@ -1,0 +1,53 @@
+We are starting ECE 493 CMS Lab 3. Before implementing any use case, do a repo-wide “spec digestion” pass so you carry shared context across features.
+
+HARD RULES:
+- Do NOT implement code in this run.
+- Do NOT modify existing spec-kit artifacts.
+- Do NOT invent requirements.
+- Everything must be derived from CMS SRS + existing use cases + existing UC acceptance tests + spec-kit outputs under specs/.
+
+OBJECTIVE:
+Read ALL use case spec folders under `specs/UC-*/` and build a shared understanding of the system that will carry across feature-by-feature implementation.
+
+WHAT TO READ:
+For every specs/UC-XX-*/ directory, read at minimum:
+- spec.md
+- plan.md
+- tasks.md
+- analysis.md (if present)
+- contracts/* (if present)
+- data_model.md / clarifications.md / checklist files (if present)
+
+Also read at repo root:
+- all use case flows (US-XX_use_case.md)
+- all acceptance tests (UC-XX_tests.md)
+And read the CMS SRS PDF in the repo (CMS-SRS.pdf).
+
+OUTPUTS (create these new files only; do not change anything else):
+1) `GLOBAL_SYSTEM_SUMMARY.md`
+   - A high-level summary of the CMS scope and modules (auth, submission, review, scheduling, registration/ticketing, announcements).
+   - List cross-cutting constraints: MVC layering, tech stack, security, validation, error handling, data persistence rules.
+   - Identify shared entities that appear across many UCs (e.g., User, Paper, Review, Conference, Registration, Ticket, etc.) and describe their common fields at a conceptual level.
+
+2) `GLOBAL_REQUIREMENTS_MATRIX.md`
+   - A table mapping each UC (UC-01..UC-20) → key responsibilities, main endpoints/pages, major data entities touched, and any shared services needed.
+   - Highlight dependencies between UCs (e.g., UC-01 login required before submission UCs).
+
+3) `GLOBAL_TEST_STRATEGY.md`
+   - Propose a consistent approach to automate UC acceptance tests:
+     - Unit tests for service/domain logic
+     - Integration tests for controller endpoints and DB effects
+     - How to treat UI-only steps (what to automate vs what to map)
+   - Describe how we will enforce 100% branch coverage with JaCoCo in Maven for the code we implement.
+
+4) `GLOBAL_SHARED_ARCHITECTURE.md`
+   - Proposed package structure (controller/service/repository/model), and how controllers map to pages/routes.
+   - DB approach for tests (embedded DB like H2) + schema management approach.
+   - A “shared components” list: password hashing utility, validation utilities, error response conventions, session/auth handling, file upload handling (if relevant), etc.
+
+QUALITY BAR:
+- Everything must cite its source (mention which UC/spec or SRS section it came from in plain text; no need for formal citations).
+- If there are conflicts between specs across UCs, list them under a “Conflicts / Ambiguities” section with the affected UCs.
+- If something is missing (e.g., endpoints not specified), record it as an “Open Question” but do not invent an answer.
+
+After producing the four files, stop. Do not begin UC-01 implementation in this run.
