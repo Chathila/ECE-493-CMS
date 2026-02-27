@@ -4,6 +4,10 @@ import com.ece493.cms.db.Db;
 import com.ece493.cms.repository.JdbcUserAccountRepository;
 import com.ece493.cms.repository.UserAccountRepository;
 import com.ece493.cms.security.PasswordHasher;
+import com.ece493.cms.service.AuthenticationService;
+import com.ece493.cms.service.AuthenticationServiceImpl;
+import com.ece493.cms.service.DefaultAccountStatusService;
+import com.ece493.cms.service.DefaultAuthenticationAvailabilityService;
 import com.ece493.cms.service.DefaultEmailValidationService;
 import com.ece493.cms.service.DefaultPasswordPolicyService;
 import com.ece493.cms.service.RegistrationService;
@@ -21,33 +25,39 @@ import java.util.Objects;
 public class CmsAppServer {
     private final Server server;
 
-<span class="nc" id="L24">    public CmsAppServer(int port, DataSource dataSource) {</span>
-<span class="nc" id="L25">        RegistrationService registrationService = createRegistrationService(dataSource);</span>
-<span class="nc" id="L26">        String registerHtml = loadRegisterHtml();</span>
+<span class="nc" id="L28">    public CmsAppServer(int port, DataSource dataSource) {</span>
+<span class="nc" id="L29">        RegistrationService registrationService = createRegistrationService(dataSource);</span>
+<span class="nc" id="L30">        AuthenticationService authenticationService = createAuthenticationService(dataSource);</span>
+<span class="nc" id="L31">        String registerHtml = loadRegisterHtml();</span>
+<span class="nc" id="L32">        String loginHtml = loadLoginHtml();</span>
 
-<span class="nc" id="L28">        this.server = new Server(port);</span>
-<span class="nc" id="L29">        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);</span>
-<span class="nc" id="L30">        context.setContextPath(&quot;/&quot;);</span>
-<span class="nc" id="L31">        context.addServlet(new ServletHolder(new RegistrationServlet(registrationService, registerHtml)), &quot;/register&quot;);</span>
-<span class="nc" id="L32">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/styles.css&quot;, &quot;text/css&quot;)), &quot;/styles.css&quot;);</span>
-<span class="nc" id="L33">        server.setHandler(context);</span>
-<span class="nc" id="L34">    }</span>
+<span class="nc" id="L34">        this.server = new Server(port);</span>
+<span class="nc" id="L35">        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);</span>
+<span class="nc" id="L36">        context.setContextPath(&quot;/&quot;);</span>
+<span class="nc" id="L37">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/index.html&quot;, &quot;text/html; charset=UTF-8&quot;)), &quot;/&quot;);</span>
+<span class="nc" id="L38">        context.addServlet(new ServletHolder(new RegistrationServlet(registrationService, registerHtml)), &quot;/register&quot;);</span>
+<span class="nc" id="L39">        context.addServlet(new ServletHolder(new LoginServlet(authenticationService, loginHtml)), &quot;/login&quot;);</span>
+<span class="nc" id="L40">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/home.html&quot;, &quot;text/html; charset=UTF-8&quot;)), &quot;/home&quot;);</span>
+<span class="nc" id="L41">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/home.html&quot;, &quot;text/html; charset=UTF-8&quot;)), &quot;/home/*&quot;);</span>
+<span class="nc" id="L42">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/styles.css&quot;, &quot;text/css&quot;)), &quot;/styles.css&quot;);</span>
+<span class="nc" id="L43">        server.setHandler(context);</span>
+<span class="nc" id="L44">    }</span>
 
     public void start() throws Exception {
-<span class="nc" id="L37">        server.start();</span>
-<span class="nc" id="L38">    }</span>
+<span class="nc" id="L47">        server.start();</span>
+<span class="nc" id="L48">    }</span>
 
     public void stop() throws Exception {
-<span class="nc" id="L41">        server.stop();</span>
-<span class="nc" id="L42">    }</span>
+<span class="nc" id="L51">        server.stop();</span>
+<span class="nc" id="L52">    }</span>
 
     public int port() {
-<span class="nc" id="L45">        return server.getURI().getPort();</span>
+<span class="nc" id="L55">        return server.getURI().getPort();</span>
     }
 
     public static RegistrationService createRegistrationService(DataSource dataSource) {
-<span class="nc" id="L49">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
-<span class="nc" id="L50">        return new RegistrationServiceImpl(</span>
+<span class="nc" id="L59">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
+<span class="nc" id="L60">        return new RegistrationServiceImpl(</span>
                 repository,
                 new DefaultEmailValidationService(),
                 new DefaultPasswordPolicyService(),
@@ -55,24 +65,42 @@ public class CmsAppServer {
         );
     }
 
-    public static void main(String[] args) throws Exception {
-<span class="nc" id="L59">        int port = Integer.parseInt(System.getProperty(&quot;PORT&quot;, System.getenv().getOrDefault(&quot;PORT&quot;, &quot;8080&quot;)));</span>
-<span class="nc" id="L60">        DataSource dataSource = Db.createDataSource(&quot;jdbc:h2:mem:cms;MODE=PostgreSQL;DB_CLOSE_DELAY=-1&quot;);</span>
-<span class="nc" id="L61">        Db.runSchema(dataSource);</span>
+    public static AuthenticationService createAuthenticationService(DataSource dataSource) {
+<span class="nc" id="L69">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
+<span class="nc" id="L70">        return new AuthenticationServiceImpl(</span>
+                repository,
+                new PasswordHasher(),
+                new DefaultAccountStatusService(),
+                new DefaultAuthenticationAvailabilityService()
+        );
+    }
 
-<span class="nc" id="L63">        CmsAppServer appServer = new CmsAppServer(port, dataSource);</span>
-<span class="nc" id="L64">        appServer.start();</span>
-<span class="nc" id="L65">        appServer.server.join();</span>
-<span class="nc" id="L66">    }</span>
+    public static void main(String[] args) throws Exception {
+<span class="nc" id="L79">        int port = Integer.parseInt(System.getProperty(&quot;PORT&quot;, System.getenv().getOrDefault(&quot;PORT&quot;, &quot;8080&quot;)));</span>
+<span class="nc" id="L80">        DataSource dataSource = Db.createDataSource(&quot;jdbc:h2:mem:cms;MODE=PostgreSQL;DB_CLOSE_DELAY=-1&quot;);</span>
+<span class="nc" id="L81">        Db.runSchema(dataSource);</span>
+
+<span class="nc" id="L83">        CmsAppServer appServer = new CmsAppServer(port, dataSource);</span>
+<span class="nc" id="L84">        appServer.start();</span>
+<span class="nc" id="L85">        appServer.server.join();</span>
+<span class="nc" id="L86">    }</span>
 
     private String loadRegisterHtml() {
-<span class="nc" id="L69">        try (InputStream stream = Objects.requireNonNull(</span>
-<span class="nc" id="L70">                Thread.currentThread().getContextClassLoader().getResourceAsStream(&quot;web/register.html&quot;),</span>
-                &quot;Missing register view&quot;
+<span class="nc" id="L89">        return loadHtml(&quot;web/register.html&quot;, &quot;register&quot;);</span>
+    }
+
+    private String loadLoginHtml() {
+<span class="nc" id="L93">        return loadHtml(&quot;web/login.html&quot;, &quot;login&quot;);</span>
+    }
+
+    private String loadHtml(String resourcePath, String viewName) {
+<span class="nc" id="L97">        try (InputStream stream = Objects.requireNonNull(</span>
+<span class="nc" id="L98">                Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath),</span>
+                &quot;Missing &quot; + viewName + &quot; view&quot;
         )) {
-<span class="nc" id="L73">            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);</span>
-<span class="nc" id="L74">        } catch (IOException e) {</span>
-<span class="nc" id="L75">            throw new IllegalStateException(&quot;Failed to read register view&quot;, e);</span>
+<span class="nc" id="L101">            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);</span>
+<span class="nc" id="L102">        } catch (IOException e) {</span>
+<span class="nc" id="L103">            throw new IllegalStateException(&quot;Failed to read &quot; + viewName + &quot; view&quot;, e);</span>
         }
     }
 }

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMS Authorized Home</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main class="register-shell">
+  <header class="register-header">
+    <p class="register-kicker">Conference Management</p>
+    <h1 class="register-title">Authorized Home</h1>
+    <p id="home-role" class="register-subtitle">Authenticated access granted.</p>
+  </header>
+  <section class="register-content">
+    <p class="inline-nav">Go to <a href="/">public homepage</a> or <a href="/login">login</a>.</p>
+  </section>
+</main>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const role = params.get('role');
+  if (role) {
+    document.getElementById('home-role').textContent = `Authenticated access granted for role: ${role}.`;
+  }
+</script>
+</body>
+</html>

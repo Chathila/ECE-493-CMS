@@ -4,6 +4,10 @@ import com.ece493.cms.db.Db;
 import com.ece493.cms.repository.JdbcUserAccountRepository;
 import com.ece493.cms.repository.UserAccountRepository;
 import com.ece493.cms.security.PasswordHasher;
+import com.ece493.cms.service.AuthenticationService;
+import com.ece493.cms.service.AuthenticationServiceImpl;
+import com.ece493.cms.service.DefaultAccountStatusService;
+import com.ece493.cms.service.DefaultAuthenticationAvailabilityService;
 import com.ece493.cms.service.DefaultEmailValidationService;
 import com.ece493.cms.service.DefaultPasswordPolicyService;
 import com.ece493.cms.service.RegistrationService;
@@ -23,12 +27,18 @@ public class CmsAppServer {
 
     public CmsAppServer(int port, DataSource dataSource) {
         RegistrationService registrationService = createRegistrationService(dataSource);
+        AuthenticationService authenticationService = createAuthenticationService(dataSource);
         String registerHtml = loadRegisterHtml();
+        String loginHtml = loadLoginHtml();
 
         this.server = new Server(port);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
+        context.addServlet(new ServletHolder(new StaticResourceServlet("web/index.html", "text/html; charset=UTF-8")), "/");
         context.addServlet(new ServletHolder(new RegistrationServlet(registrationService, registerHtml)), "/register");
+        context.addServlet(new ServletHolder(new LoginServlet(authenticationService, loginHtml)), "/login");
+        context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home");
+        context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home/*");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/styles.css", "text/css")), "/styles.css");
         server.setHandler(context);
     }
@@ -55,6 +65,16 @@ public class CmsAppServer {
         );
     }
 
+    public static AuthenticationService createAuthenticationService(DataSource dataSource) {
+        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);
+        return new AuthenticationServiceImpl(
+                repository,
+                new PasswordHasher(),
+                new DefaultAccountStatusService(),
+                new DefaultAuthenticationAvailabilityService()
+        );
+    }
+
     public static void main(String[] args) throws Exception {
         int port = Integer.parseInt(System.getProperty("PORT", System.getenv().getOrDefault("PORT", "8080")));
         DataSource dataSource = Db.createDataSource("jdbc:h2:mem:cms;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
@@ -66,13 +86,21 @@ public class CmsAppServer {
     }
 
     private String loadRegisterHtml() {
+        return loadHtml("web/register.html", "register");
+    }
+
+    private String loadLoginHtml() {
+        return loadHtml("web/login.html", "login");
+    }
+
+    private String loadHtml(String resourcePath, String viewName) {
         try (InputStream stream = Objects.requireNonNull(
-                Thread.currentThread().getContextClassLoader().getResourceAsStream("web/register.html"),
-                "Missing register view"
+                Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath),
+                "Missing " + viewName + " view"
         )) {
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to read register view", e);
+            throw new IllegalStateException("Failed to read " + viewName + " view", e);
         }
     }
 }

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthenticationServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.service</a> &gt; <span class="el_source">AuthenticationServiceImpl.java</span></div><h1>AuthenticationServiceImpl.java</h1><pre class="source lang-java linenums">package com.ece493.cms.service;
+
+import com.ece493.cms.model.LoginResult;
+import com.ece493.cms.model.LoginSubmission;
+import com.ece493.cms.model.UserAccount;
+import com.ece493.cms.repository.UserAccountRepository;
+import com.ece493.cms.security.PasswordHasher;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
+
+public class AuthenticationServiceImpl implements AuthenticationService {
+    private final UserAccountRepository userAccountRepository;
+    private final PasswordHasher passwordHasher;
+    private final AccountStatusService accountStatusService;
+    private final AuthenticationAvailabilityService availabilityService;
+
+    public AuthenticationServiceImpl(
+            UserAccountRepository userAccountRepository,
+            PasswordHasher passwordHasher,
+            AccountStatusService accountStatusService,
+            AuthenticationAvailabilityService availabilityService
+<span class="fc" id="L24">    ) {</span>
+<span class="fc" id="L25">        this.userAccountRepository = userAccountRepository;</span>
+<span class="fc" id="L26">        this.passwordHasher = passwordHasher;</span>
+<span class="fc" id="L27">        this.accountStatusService = accountStatusService;</span>
+<span class="fc" id="L28">        this.availabilityService = availabilityService;</span>
+<span class="fc" id="L29">    }</span>
+
+    @Override
+    public LoginResult authenticate(LoginSubmission submission) {
+<span class="fc bfc" id="L33" title="All 6 branches covered.">        if (submission == null || isBlank(submission.getEmail()) || isBlank(submission.getPassword())) {</span>
+<span class="fc" id="L34">            return LoginResult.error(400, &quot;Missing required fields: email and password are required.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (!availabilityService.isAvailable()) {</span>
+<span class="fc" id="L38">            return LoginResult.error(503, &quot;Authentication service unavailable. Please try again later.&quot;);</span>
+        }
+
+<span class="fc" id="L41">        Optional&lt;UserAccount&gt; accountOptional = userAccountRepository.findByEmail(submission.getEmail().trim());</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (accountOptional.isEmpty()) {</span>
+<span class="fc" id="L43">            return LoginResult.error(401, &quot;Authentication failed: incorrect email or password.&quot;);</span>
+        }
+
+<span class="fc" id="L46">        UserAccount account = accountOptional.get();</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (!passwordHasher.matches(submission.getPassword(), account.getPasswordSalt(), account.getPasswordHash())) {</span>
+<span class="fc" id="L48">            return LoginResult.error(401, &quot;Authentication failed: incorrect email or password.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        if (!accountStatusService.allowsLogin(account.getStatus())) {</span>
+<span class="fc" id="L52">            return LoginResult.error(403, &quot;Account is inactive or locked. Access denied.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        String role = account.getRole() == null ? &quot;USER&quot; : account.getRole();</span>
+<span class="fc" id="L56">        String encodedRole = URLEncoder.encode(role, StandardCharsets.UTF_8);</span>
+<span class="fc" id="L57">        return LoginResult.successRedirect(&quot;/home?role=&quot; + encodedRole);</span>
+    }
+
+    private boolean isBlank(String value) {
+<span class="fc bfc" id="L61" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

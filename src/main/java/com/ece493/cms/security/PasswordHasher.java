@@ -27,4 +27,8 @@ public class PasswordHasher {
             spec.clearPassword();
         }
     }
+
+    public boolean matches(String rawPassword, String base64Salt, String expectedHash) {
+        return hashPassword(rawPassword, base64Salt).equals(expectedHash);
+    }
 }

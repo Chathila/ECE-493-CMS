@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS user_accounts (
     password_hash VARCHAR(512) NOT NULL,
     password_salt VARCHAR(512) NOT NULL,
     status VARCHAR(20) NOT NULL,
+    role VARCHAR(30) NOT NULL DEFAULT 'AUTHOR',
     created_at TIMESTAMP NOT NULL
 );

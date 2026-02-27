@@ -9,6 +9,8 @@ import com.ece493.cms.service.PasswordPolicyService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class RegistrationServiceImplTest {
@@ -127,6 +129,11 @@ class RegistrationServiceImplTest {
         @Override
         public boolean existsByEmail(String email) {
             return email != null && email.equals(existingEmail);
+        }
+
+        @Override
+        public Optional<UserAccount> findByEmail(String email) {
+            return Optional.empty();
         }
 
         @Override
