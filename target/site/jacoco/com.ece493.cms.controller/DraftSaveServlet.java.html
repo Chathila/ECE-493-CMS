@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DraftSaveServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.controller</a> &gt; <span class="el_source">DraftSaveServlet.java</span></div><h1>DraftSaveServlet.java</h1><pre class="source lang-java linenums">package com.ece493.cms.controller;
+
+import com.ece493.cms.model.DraftSaveRequest;
+import com.ece493.cms.model.DraftSaveResult;
+import com.ece493.cms.service.DraftSaveService;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class DraftSaveServlet extends HttpServlet {
+    private final DraftSaveService draftSaveService;
+
+<span class="fc" id="L19">    public DraftSaveServlet(DraftSaveService draftSaveService) {</span>
+<span class="fc" id="L20">        this.draftSaveService = draftSaveService;</span>
+<span class="fc" id="L21">    }</span>
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+<span class="fc" id="L25">        String body = readBody(req);</span>
+
+<span class="fc" id="L27">        String title = readTextField(body, &quot;title&quot;);</span>
+<span class="fc" id="L28">        String authors = readTextOrArrayField(body, &quot;authors&quot;);</span>
+<span class="fc" id="L29">        String affiliations = readTextOrArrayField(body, &quot;affiliations&quot;);</span>
+<span class="fc" id="L30">        String paperAbstract = readTextField(body, &quot;abstract&quot;);</span>
+<span class="fc" id="L31">        String keywords = readTextOrArrayField(body, &quot;keywords&quot;);</span>
+<span class="fc" id="L32">        String contactDetails = readTextField(body, &quot;contact_details&quot;);</span>
+
+<span class="fc" id="L34">        HttpSession session = req.getSession(false);</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        String authorEmail = session == null ? null : (String) session.getAttribute(&quot;user_email&quot;);</span>
+
+<span class="fc" id="L37">        DraftSaveResult result = draftSaveService.saveDraft(</span>
+                authorEmail,
+                new DraftSaveRequest(title, authors, affiliations, paperAbstract, keywords, contactDetails)
+        );
+
+<span class="fc" id="L42">        resp.setStatus(result.getStatusCode());</span>
+<span class="fc" id="L43">        resp.setContentType(&quot;application/json; charset=UTF-8&quot;);</span>
+<span class="fc" id="L44">        resp.getWriter().write(&quot;{\&quot;message\&quot;:\&quot;&quot; + escapeJson(result.getMessage()) + &quot;\&quot;}&quot;);</span>
+<span class="fc" id="L45">    }</span>
+
+    private String readBody(HttpServletRequest req) throws IOException {
+<span class="fc" id="L48">        StringBuilder builder = new StringBuilder();</span>
+<span class="fc" id="L49">        try (BufferedReader reader = req.getReader()) {</span>
+            String line;
+<span class="fc bfc" id="L51" title="All 2 branches covered.">            while ((line = reader.readLine()) != null) {</span>
+<span class="fc" id="L52">                builder.append(line);</span>
+            }
+        }
+<span class="fc" id="L55">        return builder.toString();</span>
+    }
+
+    private String readTextField(String body, String fieldName) {
+<span class="fc bfc" id="L59" title="All 4 branches covered.">        if (body == null || body.isEmpty()) {</span>
+<span class="fc" id="L60">            return null;</span>
+        }
+<span class="fc" id="L62">        Pattern pattern = Pattern.compile(&quot;\\\&quot;&quot; + Pattern.quote(fieldName) + &quot;\\\&quot;\\s*:\\s*\\\&quot;([^\\\&quot;]*)\\\&quot;&quot;);</span>
+<span class="fc" id="L63">        Matcher matcher = pattern.matcher(body);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        return matcher.find() ? matcher.group(1) : null;</span>
+    }
+
+    private String readTextOrArrayField(String body, String fieldName) {
+<span class="fc" id="L68">        String text = readTextField(body, fieldName);</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (text != null) {</span>
+<span class="fc" id="L70">            return text;</span>
+        }
+<span class="fc bfc" id="L72" title="All 4 branches covered.">        if (body == null || body.isEmpty()) {</span>
+<span class="fc" id="L73">            return null;</span>
+        }
+
+<span class="fc" id="L76">        Pattern arrayPattern = Pattern.compile(&quot;\\\&quot;&quot; + Pattern.quote(fieldName) + &quot;\\\&quot;\\s*:\\s*\\[(.*?)\\]&quot;);</span>
+<span class="fc" id="L77">        Matcher arrayMatcher = arrayPattern.matcher(body);</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (!arrayMatcher.find()) {</span>
+<span class="fc" id="L79">            return null;</span>
+        }
+
+<span class="fc" id="L82">        String rawItems = arrayMatcher.group(1);</span>
+<span class="fc" id="L83">        Matcher itemMatcher = Pattern.compile(&quot;\\\&quot;([^\\\&quot;]*)\\\&quot;&quot;).matcher(rawItems);</span>
+<span class="fc" id="L84">        StringBuilder builder = new StringBuilder();</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        while (itemMatcher.find()) {</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">            if (builder.length() &gt; 0) {</span>
+<span class="fc" id="L87">                builder.append(&quot;, &quot;);</span>
+            }
+<span class="fc" id="L89">            builder.append(itemMatcher.group(1));</span>
+        }
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        return builder.length() == 0 ? null : builder.toString();</span>
+    }
+
+    private String escapeJson(String value) {
+<span class="fc" id="L95">        return value.replace(&quot;\\&quot;, &quot;\\\\&quot;).replace(&quot;\&quot;&quot;, &quot;\\\&quot;&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

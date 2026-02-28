@@ -45,12 +45,23 @@ public final class ServletHttpTestSupport {
     }
 
     public static HttpServletRequest getRequest() {
+        return getRequest(null);
+    }
+
+    public static HttpServletRequest getRequest(SessionCapture sessionCapture) {
         return (HttpServletRequest) Proxy.newProxyInstance(
                 ServletHttpTestSupport.class.getClassLoader(),
                 new Class[]{HttpServletRequest.class},
                 (proxy, method, args) -> {
                     if ("getMethod".equals(method.getName())) {
                         return "GET";
+                    }
+                    if ("getSession".equals(method.getName())) {
+                        boolean create = args != null && args.length == 1 && Boolean.TRUE.equals(args[0]);
+                        if (sessionCapture == null) {
+                            return create ? new SessionCapture().asSession() : null;
+                        }
+                        return sessionCapture.asSession();
                     }
                     return defaultValue(method.getReturnType());
                 }

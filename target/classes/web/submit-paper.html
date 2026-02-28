@@ -12,6 +12,7 @@
     <p class="register-kicker">Conference Management</p>
     <h1 class="register-title">Submit Paper</h1>
     <p class="register-subtitle">Upload manuscript metadata and file. Allowed formats: PDF/DOCX. Max size: 20 MB.</p>
+    <p class="register-subtitle">Draft save minimum: title and contact email.</p>
   </header>
   <section class="register-content">
     <form id="submit-paper-form" class="register-form" method="post" action="/papers/submit">
@@ -36,7 +37,10 @@
       <label for="manuscript-file">Manuscript File (PDF/DOCX)</label>
       <input type="file" id="manuscript-file" name="manuscript_file" required accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
 
-      <button class="register-submit" type="submit">Submit Paper</button>
+      <div class="dual-actions">
+        <button class="register-submit secondary-action" id="save-draft-button" type="button">Save Draft</button>
+        <button class="register-submit" type="submit">Submit Paper</button>
+      </div>
     </form>
     <div id="status" class="register-status" aria-live="polite"></div>
   </section>
@@ -44,6 +48,8 @@
 <script>
   const form = document.getElementById('submit-paper-form');
   const statusBox = document.getElementById('status');
+  const saveDraftButton = document.getElementById('save-draft-button');
+  const params = new URLSearchParams(window.location.search);
 
   function toBase64(file) {
     return new Promise((resolve, reject) => {
@@ -99,6 +105,60 @@
     statusBox.classList.add('error');
     statusBox.textContent = result.message;
   });
+
+  saveDraftButton.addEventListener('click', async () => {
+    statusBox.classList.remove('error', 'success');
+    statusBox.textContent = '';
+
+    const payload = {
+      title: document.getElementById('title').value,
+      authors: document.getElementById('authors').value,
+      affiliations: document.getElementById('affiliations').value,
+      abstract: document.getElementById('paper-abstract').value,
+      keywords: document.getElementById('keywords').value,
+      contact_details: document.getElementById('contact-details').value
+    };
+
+    const response = await fetch('/papers/draft/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    if (response.status === 200) {
+      statusBox.classList.add('success');
+      statusBox.textContent = result.message;
+      window.setTimeout(() => {
+        window.location.href = '/home?tab=papers&draft_saved=1';
+      }, 700);
+      return;
+    }
+
+    statusBox.classList.add('error');
+    statusBox.textContent = result.message;
+  });
+
+  async function loadDraftIntoForm() {
+    const response = await fetch('/papers/draft', { method: 'GET' });
+    if (response.status !== 200) {
+      return;
+    }
+    const draft = await response.json();
+    document.getElementById('title').value = draft.title || '';
+    document.getElementById('authors').value = draft.authors || '';
+    document.getElementById('affiliations').value = draft.affiliations || '';
+    document.getElementById('paper-abstract').value = draft.abstract || '';
+    document.getElementById('keywords').value = draft.keywords || '';
+    document.getElementById('contact-details').value = draft.contact_details || '';
+    statusBox.classList.remove('error');
+    statusBox.classList.add('success');
+    statusBox.textContent = 'Draft loaded. Review fields, attach manuscript file, then submit.';
+  }
+
+  if (params.get('loadDraft') === '1') {
+    loadDraftIntoForm();
+  }
 </script>
 </body>
 </html>

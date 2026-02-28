@@ -176,3 +176,47 @@ Both commands succeed in the final UC-04 state.
 ## Spec-Kit Command Note
 
 - `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-04 was implemented directly from existing spec-kit artifacts.
+
+---
+
+# Lab 3 Report Notes (UC-05 Run)
+
+## Scope Completed
+
+- Implemented UC-05 save-paper-submission-draft flow from:
+  - `specs/UC-05-save-paper-submission-draft/spec.md`
+  - `specs/UC-05-save-paper-submission-draft/plan.md`
+  - `specs/UC-05-save-paper-submission-draft/tasks.md`
+  - `specs/UC-05-save-paper-submission-draft/contracts/save-draft.openapi.yaml`
+  - `UC-05_tests.md`
+- Added `/papers/draft/save` POST endpoint behavior with:
+  - required draft fields validation (title + corresponding author email)
+  - invalid character validation for draft fields
+  - persistence of draft state in database
+  - storage/database failure handling
+  - no-change save detection with confirmation message
+- Added database persistence for drafts (`paper_submission_drafts` table).
+- Updated submit paper UI to include `Save Draft` action and helper text for minimum required draft fields.
+- Added unit + integration + acceptance tests and UC-05 traceability.
+
+## Commands Run
+
+1. `mvn test`
+2. `mvn verify`
+
+Both commands succeed in the final UC-05 state.
+
+## Coverage
+
+- JaCoCo report directory:
+  - `target/site/jacoco/index.html`
+- Final branch coverage:
+  - `BRANCH missed=0 covered=308 ratio=100.00%`
+
+## Traceability
+
+- `traceability/UC-05-traceability.md` maps AT-01..AT-03 to automated tests.
+
+## Spec-Kit Command Note
+
+- `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-05 was implemented directly from existing spec-kit artifacts.

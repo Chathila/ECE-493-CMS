@@ -4,18 +4,24 @@ import com.ece493.cms.controller.LoginServlet;
 import com.ece493.cms.controller.PaperSubmissionServlet;
 import com.ece493.cms.controller.RegistrationServlet;
 import com.ece493.cms.controller.ChangePasswordServlet;
+import com.ece493.cms.controller.DraftSaveServlet;
+import com.ece493.cms.controller.DraftViewServlet;
 import com.ece493.cms.db.Db;
 import com.ece493.cms.model.UserAccount;
+import com.ece493.cms.repository.JdbcPaperSubmissionDraftRepository;
 import com.ece493.cms.repository.JdbcPaperSubmissionRepository;
 import com.ece493.cms.repository.JdbcUserAccountRepository;
 import com.ece493.cms.security.PasswordHasher;
 import com.ece493.cms.service.AuthenticationService;
 import com.ece493.cms.service.AuthenticationServiceImpl;
+import com.ece493.cms.service.DefaultDraftValidationService;
 import com.ece493.cms.service.DefaultAccountStatusService;
 import com.ece493.cms.service.DefaultAuthenticationAvailabilityService;
 import com.ece493.cms.service.DefaultEmailValidationService;
 import com.ece493.cms.service.DefaultPasswordPolicyService;
 import com.ece493.cms.service.DefaultMetadataValidationService;
+import com.ece493.cms.service.DraftSaveService;
+import com.ece493.cms.service.DraftSaveServiceImpl;
 import com.ece493.cms.service.PasswordChangeService;
 import com.ece493.cms.service.PasswordChangeServiceImpl;
 import com.ece493.cms.service.PaperSubmissionService;
@@ -35,6 +41,8 @@ public class RegistrationIntegrationSupport {
     protected LoginServlet loginServlet;
     protected ChangePasswordServlet changePasswordServlet;
     protected PaperSubmissionServlet paperSubmissionServlet;
+    protected DraftSaveServlet draftSaveServlet;
+    protected DraftViewServlet draftViewServlet;
     protected InMemoryFileStorageService fileStorageService;
 
     protected void startApp() {
@@ -65,11 +73,17 @@ public class RegistrationIntegrationSupport {
                 new DefaultMetadataValidationService(),
                 fileStorageService
         );
+        DraftSaveService draftSaveService = new DraftSaveServiceImpl(
+                new JdbcPaperSubmissionDraftRepository(dataSource),
+                new DefaultDraftValidationService()
+        );
 
         servlet = new RegistrationServlet(registrationService, loadRegisterHtml());
         loginServlet = new LoginServlet(authenticationService, loadLoginHtml());
         changePasswordServlet = new ChangePasswordServlet(passwordChangeService, loadChangePasswordHtml());
         paperSubmissionServlet = new PaperSubmissionServlet(paperSubmissionService, loadSubmitPaperHtml());
+        draftSaveServlet = new DraftSaveServlet(draftSaveService);
+        draftViewServlet = new DraftViewServlet(new JdbcPaperSubmissionDraftRepository(dataSource));
     }
 
     protected void stopApp() {
@@ -155,6 +169,24 @@ public class RegistrationIntegrationSupport {
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         paperSubmissionServlet.service(
                 ServletHttpTestSupport.postJsonRequest(payload, session),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postDraftSave(String payload, ServletHttpTestSupport.SessionCapture session) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        draftSaveServlet.service(
+                ServletHttpTestSupport.postJsonRequest(payload, session),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getDraft(ServletHttpTestSupport.SessionCapture session) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        draftViewServlet.service(
+                ServletHttpTestSupport.getRequest(session),
                 response.asResponse()
         );
         return response;

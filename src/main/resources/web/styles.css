@@ -129,6 +129,22 @@ body {
   background: var(--brand-primary-hover);
 }
 
+.dual-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.secondary-action {
+  background: color-mix(in srgb, var(--brand-primary) 12%, #fff);
+  color: var(--brand-primary);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, #fff);
+}
+
+.secondary-action:hover {
+  background: color-mix(in srgb, var(--brand-primary) 20%, #fff);
+}
+
 .register-status {
   min-height: 22px;
   margin-top: 12px;
@@ -256,6 +272,12 @@ body.dashboard-page {
 
 .dashboard-footer-nav {
   margin-top: 16px;
+}
+
+.draft-panel {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
 }
 
 @media (max-width: 560px) {

@@ -3,16 +3,21 @@ package com.ece493.cms.controller;
 import com.ece493.cms.db.Db;
 import com.ece493.cms.repository.JdbcUserAccountRepository;
 import com.ece493.cms.repository.JdbcPaperSubmissionRepository;
+import com.ece493.cms.repository.JdbcPaperSubmissionDraftRepository;
 import com.ece493.cms.repository.PaperSubmissionRepository;
+import com.ece493.cms.repository.PaperSubmissionDraftRepository;
 import com.ece493.cms.repository.UserAccountRepository;
 import com.ece493.cms.security.PasswordHasher;
 import com.ece493.cms.service.AuthenticationService;
 import com.ece493.cms.service.AuthenticationServiceImpl;
+import com.ece493.cms.service.DefaultDraftValidationService;
 import com.ece493.cms.service.DefaultAccountStatusService;
 import com.ece493.cms.service.DefaultAuthenticationAvailabilityService;
 import com.ece493.cms.service.DefaultEmailValidationService;
 import com.ece493.cms.service.DefaultMetadataValidationService;
 import com.ece493.cms.service.DefaultPasswordPolicyService;
+import com.ece493.cms.service.DraftSaveService;
+import com.ece493.cms.service.DraftSaveServiceImpl;
 import com.ece493.cms.service.InMemoryFileStorageService;
 import com.ece493.cms.service.PasswordChangeService;
 import com.ece493.cms.service.PasswordChangeServiceImpl;
@@ -40,6 +45,7 @@ public class CmsAppServer {
         PasswordChangeService passwordChangeService = createPasswordChangeService(dataSource);
         InMemoryFileStorageService fileStorageService = new InMemoryFileStorageService();
         PaperSubmissionService paperSubmissionService = createPaperSubmissionService(dataSource, fileStorageService);
+        DraftSaveService draftSaveService = createDraftSaveService(dataSource);
         String registerHtml = loadRegisterHtml();
         String loginHtml = loadLoginHtml();
         String changePasswordHtml = loadChangePasswordHtml();
@@ -53,6 +59,8 @@ public class CmsAppServer {
         context.addServlet(new ServletHolder(new LoginServlet(authenticationService, loginHtml)), "/login");
         context.addServlet(new ServletHolder(new ChangePasswordServlet(passwordChangeService, changePasswordHtml)), "/account/password");
         context.addServlet(new ServletHolder(new PaperSubmissionServlet(paperSubmissionService, submitPaperHtml)), "/papers/submit");
+        context.addServlet(new ServletHolder(new DraftSaveServlet(draftSaveService)), "/papers/draft/save");
+        context.addServlet(new ServletHolder(new DraftViewServlet(new JdbcPaperSubmissionDraftRepository(dataSource))), "/papers/draft");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home/*");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/styles.css", "text/css")), "/styles.css");
@@ -108,6 +116,11 @@ public class CmsAppServer {
                 new DefaultMetadataValidationService(),
                 fileStorageService
         );
+    }
+
+    public static DraftSaveService createDraftSaveService(DataSource dataSource) {
+        PaperSubmissionDraftRepository repository = new JdbcPaperSubmissionDraftRepository(dataSource);
+        return new DraftSaveServiceImpl(repository, new DefaultDraftValidationService());
     }
 
     public static void main(String[] args) throws Exception {

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DraftSaveServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.service</a> &gt; <span class="el_source">DraftSaveServiceImpl.java</span></div><h1>DraftSaveServiceImpl.java</h1><pre class="source lang-java linenums">package com.ece493.cms.service;
+
+import com.ece493.cms.model.DraftSaveRequest;
+import com.ece493.cms.model.DraftSaveResult;
+import com.ece493.cms.model.PaperSubmissionDraft;
+import com.ece493.cms.repository.PaperSubmissionDraftRepository;
+
+import java.time.Instant;
+import java.util.Optional;
+
+public class DraftSaveServiceImpl implements DraftSaveService {
+    private final PaperSubmissionDraftRepository draftRepository;
+    private final DraftValidationService draftValidationService;
+
+<span class="fc" id="L15">    public DraftSaveServiceImpl(PaperSubmissionDraftRepository draftRepository, DraftValidationService draftValidationService) {</span>
+<span class="fc" id="L16">        this.draftRepository = draftRepository;</span>
+<span class="fc" id="L17">        this.draftValidationService = draftValidationService;</span>
+<span class="fc" id="L18">    }</span>
+
+    @Override
+    public DraftSaveResult saveDraft(String authorEmail, DraftSaveRequest request) {
+<span class="fc bfc" id="L22" title="All 2 branches covered.">        if (isBlank(authorEmail)) {</span>
+<span class="fc" id="L23">            return DraftSaveResult.error(401, &quot;You must log in to save a draft.&quot;);</span>
+        }
+
+<span class="fc" id="L26">        String validationMessage = draftValidationService.validate(request);</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">        if (validationMessage != null) {</span>
+<span class="fc" id="L28">            return DraftSaveResult.error(400, validationMessage);</span>
+        }
+
+<span class="fc" id="L31">        Optional&lt;PaperSubmissionDraft&gt; existingDraft = draftRepository.findByAuthorEmail(authorEmail);</span>
+<span class="fc bfc" id="L32" title="All 4 branches covered.">        boolean noChanges = existingDraft.isPresent() &amp;&amp; matches(existingDraft.get(), request);</span>
+
+<span class="fc" id="L34">        PaperSubmissionDraft draft = new PaperSubmissionDraft(</span>
+<span class="fc" id="L35">                existingDraft.map(PaperSubmissionDraft::getDraftId).orElse(0L),</span>
+                authorEmail,
+<span class="fc" id="L37">                request.getTitle().trim(),</span>
+<span class="fc" id="L38">                normalize(request.getAuthors()),</span>
+<span class="fc" id="L39">                normalize(request.getAffiliations()),</span>
+<span class="fc" id="L40">                normalize(request.getPaperAbstract()),</span>
+<span class="fc" id="L41">                normalize(request.getKeywords()),</span>
+<span class="fc" id="L42">                request.getContactDetails().trim(),</span>
+<span class="fc" id="L43">                Instant.now()</span>
+        );
+
+        try {
+<span class="fc" id="L47">            draftRepository.saveOrUpdate(draft);</span>
+<span class="fc" id="L48">        } catch (IllegalStateException e) {</span>
+<span class="fc" id="L49">            return DraftSaveResult.error(500, &quot;Draft could not be saved due to a storage error. Please try again.&quot;);</span>
+<span class="fc" id="L50">        }</span>
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (noChanges) {</span>
+<span class="fc" id="L53">            return DraftSaveResult.success(&quot;Draft saved successfully. No changes were detected.&quot;);</span>
+        }
+<span class="fc" id="L55">        return DraftSaveResult.success(&quot;Draft saved successfully.&quot;);</span>
+    }
+
+    private boolean matches(PaperSubmissionDraft draft, DraftSaveRequest request) {
+<span class="fc" id="L59">        String existing = String.join(&quot;|&quot;,</span>
+<span class="fc" id="L60">                normalize(draft.getTitle()),</span>
+<span class="fc" id="L61">                normalize(draft.getAuthors()),</span>
+<span class="fc" id="L62">                normalize(draft.getAffiliations()),</span>
+<span class="fc" id="L63">                normalize(draft.getPaperAbstract()),</span>
+<span class="fc" id="L64">                normalize(draft.getKeywords()),</span>
+<span class="fc" id="L65">                normalize(draft.getContactDetails())</span>
+        );
+<span class="fc" id="L67">        String incoming = String.join(&quot;|&quot;,</span>
+<span class="fc" id="L68">                normalize(request.getTitle()),</span>
+<span class="fc" id="L69">                normalize(request.getAuthors()),</span>
+<span class="fc" id="L70">                normalize(request.getAffiliations()),</span>
+<span class="fc" id="L71">                normalize(request.getPaperAbstract()),</span>
+<span class="fc" id="L72">                normalize(request.getKeywords()),</span>
+<span class="fc" id="L73">                normalize(request.getContactDetails())</span>
+        );
+<span class="fc" id="L75">        return existing.equals(incoming);</span>
+    }
+
+    private String normalize(String value) {
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        return value == null ? &quot;&quot; : value.trim();</span>
+    }
+
+    private boolean isBlank(String value) {
+<span class="fc bfc" id="L83" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
