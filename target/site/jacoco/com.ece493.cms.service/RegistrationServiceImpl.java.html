@@ -26,9 +26,9 @@ public class RegistrationServiceImpl implements RegistrationService {
 <span class="fc" id="L26">    }</span>
 
     @Override
-    public RegistrationResult register(String email, String password) {
-<span class="fc bfc" id="L30" title="All 4 branches covered.">        if (isBlank(email) || isBlank(password)) {</span>
-<span class="fc" id="L31">            return RegistrationResult.error(400, &quot;Missing required fields: email and password are required.&quot;);</span>
+    public RegistrationResult register(String name, String email, String password) {
+<span class="fc bfc" id="L30" title="All 6 branches covered.">        if (isBlank(name) || isBlank(email) || isBlank(password)) {</span>
+<span class="fc" id="L31">            return RegistrationResult.error(400, &quot;Missing required fields: name, email, and password are required.&quot;);</span>
         }
 
 <span class="fc bfc" id="L34" title="All 2 branches covered.">        if (!emailValidationService.isServiceAvailable()) {</span>
@@ -56,14 +56,16 @@ public class RegistrationServiceImpl implements RegistrationService {
                 hash,
                 salt,
                 &quot;ACTIVE&quot;,
-<span class="fc" id="L59">                Instant.now()</span>
+                &quot;AUTHOR&quot;,
+<span class="fc" id="L60">                name.trim(),</span>
+<span class="fc" id="L61">                Instant.now()</span>
         ));
 
-<span class="fc" id="L62">        return RegistrationResult.successRedirect(&quot;/login&quot;);</span>
+<span class="fc" id="L64">        return RegistrationResult.successRedirect(&quot;/login&quot;);</span>
     }
 
     private boolean isBlank(String value) {
-<span class="fc bfc" id="L66" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
+<span class="fc bfc" id="L68" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

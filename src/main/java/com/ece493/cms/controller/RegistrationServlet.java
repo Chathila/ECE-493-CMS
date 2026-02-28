@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RegistrationServlet extends HttpServlet {
+    private static final Pattern NAME_PATTERN = Pattern.compile("\\\"name\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"");
     private static final Pattern EMAIL_PATTERN = Pattern.compile("\\\"email\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"");
     private static final Pattern PASSWORD_PATTERN = Pattern.compile("\\\"password\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"");
 
@@ -33,10 +34,11 @@ public class RegistrationServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String body = readBody(req);
+        String name = readField(body, NAME_PATTERN);
         String email = readField(body, EMAIL_PATTERN);
         String password = readField(body, PASSWORD_PATTERN);
 
-        RegistrationResult result = registrationService.register(email, password);
+        RegistrationResult result = registrationService.register(name, email, password);
         if (result.isRedirect()) {
             resp.setStatus(HttpServletResponse.SC_FOUND);
             resp.setHeader("Location", result.getRedirectLocation());

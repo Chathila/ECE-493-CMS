@@ -4,6 +4,7 @@ import java.time.Instant;
 
 public class UserAccount {
     private final long userId;
+    private final String fullName;
     private final String email;
     private final String passwordHash;
     private final String passwordSalt;
@@ -12,45 +13,54 @@ public class UserAccount {
     private final Instant createdAt;
 
     public UserAccount(long userId, String email, String passwordHash, String passwordSalt, String status, Instant createdAt) {
-<span class="fc" id="L15">        this(userId, email, passwordHash, passwordSalt, status, &quot;AUTHOR&quot;, createdAt);</span>
-<span class="fc" id="L16">    }</span>
+<span class="nc" id="L16">        this(userId, email, passwordHash, passwordSalt, status, &quot;AUTHOR&quot;, null, createdAt);</span>
+<span class="nc" id="L17">    }</span>
 
-<span class="fc" id="L18">    public UserAccount(long userId, String email, String passwordHash, String passwordSalt, String status, String role, Instant createdAt) {</span>
-<span class="fc" id="L19">        this.userId = userId;</span>
-<span class="fc" id="L20">        this.email = email;</span>
-<span class="fc" id="L21">        this.passwordHash = passwordHash;</span>
-<span class="fc" id="L22">        this.passwordSalt = passwordSalt;</span>
-<span class="fc" id="L23">        this.status = status;</span>
-<span class="fc" id="L24">        this.role = role;</span>
-<span class="fc" id="L25">        this.createdAt = createdAt;</span>
-<span class="fc" id="L26">    }</span>
+    public UserAccount(long userId, String email, String passwordHash, String passwordSalt, String status, String role, Instant createdAt) {
+<span class="fc" id="L20">        this(userId, email, passwordHash, passwordSalt, status, role, null, createdAt);</span>
+<span class="fc" id="L21">    }</span>
+
+<span class="fc" id="L23">    public UserAccount(long userId, String email, String passwordHash, String passwordSalt, String status, String role, String fullName, Instant createdAt) {</span>
+<span class="fc" id="L24">        this.userId = userId;</span>
+<span class="fc" id="L25">        this.fullName = fullName;</span>
+<span class="fc" id="L26">        this.email = email;</span>
+<span class="fc" id="L27">        this.passwordHash = passwordHash;</span>
+<span class="fc" id="L28">        this.passwordSalt = passwordSalt;</span>
+<span class="fc" id="L29">        this.status = status;</span>
+<span class="fc" id="L30">        this.role = role;</span>
+<span class="fc" id="L31">        this.createdAt = createdAt;</span>
+<span class="fc" id="L32">    }</span>
 
     public long getUserId() {
-<span class="fc" id="L29">        return userId;</span>
+<span class="fc" id="L35">        return userId;</span>
+    }
+
+    public String getFullName() {
+<span class="fc" id="L39">        return fullName;</span>
     }
 
     public String getEmail() {
-<span class="fc" id="L33">        return email;</span>
+<span class="fc" id="L43">        return email;</span>
     }
 
     public String getPasswordHash() {
-<span class="fc" id="L37">        return passwordHash;</span>
+<span class="fc" id="L47">        return passwordHash;</span>
     }
 
     public String getPasswordSalt() {
-<span class="fc" id="L41">        return passwordSalt;</span>
+<span class="fc" id="L51">        return passwordSalt;</span>
     }
 
     public String getStatus() {
-<span class="fc" id="L45">        return status;</span>
+<span class="fc" id="L55">        return status;</span>
     }
 
     public String getRole() {
-<span class="fc" id="L49">        return role;</span>
+<span class="fc" id="L59">        return role;</span>
     }
 
     public Instant getCreatedAt() {
-<span class="fc" id="L53">        return createdAt;</span>
+<span class="fc" id="L63">        return createdAt;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

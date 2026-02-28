@@ -11,6 +11,8 @@ import com.ece493.cms.service.AuthenticationServiceImpl;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -73,6 +75,7 @@ class AuthenticationServiceImplTest {
         LoginResult result = service.authenticate(new LoginSubmission("missing@cms.com", "secret"));
 
         assertEquals(401, result.getStatusCode());
+        assertTrue(result.getMessage().contains("Please register"));
     }
 
     @Test
@@ -131,6 +134,26 @@ class AuthenticationServiceImplTest {
         assertTrue(result.getRedirectLocation().startsWith("/home?role="));
         assertTrue(result.getRedirectLocation().contains("PROGRAM_CHAIR"));
         assertEquals("user@cms.com", result.getAuthenticatedEmail());
+    }
+
+    @Test
+    void includesFullNameInRedirectWhenAvailable() {
+        PasswordHasher hasher = new PasswordHasher();
+        String salt = hasher.generateSalt();
+        String hash = hasher.hashPassword("Correct123", salt);
+
+        AuthenticationServiceImpl service = new AuthenticationServiceImpl(
+                new StubRepo(Optional.of(new UserAccount(1L, "user@cms.com", hash, salt, "ACTIVE", "AUTHOR", "Jamie Doe", Instant.now()))),
+                hasher,
+                statusService(true),
+                availableService(true)
+        );
+
+        LoginResult result = service.authenticate(new LoginSubmission("user@cms.com", "Correct123"));
+
+        assertEquals(302, result.getStatusCode());
+        assertTrue(result.getRedirectLocation().contains("&name="));
+        assertTrue(URLDecoder.decode(result.getRedirectLocation(), StandardCharsets.UTF_8).contains("Jamie Doe"));
     }
 
     @Test

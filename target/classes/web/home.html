@@ -6,24 +6,69 @@
   <title>CMS Authorized Home</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
-<main class="register-shell">
+<body class="dashboard-page">
+<main class="register-shell dashboard-shell">
   <header class="register-header">
     <p class="register-kicker">Conference Management</p>
-    <h1 class="register-title">Authorized Home</h1>
-    <p id="home-role" class="register-subtitle">Authenticated access granted.</p>
+    <h1 class="register-title">User Dashboard</h1>
+    <p id="home-role" class="register-subtitle">Welcome to CMS. Manage your profile and papers from one place.</p>
   </header>
   <section class="register-content">
-    <p class="inline-nav"><a href="/account/password">Change Password</a> from account settings.</p>
-    <p class="inline-nav">Go to <a href="/">public homepage</a> or <a href="/login">login</a>.</p>
+    <nav class="tab-nav" aria-label="Dashboard sections">
+      <button class="tab-btn active" data-tab="papers" type="button">Papers</button>
+      <button class="tab-btn" data-tab="profile" type="button">Profile</button>
+    </nav>
+
+    <div class="tab-pane active" data-pane="papers">
+      <article class="dashboard-card">
+        <h2 class="dashboard-title">Papers</h2>
+        <p class="dashboard-text">Manage all paper-related activities from this area.</p>
+        <a class="action-link" href="/papers/submit">Submit Paper</a>
+      </article>
+    </div>
+
+    <div class="tab-pane" data-pane="profile">
+      <article class="dashboard-card">
+        <h2 class="dashboard-title">Profile</h2>
+        <p class="dashboard-text">View your account profile details and manage sign-in settings.</p>
+        <p class="inline-nav">Account: <strong id="account-email">Signed in user</strong></p>
+        <a class="action-link secondary" href="/account/password">Change Password</a>
+      </article>
+    </div>
+
+    <p class="inline-nav dashboard-footer-nav">Go to <a href="/">public homepage</a> or <a href="/login">login</a>.</p>
   </section>
 </main>
 <script>
   const params = new URLSearchParams(window.location.search);
   const role = params.get('role');
+  const nameFromQuery = params.get('name');
+  const nameFromSession = sessionStorage.getItem('last_login_name');
+  const displayName = nameFromQuery || nameFromSession;
   if (role) {
-    document.getElementById('home-role').textContent = `Authenticated access granted for role: ${role}.`;
+    if (displayName) {
+      document.getElementById('home-role').textContent = `Welcome to CMS, ${displayName}. You are signed in as ${role}.`;
+    } else {
+      document.getElementById('home-role').textContent = `Welcome to CMS. You are signed in as ${role}.`;
+    }
+  } else if (displayName) {
+    document.getElementById('home-role').textContent = `Welcome to CMS, ${displayName}.`;
   }
+  const email = sessionStorage.getItem('last_login_email');
+  if (email) {
+    document.getElementById('account-email').textContent = email;
+  }
+
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const tabPanes = document.querySelectorAll('.tab-pane');
+
+  tabButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = button.dataset.tab;
+      tabButtons.forEach((b) => b.classList.toggle('active', b === button));
+      tabPanes.forEach((pane) => pane.classList.toggle('active', pane.dataset.pane === target));
+    });
+  });
 </script>
 </body>
 </html>

@@ -34,7 +34,7 @@ public class JdbcUserAccountRepository implements UserAccountRepository {
 
     @Override
     public Optional&lt;UserAccount&gt; findByEmail(String email) {
-<span class="fc" id="L37">        String sql = &quot;SELECT user_id, email, password_hash, password_salt, status, role, created_at FROM user_accounts WHERE email = ?&quot;;</span>
+<span class="fc" id="L37">        String sql = &quot;SELECT user_id, full_name, email, password_hash, password_salt, status, role, created_at FROM user_accounts WHERE email = ?&quot;;</span>
         try {
 <span class="fc" id="L39">            Connection connection = dataSource.getConnection();</span>
 <span class="fc" id="L40">            PreparedStatement statement = connection.prepareStatement(sql);</span>
@@ -53,60 +53,62 @@ public class JdbcUserAccountRepository implements UserAccountRepository {
 <span class="fc" id="L53">                    resultSet.getString(&quot;password_salt&quot;),</span>
 <span class="fc" id="L54">                    resultSet.getString(&quot;status&quot;),</span>
 <span class="fc" id="L55">                    resultSet.getString(&quot;role&quot;),</span>
-<span class="fc" id="L56">                    resultSet.getTimestamp(&quot;created_at&quot;).toInstant()</span>
+<span class="fc" id="L56">                    resultSet.getString(&quot;full_name&quot;),</span>
+<span class="fc" id="L57">                    resultSet.getTimestamp(&quot;created_at&quot;).toInstant()</span>
             );
-<span class="fc" id="L58">            resultSet.close();</span>
-<span class="fc" id="L59">            statement.close();</span>
-<span class="fc" id="L60">            connection.close();</span>
-<span class="fc" id="L61">            return Optional.of(account);</span>
-<span class="fc" id="L62">        } catch (SQLException e) {</span>
-<span class="fc" id="L63">            throw new IllegalStateException(&quot;Failed to fetch user by email&quot;, e);</span>
+<span class="fc" id="L59">            resultSet.close();</span>
+<span class="fc" id="L60">            statement.close();</span>
+<span class="fc" id="L61">            connection.close();</span>
+<span class="fc" id="L62">            return Optional.of(account);</span>
+<span class="fc" id="L63">        } catch (SQLException e) {</span>
+<span class="fc" id="L64">            throw new IllegalStateException(&quot;Failed to fetch user by email&quot;, e);</span>
         }
     }
 
     @Override
     public void save(UserAccount userAccount) {
-<span class="fc" id="L69">        String sql = &quot;INSERT INTO user_accounts (email, password_hash, password_salt, status, role, created_at) VALUES (?, ?, ?, ?, ?, ?)&quot;;</span>
-<span class="fc" id="L70">        try (Connection connection = dataSource.getConnection();</span>
-<span class="fc" id="L71">             PreparedStatement statement = connection.prepareStatement(sql)) {</span>
-<span class="fc" id="L72">            statement.setString(1, userAccount.getEmail());</span>
-<span class="fc" id="L73">            statement.setString(2, userAccount.getPasswordHash());</span>
-<span class="fc" id="L74">            statement.setString(3, userAccount.getPasswordSalt());</span>
-<span class="fc" id="L75">            statement.setString(4, userAccount.getStatus());</span>
-<span class="fc" id="L76">            statement.setString(5, userAccount.getRole());</span>
-<span class="fc" id="L77">            statement.setTimestamp(6, Timestamp.from(userAccount.getCreatedAt()));</span>
-<span class="fc" id="L78">            statement.executeUpdate();</span>
-<span class="fc" id="L79">        } catch (SQLException e) {</span>
-<span class="fc" id="L80">            throw new IllegalStateException(&quot;Failed to save user account&quot;, e);</span>
-<span class="fc" id="L81">        }</span>
-<span class="fc" id="L82">    }</span>
+<span class="fc" id="L70">        String sql = &quot;INSERT INTO user_accounts (full_name, email, password_hash, password_salt, status, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="fc" id="L71">        try (Connection connection = dataSource.getConnection();</span>
+<span class="fc" id="L72">             PreparedStatement statement = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L73">            statement.setString(1, userAccount.getFullName());</span>
+<span class="fc" id="L74">            statement.setString(2, userAccount.getEmail());</span>
+<span class="fc" id="L75">            statement.setString(3, userAccount.getPasswordHash());</span>
+<span class="fc" id="L76">            statement.setString(4, userAccount.getPasswordSalt());</span>
+<span class="fc" id="L77">            statement.setString(5, userAccount.getStatus());</span>
+<span class="fc" id="L78">            statement.setString(6, userAccount.getRole());</span>
+<span class="fc" id="L79">            statement.setTimestamp(7, Timestamp.from(userAccount.getCreatedAt()));</span>
+<span class="fc" id="L80">            statement.executeUpdate();</span>
+<span class="fc" id="L81">        } catch (SQLException e) {</span>
+<span class="fc" id="L82">            throw new IllegalStateException(&quot;Failed to save user account&quot;, e);</span>
+<span class="fc" id="L83">        }</span>
+<span class="fc" id="L84">    }</span>
 
     @Override
     public boolean updatePasswordCredentialsByEmail(String email, String passwordHash, String passwordSalt) {
-<span class="fc" id="L86">        String sql = &quot;UPDATE user_accounts SET password_hash = ?, password_salt = ? WHERE email = ?&quot;;</span>
-<span class="fc" id="L87">        try (Connection connection = dataSource.getConnection();</span>
-<span class="fc" id="L88">             PreparedStatement statement = connection.prepareStatement(sql)) {</span>
-<span class="fc" id="L89">            statement.setString(1, passwordHash);</span>
-<span class="fc" id="L90">            statement.setString(2, passwordSalt);</span>
-<span class="fc" id="L91">            statement.setString(3, email);</span>
-<span class="fc bfc" id="L92" title="All 2 branches covered.">            return statement.executeUpdate() == 1;</span>
-<span class="fc" id="L93">        } catch (SQLException e) {</span>
-<span class="fc" id="L94">            throw new IllegalStateException(&quot;Failed to update password credentials&quot;, e);</span>
+<span class="fc" id="L88">        String sql = &quot;UPDATE user_accounts SET password_hash = ?, password_salt = ? WHERE email = ?&quot;;</span>
+<span class="fc" id="L89">        try (Connection connection = dataSource.getConnection();</span>
+<span class="fc" id="L90">             PreparedStatement statement = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L91">            statement.setString(1, passwordHash);</span>
+<span class="fc" id="L92">            statement.setString(2, passwordSalt);</span>
+<span class="fc" id="L93">            statement.setString(3, email);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            return statement.executeUpdate() == 1;</span>
+<span class="fc" id="L95">        } catch (SQLException e) {</span>
+<span class="fc" id="L96">            throw new IllegalStateException(&quot;Failed to update password credentials&quot;, e);</span>
         }
     }
 
     @Override
     public long countByEmail(String email) {
-<span class="fc" id="L100">        String sql = &quot;SELECT COUNT(1) FROM user_accounts WHERE email = ?&quot;;</span>
-<span class="fc" id="L101">        try (Connection connection = dataSource.getConnection();</span>
-<span class="fc" id="L102">             PreparedStatement statement = connection.prepareStatement(sql)) {</span>
-<span class="fc" id="L103">            statement.setString(1, email);</span>
-<span class="fc" id="L104">            try (ResultSet resultSet = statement.executeQuery()) {</span>
-<span class="fc" id="L105">                resultSet.next();</span>
-<span class="fc" id="L106">                return resultSet.getLong(1);</span>
+<span class="fc" id="L102">        String sql = &quot;SELECT COUNT(1) FROM user_accounts WHERE email = ?&quot;;</span>
+<span class="fc" id="L103">        try (Connection connection = dataSource.getConnection();</span>
+<span class="fc" id="L104">             PreparedStatement statement = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L105">            statement.setString(1, email);</span>
+<span class="fc" id="L106">            try (ResultSet resultSet = statement.executeQuery()) {</span>
+<span class="fc" id="L107">                resultSet.next();</span>
+<span class="fc" id="L108">                return resultSet.getLong(1);</span>
             }
-<span class="fc" id="L108">        } catch (SQLException e) {</span>
-<span class="fc" id="L109">            throw new IllegalStateException(&quot;Failed to count user by email&quot;, e);</span>
+<span class="fc" id="L110">        } catch (SQLException e) {</span>
+<span class="fc" id="L111">            throw new IllegalStateException(&quot;Failed to count user by email&quot;, e);</span>
         }
     }
 }

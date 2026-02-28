@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JdbcPaperSubmissionRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.repository</a> &gt; <span class="el_source">JdbcPaperSubmissionRepository.java</span></div><h1>JdbcPaperSubmissionRepository.java</h1><pre class="source lang-java linenums">package com.ece493.cms.repository;
+
+import com.ece493.cms.model.PaperSubmission;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+
+public class JdbcPaperSubmissionRepository implements PaperSubmissionRepository {
+    private final DataSource dataSource;
+
+<span class="fc" id="L15">    public JdbcPaperSubmissionRepository(DataSource dataSource) {</span>
+<span class="fc" id="L16">        this.dataSource = dataSource;</span>
+<span class="fc" id="L17">    }</span>
+
+    @Override
+    public void save(PaperSubmission paperSubmission) {
+<span class="fc" id="L21">        String sql = &quot;INSERT INTO paper_submissions (author_email, title, authors, affiliations, abstract_text, keywords, contact_details, manuscript_file_id, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="fc" id="L22">        try (Connection connection = dataSource.getConnection();</span>
+<span class="fc" id="L23">             PreparedStatement statement = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L24">            statement.setString(1, paperSubmission.getAuthorEmail());</span>
+<span class="fc" id="L25">            statement.setString(2, paperSubmission.getTitle());</span>
+<span class="fc" id="L26">            statement.setString(3, paperSubmission.getAuthors());</span>
+<span class="fc" id="L27">            statement.setString(4, paperSubmission.getAffiliations());</span>
+<span class="fc" id="L28">            statement.setString(5, paperSubmission.getPaperAbstract());</span>
+<span class="fc" id="L29">            statement.setString(6, paperSubmission.getKeywords());</span>
+<span class="fc" id="L30">            statement.setString(7, paperSubmission.getContactDetails());</span>
+<span class="fc" id="L31">            statement.setLong(8, paperSubmission.getManuscriptFileId());</span>
+<span class="fc" id="L32">            statement.setTimestamp(9, Timestamp.from(paperSubmission.getSubmittedAt()));</span>
+<span class="fc" id="L33">            statement.executeUpdate();</span>
+<span class="fc" id="L34">        } catch (SQLException e) {</span>
+<span class="fc" id="L35">            throw new IllegalStateException(&quot;Failed to save paper submission&quot;, e);</span>
+<span class="fc" id="L36">        }</span>
+<span class="fc" id="L37">    }</span>
+
+    @Override
+    public long countAll() {
+<span class="fc" id="L41">        String sql = &quot;SELECT COUNT(1) FROM paper_submissions&quot;;</span>
+<span class="fc" id="L42">        try (Connection connection = dataSource.getConnection();</span>
+<span class="fc" id="L43">             PreparedStatement statement = connection.prepareStatement(sql);</span>
+<span class="fc" id="L44">             ResultSet resultSet = statement.executeQuery()) {</span>
+<span class="fc" id="L45">            resultSet.next();</span>
+<span class="fc" id="L46">            return resultSet.getLong(1);</span>
+<span class="fc" id="L47">        } catch (SQLException e) {</span>
+<span class="fc" id="L48">            throw new IllegalStateException(&quot;Failed to count paper submissions&quot;, e);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

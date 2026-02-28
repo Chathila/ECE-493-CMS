@@ -15,10 +15,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RegistrationServiceImplTest {
     @Test
-    void returnsMissingFieldsWhenEmailOrPasswordMissing() {
+    void returnsMissingFieldsWhenNameEmailOrPasswordMissing() {
         RegistrationServiceImpl service = new RegistrationServiceImpl(new InMemoryRepo(), availableEmailService(true), pwdPolicy(true), new PasswordHasher());
 
-        RegistrationResult result = service.register("", "pass");
+        RegistrationResult result = service.register("", "user@cms.com", "Valid123");
 
         assertEquals(400, result.getStatusCode());
         assertTrue(result.getMessage().contains("Missing required fields"));
@@ -28,7 +28,17 @@ class RegistrationServiceImplTest {
     void returnsMissingFieldsWhenPasswordMissingWithValidEmail() {
         RegistrationServiceImpl service = new RegistrationServiceImpl(new InMemoryRepo(), availableEmailService(true), pwdPolicy(true), new PasswordHasher());
 
-        RegistrationResult result = service.register("user@cms.com", "");
+        RegistrationResult result = service.register("Test User", "user@cms.com", "");
+
+        assertEquals(400, result.getStatusCode());
+        assertTrue(result.getMessage().contains("Missing required fields"));
+    }
+
+    @Test
+    void returnsMissingFieldsWhenEmailMissingWithValidNameAndPassword() {
+        RegistrationServiceImpl service = new RegistrationServiceImpl(new InMemoryRepo(), availableEmailService(true), pwdPolicy(true), new PasswordHasher());
+
+        RegistrationResult result = service.register("Test User", "", "Valid123");
 
         assertEquals(400, result.getStatusCode());
         assertTrue(result.getMessage().contains("Missing required fields"));
@@ -38,7 +48,7 @@ class RegistrationServiceImplTest {
     void returnsServiceUnavailableWhenEmailValidationServiceDown() {
         RegistrationServiceImpl service = new RegistrationServiceImpl(new InMemoryRepo(), unavailableEmailService(), pwdPolicy(true), new PasswordHasher());
 
-        RegistrationResult result = service.register("a@b.com", "Valid123");
+        RegistrationResult result = service.register("Test User", "a@b.com", "Valid123");
 
         assertEquals(503, result.getStatusCode());
     }
@@ -47,7 +57,7 @@ class RegistrationServiceImplTest {
     void returnsInvalidEmailWhenFormatFails() {
         RegistrationServiceImpl service = new RegistrationServiceImpl(new InMemoryRepo(), availableEmailService(false), pwdPolicy(true), new PasswordHasher());
 
-        RegistrationResult result = service.register("bad-email", "Valid123");
+        RegistrationResult result = service.register("Test User", "bad-email", "Valid123");
 
         assertEquals(400, result.getStatusCode());
         assertTrue(result.getMessage().contains("valid email"));
@@ -59,7 +69,7 @@ class RegistrationServiceImplTest {
         repo.existingEmail = "already@cms.com";
         RegistrationServiceImpl service = new RegistrationServiceImpl(repo, availableEmailService(true), pwdPolicy(true), new PasswordHasher());
 
-        RegistrationResult result = service.register("already@cms.com", "Valid123");
+        RegistrationResult result = service.register("Test User", "already@cms.com", "Valid123");
 
         assertEquals(409, result.getStatusCode());
     }
@@ -68,7 +78,7 @@ class RegistrationServiceImplTest {
     void returnsWeakPasswordErrorWhenPolicyFails() {
         RegistrationServiceImpl service = new RegistrationServiceImpl(new InMemoryRepo(), availableEmailService(true), pwdPolicy(false), new PasswordHasher());
 
-        RegistrationResult result = service.register("a@b.com", "weak");
+        RegistrationResult result = service.register("Test User", "a@b.com", "weak");
 
         assertEquals(400, result.getStatusCode());
         assertTrue(result.getMessage().contains("CMS policy"));
@@ -79,11 +89,12 @@ class RegistrationServiceImplTest {
         InMemoryRepo repo = new InMemoryRepo();
         RegistrationServiceImpl service = new RegistrationServiceImpl(repo, availableEmailService(true), pwdPolicy(true), new PasswordHasher());
 
-        RegistrationResult result = service.register("new@cms.com", "Valid123");
+        RegistrationResult result = service.register("New User", "new@cms.com", "Valid123");
 
         assertEquals(302, result.getStatusCode());
         assertEquals("/login", result.getRedirectLocation());
         assertNotNull(repo.saved);
+        assertEquals("New User", repo.saved.getFullName());
         assertEquals("new@cms.com", repo.saved.getEmail());
         assertEquals("ACTIVE", repo.saved.getStatus());
         assertNotEquals("Valid123", repo.saved.getPasswordHash());

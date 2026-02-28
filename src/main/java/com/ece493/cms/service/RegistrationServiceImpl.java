@@ -26,9 +26,9 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     @Override
-    public RegistrationResult register(String email, String password) {
-        if (isBlank(email) || isBlank(password)) {
-            return RegistrationResult.error(400, "Missing required fields: email and password are required.");
+    public RegistrationResult register(String name, String email, String password) {
+        if (isBlank(name) || isBlank(email) || isBlank(password)) {
+            return RegistrationResult.error(400, "Missing required fields: name, email, and password are required.");
         }
 
         if (!emailValidationService.isServiceAvailable()) {
@@ -56,6 +56,8 @@ public class RegistrationServiceImpl implements RegistrationService {
                 hash,
                 salt,
                 "ACTIVE",
+                "AUTHOR",
+                name.trim(),
                 Instant.now()
         ));
 

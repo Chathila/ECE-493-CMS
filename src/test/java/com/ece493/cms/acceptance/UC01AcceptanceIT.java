@@ -22,7 +22,7 @@ class UC01AcceptanceIT extends RegistrationIntegrationSupport {
 
     @Test
     void AT01_successfulUserRegistration() throws Exception {
-        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"email\":\"at01@cms.com\",\"password\":\"Valid123\"}");
+        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"name\":\"AT One\",\"email\":\"at01@cms.com\",\"password\":\"Valid123\"}");
 
         assertEquals(302, response.getStatus());
         assertEquals("/login", response.getHeader("Location"));
@@ -39,7 +39,7 @@ class UC01AcceptanceIT extends RegistrationIntegrationSupport {
 
     @Test
     void AT03_invalidEmailFormat() throws Exception {
-        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"email\":\"invalid-email\",\"password\":\"Valid123\"}");
+        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"name\":\"AT Three\",\"email\":\"invalid-email\",\"password\":\"Valid123\"}");
 
         assertEquals(400, response.getStatus());
         assertTrue(response.getBody().contains("valid email"));
@@ -47,9 +47,9 @@ class UC01AcceptanceIT extends RegistrationIntegrationSupport {
 
     @Test
     void AT04_duplicateEmailAddress() throws Exception {
-        postRegister("{\"email\":\"dupat@cms.com\",\"password\":\"Valid123\"}");
+        postRegister("{\"name\":\"Dup One\",\"email\":\"dupat@cms.com\",\"password\":\"Valid123\"}");
 
-        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"email\":\"dupat@cms.com\",\"password\":\"Valid123\"}");
+        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"name\":\"Dup Two\",\"email\":\"dupat@cms.com\",\"password\":\"Valid123\"}");
 
         assertEquals(409, response.getStatus());
         assertTrue(response.getBody().contains("already registered"));
@@ -57,7 +57,7 @@ class UC01AcceptanceIT extends RegistrationIntegrationSupport {
 
     @Test
     void AT05_weakPassword() throws Exception {
-        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"email\":\"weakat@cms.com\",\"password\":\"short\"}");
+        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"name\":\"Weak AT\",\"email\":\"weakat@cms.com\",\"password\":\"short\"}");
 
         assertEquals(400, response.getStatus());
         assertTrue(response.getBody().contains("CMS policy"));

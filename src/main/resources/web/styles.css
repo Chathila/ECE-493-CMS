@@ -94,7 +94,8 @@ body {
   font-weight: 700;
 }
 
-.register-form input {
+.register-form input,
+.register-form textarea {
   width: 100%;
   background: var(--bg-input);
   border: 1px solid var(--border-soft);
@@ -104,7 +105,8 @@ body {
   padding: 11px 12px;
 }
 
-.register-form input:focus {
+.register-form input:focus,
+.register-form textarea:focus {
   outline: 2px solid color-mix(in srgb, var(--brand-primary) 35%, transparent);
   outline-offset: 1px;
   border-color: var(--brand-primary);
@@ -178,6 +180,82 @@ body {
   background: color-mix(in srgb, var(--brand-primary) 12%, #fff);
   color: var(--brand-primary);
   border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, #fff);
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-tabs {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-card {
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: color-mix(in srgb, #fff 92%, var(--brand-primary) 8%);
+  padding: 14px;
+}
+
+.dashboard-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-family: var(--font-heading);
+}
+
+.dashboard-text {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+body.dashboard-page {
+  display: block;
+  padding: 0;
+}
+
+.dashboard-shell {
+  max-width: min(1120px, 100vw);
+  min-height: 100vh;
+  border-radius: 0;
+  margin: 0 auto;
+}
+
+.tab-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.tab-btn {
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  color: var(--text-muted);
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #fff;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+.dashboard-footer-nav {
+  margin-top: 16px;
 }
 
 @media (max-width: 560px) {

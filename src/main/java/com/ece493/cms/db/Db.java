@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -30,7 +31,12 @@ public final class Db {
         String schemaSql = loadResource("db/schema.sql");
         try (Connection connection = dataSource.getConnection();
              Statement statement = connection.createStatement()) {
-            statement.execute(schemaSql);
+            for (String sql : Arrays.stream(schemaSql.split(";"))
+                    .map(String::trim)
+                    .filter(command -> !command.isEmpty())
+                    .toList()) {
+                statement.execute(sql);
+            }
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to initialize schema", e);
         }

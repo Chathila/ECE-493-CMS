@@ -28,7 +28,7 @@ class RegistrationEndpointIT extends RegistrationIntegrationSupport {
 
     @Test
     void postRegisterSuccessCreatesAccountAndRedirects() throws Exception {
-        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"email\":\"integration@cms.com\",\"password\":\"Valid123\"}");
+        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"name\":\"Integration User\",\"email\":\"integration@cms.com\",\"password\":\"Valid123\"}");
 
         assertEquals(302, response.getStatus());
         assertEquals("/login", response.getHeader("Location"));
@@ -54,7 +54,7 @@ class RegistrationEndpointIT extends RegistrationIntegrationSupport {
 
     @Test
     void postRegisterInvalidEmailReturns400() throws Exception {
-        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"email\":\"bad-email\",\"password\":\"Valid123\"}");
+        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"name\":\"Invalid Email\",\"email\":\"bad-email\",\"password\":\"Valid123\"}");
 
         assertEquals(400, response.getStatus());
         assertTrue(response.getBody().contains("valid email"));
@@ -62,7 +62,7 @@ class RegistrationEndpointIT extends RegistrationIntegrationSupport {
 
     @Test
     void postRegisterWeakPasswordReturns400() throws Exception {
-        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"email\":\"weak@cms.com\",\"password\":\"weak\"}");
+        ServletHttpTestSupport.ResponseCapture response = postRegister("{\"name\":\"Weak Password\",\"email\":\"weak@cms.com\",\"password\":\"weak\"}");
 
         assertEquals(400, response.getStatus());
         assertTrue(response.getBody().contains("CMS policy"));
@@ -71,9 +71,9 @@ class RegistrationEndpointIT extends RegistrationIntegrationSupport {
 
     @Test
     void postRegisterDuplicateEmailReturns409() throws Exception {
-        postRegister("{\"email\":\"dup@cms.com\",\"password\":\"Valid123\"}");
+        postRegister("{\"name\":\"First User\",\"email\":\"dup@cms.com\",\"password\":\"Valid123\"}");
 
-        ServletHttpTestSupport.ResponseCapture duplicateResponse = postRegister("{\"email\":\"dup@cms.com\",\"password\":\"Valid123\"}");
+        ServletHttpTestSupport.ResponseCapture duplicateResponse = postRegister("{\"name\":\"Second User\",\"email\":\"dup@cms.com\",\"password\":\"Valid123\"}");
 
         assertEquals(409, duplicateResponse.getStatus());
         assertTrue(duplicateResponse.getBody().contains("already registered"));

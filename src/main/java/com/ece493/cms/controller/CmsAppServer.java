@@ -2,6 +2,8 @@ package com.ece493.cms.controller;
 
 import com.ece493.cms.db.Db;
 import com.ece493.cms.repository.JdbcUserAccountRepository;
+import com.ece493.cms.repository.JdbcPaperSubmissionRepository;
+import com.ece493.cms.repository.PaperSubmissionRepository;
 import com.ece493.cms.repository.UserAccountRepository;
 import com.ece493.cms.security.PasswordHasher;
 import com.ece493.cms.service.AuthenticationService;
@@ -9,9 +11,13 @@ import com.ece493.cms.service.AuthenticationServiceImpl;
 import com.ece493.cms.service.DefaultAccountStatusService;
 import com.ece493.cms.service.DefaultAuthenticationAvailabilityService;
 import com.ece493.cms.service.DefaultEmailValidationService;
+import com.ece493.cms.service.DefaultMetadataValidationService;
 import com.ece493.cms.service.DefaultPasswordPolicyService;
+import com.ece493.cms.service.InMemoryFileStorageService;
 import com.ece493.cms.service.PasswordChangeService;
 import com.ece493.cms.service.PasswordChangeServiceImpl;
+import com.ece493.cms.service.PaperSubmissionService;
+import com.ece493.cms.service.PaperSubmissionServiceImpl;
 import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 import org.eclipse.jetty.server.Server;
@@ -22,6 +28,7 @@ import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Objects;
 
 public class CmsAppServer {
@@ -31,9 +38,12 @@ public class CmsAppServer {
         RegistrationService registrationService = createRegistrationService(dataSource);
         AuthenticationService authenticationService = createAuthenticationService(dataSource);
         PasswordChangeService passwordChangeService = createPasswordChangeService(dataSource);
+        InMemoryFileStorageService fileStorageService = new InMemoryFileStorageService();
+        PaperSubmissionService paperSubmissionService = createPaperSubmissionService(dataSource, fileStorageService);
         String registerHtml = loadRegisterHtml();
         String loginHtml = loadLoginHtml();
         String changePasswordHtml = loadChangePasswordHtml();
+        String submitPaperHtml = loadSubmitPaperHtml();
 
         this.server = new Server(port);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -42,6 +52,7 @@ public class CmsAppServer {
         context.addServlet(new ServletHolder(new RegistrationServlet(registrationService, registerHtml)), "/register");
         context.addServlet(new ServletHolder(new LoginServlet(authenticationService, loginHtml)), "/login");
         context.addServlet(new ServletHolder(new ChangePasswordServlet(passwordChangeService, changePasswordHtml)), "/account/password");
+        context.addServlet(new ServletHolder(new PaperSubmissionServlet(paperSubmissionService, submitPaperHtml)), "/papers/submit");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home/*");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/styles.css", "text/css")), "/styles.css");
@@ -90,14 +101,46 @@ public class CmsAppServer {
         );
     }
 
+    public static PaperSubmissionService createPaperSubmissionService(DataSource dataSource, InMemoryFileStorageService fileStorageService) {
+        PaperSubmissionRepository repository = new JdbcPaperSubmissionRepository(dataSource);
+        return new PaperSubmissionServiceImpl(
+                repository,
+                new DefaultMetadataValidationService(),
+                fileStorageService
+        );
+    }
+
     public static void main(String[] args) throws Exception {
         int port = Integer.parseInt(System.getProperty("PORT", System.getenv().getOrDefault("PORT", "8080")));
         DataSource dataSource = Db.createDataSource("jdbc:h2:mem:cms;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
         Db.runSchema(dataSource);
+        seedDefaultTestUser(dataSource);
 
         CmsAppServer appServer = new CmsAppServer(port, dataSource);
         appServer.start();
         appServer.server.join();
+    }
+
+    private static void seedDefaultTestUser(DataSource dataSource) {
+        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);
+        String defaultEmail = "admin@user.com";
+        if (repository.existsByEmail(defaultEmail)) {
+            return;
+        }
+
+        PasswordHasher hasher = new PasswordHasher();
+        String salt = hasher.generateSalt();
+        String hash = hasher.hashPassword("monkey", salt);
+        repository.save(new com.ece493.cms.model.UserAccount(
+                0L,
+                defaultEmail,
+                hash,
+                salt,
+                "ACTIVE",
+                "AUTHOR",
+                "Admin User",
+                Instant.now()
+        ));
     }
 
     private String loadRegisterHtml() {
@@ -110,6 +153,10 @@ public class CmsAppServer {
 
     private String loadChangePasswordHtml() {
         return loadHtml("web/change-password.html", "change-password");
+    }
+
+    private String loadSubmitPaperHtml() {
+        return loadHtml("web/submit-paper.html", "submit-paper");
     }
 
     private String loadHtml(String resourcePath, String viewName) {

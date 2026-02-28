@@ -128,3 +128,51 @@ Both commands succeed in the final UC-03 state.
 
 - `prompts/implementation.txt` does not exist in this repository; UC-03 run was executed using `prompts/implementation-rest.txt`.
 - `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-03 was implemented directly from existing spec-kit artifacts.
+
+---
+
+# Lab 3 Report Notes (UC-04 Run)
+
+## Scope Completed
+
+- Implemented UC-04 submit-paper-manuscript flow from:
+  - `specs/UC-04-submit-paper-manuscript/spec.md`
+  - `specs/UC-04-submit-paper-manuscript/plan.md`
+  - `specs/UC-04-submit-paper-manuscript/tasks.md`
+  - `specs/UC-04-submit-paper-manuscript/contracts/submit-paper.openapi.yaml`
+  - `UC-04_tests.md`
+- Added `/papers/submit` GET/POST endpoint behavior with:
+  - required metadata validation
+  - metadata formatting validation
+  - manuscript file format validation (PDF/DOCX)
+  - manuscript file size validation (max 20 MB)
+  - upload/storage failure handling with retry message
+  - success confirmation + dashboard redirect payload
+- Added database persistence for paper metadata (`paper_submissions` table).
+- Added file storage service implementation for manuscript upload simulation.
+- Added/updated UI pages:
+  - submit paper form page
+  - dashboard/home includes Submit Paper option
+- Added unit + integration + acceptance tests and UC-04 traceability.
+
+## Commands Run
+
+1. `mvn test`
+2. `mvn verify`
+
+Both commands succeed in the final UC-04 state.
+
+## Coverage
+
+- JaCoCo report directory:
+  - `target/site/jacoco/index.html`
+- Final branch coverage:
+  - `BRANCH missed=0 covered=224 ratio=100.00%`
+
+## Traceability
+
+- `traceability/UC-04-traceability.md` maps AT-01..AT-05 to automated tests.
+
+## Spec-Kit Command Note
+
+- `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-04 was implemented directly from existing spec-kit artifacts.

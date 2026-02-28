@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaperSubmission.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.model</a> &gt; <span class="el_source">PaperSubmission.java</span></div><h1>PaperSubmission.java</h1><pre class="source lang-java linenums">package com.ece493.cms.model;
+
+import java.time.Instant;
+
+public class PaperSubmission {
+    private final long submissionId;
+    private final String authorEmail;
+    private final String title;
+    private final String authors;
+    private final String affiliations;
+    private final String paperAbstract;
+    private final String keywords;
+    private final String contactDetails;
+    private final long manuscriptFileId;
+    private final Instant submittedAt;
+
+    public PaperSubmission(
+            long submissionId,
+            String authorEmail,
+            String title,
+            String authors,
+            String affiliations,
+            String paperAbstract,
+            String keywords,
+            String contactDetails,
+            long manuscriptFileId,
+            Instant submittedAt
+<span class="fc" id="L28">    ) {</span>
+<span class="fc" id="L29">        this.submissionId = submissionId;</span>
+<span class="fc" id="L30">        this.authorEmail = authorEmail;</span>
+<span class="fc" id="L31">        this.title = title;</span>
+<span class="fc" id="L32">        this.authors = authors;</span>
+<span class="fc" id="L33">        this.affiliations = affiliations;</span>
+<span class="fc" id="L34">        this.paperAbstract = paperAbstract;</span>
+<span class="fc" id="L35">        this.keywords = keywords;</span>
+<span class="fc" id="L36">        this.contactDetails = contactDetails;</span>
+<span class="fc" id="L37">        this.manuscriptFileId = manuscriptFileId;</span>
+<span class="fc" id="L38">        this.submittedAt = submittedAt;</span>
+<span class="fc" id="L39">    }</span>
+
+    public long getSubmissionId() {
+<span class="nc" id="L42">        return submissionId;</span>
+    }
+
+    public String getAuthorEmail() {
+<span class="fc" id="L46">        return authorEmail;</span>
+    }
+
+    public String getTitle() {
+<span class="fc" id="L50">        return title;</span>
+    }
+
+    public String getAuthors() {
+<span class="fc" id="L54">        return authors;</span>
+    }
+
+    public String getAffiliations() {
+<span class="fc" id="L58">        return affiliations;</span>
+    }
+
+    public String getPaperAbstract() {
+<span class="fc" id="L62">        return paperAbstract;</span>
+    }
+
+    public String getKeywords() {
+<span class="fc" id="L66">        return keywords;</span>
+    }
+
+    public String getContactDetails() {
+<span class="fc" id="L70">        return contactDetails;</span>
+    }
+
+    public long getManuscriptFileId() {
+<span class="fc" id="L74">        return manuscriptFileId;</span>
+    }
+
+    public Instant getSubmittedAt() {
+<span class="fc" id="L78">        return submittedAt;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

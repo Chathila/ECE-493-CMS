@@ -1,10 +1,12 @@
 package com.ece493.cms.integration;
 
 import com.ece493.cms.controller.LoginServlet;
+import com.ece493.cms.controller.PaperSubmissionServlet;
 import com.ece493.cms.controller.RegistrationServlet;
 import com.ece493.cms.controller.ChangePasswordServlet;
 import com.ece493.cms.db.Db;
 import com.ece493.cms.model.UserAccount;
+import com.ece493.cms.repository.JdbcPaperSubmissionRepository;
 import com.ece493.cms.repository.JdbcUserAccountRepository;
 import com.ece493.cms.security.PasswordHasher;
 import com.ece493.cms.service.AuthenticationService;
@@ -13,8 +15,12 @@ import com.ece493.cms.service.DefaultAccountStatusService;
 import com.ece493.cms.service.DefaultAuthenticationAvailabilityService;
 import com.ece493.cms.service.DefaultEmailValidationService;
 import com.ece493.cms.service.DefaultPasswordPolicyService;
+import com.ece493.cms.service.DefaultMetadataValidationService;
 import com.ece493.cms.service.PasswordChangeService;
 import com.ece493.cms.service.PasswordChangeServiceImpl;
+import com.ece493.cms.service.PaperSubmissionService;
+import com.ece493.cms.service.PaperSubmissionServiceImpl;
+import com.ece493.cms.service.InMemoryFileStorageService;
 import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 
@@ -28,9 +34,11 @@ public class RegistrationIntegrationSupport {
     protected RegistrationServlet servlet;
     protected LoginServlet loginServlet;
     protected ChangePasswordServlet changePasswordServlet;
+    protected PaperSubmissionServlet paperSubmissionServlet;
+    protected InMemoryFileStorageService fileStorageService;
 
     protected void startApp() {
-        dataSource = Db.createDataSource("jdbc:h2:mem:cms_it;DB_CLOSE_DELAY=-1");
+        dataSource = Db.createDataSource("jdbc:h2:mem:cms_it_" + System.nanoTime() + ";DB_CLOSE_DELAY=-1");
         Db.runSchema(dataSource);
 
         RegistrationService registrationService = new RegistrationServiceImpl(
@@ -51,10 +59,17 @@ public class RegistrationIntegrationSupport {
                 new PasswordHasher(),
                 new DefaultAuthenticationAvailabilityService()
         );
+        fileStorageService = new InMemoryFileStorageService();
+        PaperSubmissionService paperSubmissionService = new PaperSubmissionServiceImpl(
+                new JdbcPaperSubmissionRepository(dataSource),
+                new DefaultMetadataValidationService(),
+                fileStorageService
+        );
 
         servlet = new RegistrationServlet(registrationService, loadRegisterHtml());
         loginServlet = new LoginServlet(authenticationService, loadLoginHtml());
         changePasswordServlet = new ChangePasswordServlet(passwordChangeService, loadChangePasswordHtml());
+        paperSubmissionServlet = new PaperSubmissionServlet(paperSubmissionService, loadSubmitPaperHtml());
     }
 
     protected void stopApp() {
@@ -136,6 +151,24 @@ public class RegistrationIntegrationSupport {
         return response;
     }
 
+    protected ServletHttpTestSupport.ResponseCapture postPaperSubmission(String payload, ServletHttpTestSupport.SessionCapture session) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        paperSubmissionServlet.service(
+                ServletHttpTestSupport.postJsonRequest(payload, session),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getPaperSubmissionPage() throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        paperSubmissionServlet.service(
+                ServletHttpTestSupport.getRequest(),
+                response.asResponse()
+        );
+        return response;
+    }
+
     private String loadRegisterHtml() {
         try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream("web/register.html")) {
             if (stream == null) {
@@ -166,6 +199,17 @@ public class RegistrationIntegrationSupport {
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to load change-password view", e);
+        }
+    }
+
+    private String loadSubmitPaperHtml() {
+        try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream("web/submit-paper.html")) {
+            if (stream == null) {
+                throw new IllegalStateException("Missing submit-paper view");
+            }
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to load submit-paper view", e);
         }
     }
 }

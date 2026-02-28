@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class RegistrationServletTest {
     @Test
     void readFieldReturnsNullWhenBodyIsNull() throws Exception {
-        RegistrationService service = (email, password) -> null;
+        RegistrationService service = (name, email, password) -> null;
         RegistrationServlet servlet = new RegistrationServlet(service, "<html></html>");
 
         Method readField = RegistrationServlet.class.getDeclaredMethod("readField", String.class, Pattern.class);

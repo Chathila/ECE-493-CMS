@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaperSubmissionServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.service</a> &gt; <span class="el_source">PaperSubmissionServiceImpl.java</span></div><h1>PaperSubmissionServiceImpl.java</h1><pre class="source lang-java linenums">package com.ece493.cms.service;
+
+import com.ece493.cms.model.ManuscriptFile;
+import com.ece493.cms.model.MetadataValidationResult;
+import com.ece493.cms.model.PaperSubmission;
+import com.ece493.cms.model.PaperSubmissionRequest;
+import com.ece493.cms.model.PaperSubmissionResult;
+import com.ece493.cms.repository.PaperSubmissionRepository;
+
+import java.time.Instant;
+
+public class PaperSubmissionServiceImpl implements PaperSubmissionService {
+    private final PaperSubmissionRepository paperSubmissionRepository;
+    private final MetadataValidationService metadataValidationService;
+    private final FileStorageService fileStorageService;
+
+    public PaperSubmissionServiceImpl(
+            PaperSubmissionRepository paperSubmissionRepository,
+            MetadataValidationService metadataValidationService,
+            FileStorageService fileStorageService
+<span class="fc" id="L21">    ) {</span>
+<span class="fc" id="L22">        this.paperSubmissionRepository = paperSubmissionRepository;</span>
+<span class="fc" id="L23">        this.metadataValidationService = metadataValidationService;</span>
+<span class="fc" id="L24">        this.fileStorageService = fileStorageService;</span>
+<span class="fc" id="L25">    }</span>
+
+    @Override
+    public PaperSubmissionResult submit(String authorEmail, PaperSubmissionRequest request) {
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        if (isBlank(authorEmail)) {</span>
+<span class="fc" id="L30">            return PaperSubmissionResult.error(401, &quot;You must log in to submit a paper.&quot;);</span>
+        }
+
+<span class="fc" id="L33">        MetadataValidationResult metadata = metadataValidationService.validate(request);</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (!metadata.isValid()) {</span>
+<span class="fc" id="L35">            return PaperSubmissionResult.error(400, metadata.getMessage());</span>
+        }
+
+<span class="fc" id="L38">        ManuscriptFile manuscriptFile = request.getManuscriptFile();</span>
+<span class="fc bfc" id="L39" title="All 6 branches covered.">        if (manuscriptFile == null || isBlank(manuscriptFile.getFilename()) || isBlank(manuscriptFile.getContentBase64())) {</span>
+<span class="fc" id="L40">            return PaperSubmissionResult.error(400, &quot;Missing required information. Manuscript file is required.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (!fileStorageService.isSupportedFormat(manuscriptFile.getFilename())) {</span>
+<span class="fc" id="L44">            return PaperSubmissionResult.error(415, &quot;Unsupported file format. Allowed formats: PDF and DOCX.&quot;);</span>
+        }
+
+<span class="fc" id="L47">        long sizeBytes = fileStorageService.computeFileSizeBytes(manuscriptFile.getContentBase64());</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (!fileStorageService.isWithinSizeLimit(sizeBytes)) {</span>
+<span class="fc" id="L49">            return PaperSubmissionResult.error(413, &quot;File size exceeds maximum limit of 20 MB.&quot;);</span>
+        }
+
+        long fileId;
+        try {
+<span class="fc" id="L54">            fileId = fileStorageService.store(manuscriptFile);</span>
+<span class="fc" id="L55">        } catch (IllegalStateException e) {</span>
+<span class="fc" id="L56">            return PaperSubmissionResult.error(503, &quot;Manuscript upload failed. Please try again.&quot;);</span>
+<span class="fc" id="L57">        }</span>
+
+<span class="fc" id="L59">        paperSubmissionRepository.save(new PaperSubmission(</span>
+                0L,
+                authorEmail,
+<span class="fc" id="L62">                request.getTitle(),</span>
+<span class="fc" id="L63">                request.getAuthors(),</span>
+<span class="fc" id="L64">                request.getAffiliations(),</span>
+<span class="fc" id="L65">                request.getPaperAbstract(),</span>
+<span class="fc" id="L66">                request.getKeywords(),</span>
+<span class="fc" id="L67">                request.getContactDetails(),</span>
+                fileId,
+<span class="fc" id="L69">                Instant.now()</span>
+        ));
+
+<span class="fc" id="L72">        return PaperSubmissionResult.success(&quot;Paper submitted successfully.&quot;, &quot;/home&quot;);</span>
+    }
+
+    private boolean isBlank(String value) {
+<span class="fc bfc" id="L76" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

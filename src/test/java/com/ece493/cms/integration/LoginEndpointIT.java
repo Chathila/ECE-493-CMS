@@ -62,6 +62,14 @@ class LoginEndpointIT extends RegistrationIntegrationSupport {
     }
 
     @Test
+    void postLoginUnknownEmailPromptsRegistration() throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = postLogin("{\"email\":\"unknown@cms.com\",\"password\":\"Valid123\"}");
+
+        assertEquals(401, response.getStatus());
+        assertTrue(response.getBody().contains("Please register"));
+    }
+
+    @Test
     void postLoginInactiveOrLockedReturns403() throws Exception {
         seedUser("login-locked@cms.com", "Valid123", "LOCKED", "AUTHOR");
 

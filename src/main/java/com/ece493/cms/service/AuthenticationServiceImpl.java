@@ -40,7 +40,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         Optional<UserAccount> accountOptional = userAccountRepository.findByEmail(submission.getEmail().trim());
         if (accountOptional.isEmpty()) {
-            return LoginResult.error(401, "Authentication failed: incorrect email or password.");
+            return LoginResult.error(401, "No account found for this email. Please register first.");
         }
 
         UserAccount account = accountOptional.get();
@@ -54,7 +54,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         String role = account.getRole() == null ? "USER" : account.getRole();
         String encodedRole = URLEncoder.encode(role, StandardCharsets.UTF_8);
-        return LoginResult.successRedirect("/home?role=" + encodedRole, account.getEmail());
+        String redirect = "/home?role=" + encodedRole;
+        if (!isBlank(account.getFullName())) {
+            redirect = redirect + "&name=" + URLEncoder.encode(account.getFullName(), StandardCharsets.UTF_8);
+        }
+        return LoginResult.successRedirect(redirect, account.getEmail());
     }
 
     private boolean isBlank(String value) {

@@ -11,10 +11,12 @@
   <header class="register-header">
     <p class="register-kicker">Conference Management</p>
     <h1 class="register-title">Create CMS Account</h1>
-    <p class="register-subtitle">Register with email and password. Your email is your login username.</p>
+    <p class="register-subtitle">Register with your name, email, and password. Your email is your login username.</p>
   </header>
   <section class="register-content">
     <form id="register-form" class="register-form" method="post" action="/register">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" name="name" required>
       <label for="email">Email</label>
       <input type="email" id="email" name="email" required>
       <label for="password">Password</label>
@@ -35,6 +37,7 @@
     statusBox.textContent = '';
 
     const payload = {
+      name: document.getElementById('name').value,
       email: document.getElementById('email').value,
       password: document.getElementById('password').value
     };
@@ -45,10 +48,12 @@
       body: JSON.stringify(payload)
     });
 
-    if (response.status === 302) {
+    if (response.status === 302 || response.redirected) {
       statusBox.classList.add('success');
-      statusBox.textContent = 'Registration successful. Redirecting to login...';
-      window.location.href = '/login';
+      statusBox.textContent = 'Registration successful. You can now log in.';
+      window.setTimeout(() => {
+        window.location.href = '/login?registered=1';
+      }, 900);
       return;
     }
 

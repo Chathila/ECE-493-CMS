@@ -40,7 +40,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 <span class="fc" id="L41">        Optional&lt;UserAccount&gt; accountOptional = userAccountRepository.findByEmail(submission.getEmail().trim());</span>
 <span class="fc bfc" id="L42" title="All 2 branches covered.">        if (accountOptional.isEmpty()) {</span>
-<span class="fc" id="L43">            return LoginResult.error(401, &quot;Authentication failed: incorrect email or password.&quot;);</span>
+<span class="fc" id="L43">            return LoginResult.error(401, &quot;No account found for this email. Please register first.&quot;);</span>
         }
 
 <span class="fc" id="L46">        UserAccount account = accountOptional.get();</span>
@@ -54,11 +54,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 <span class="fc bfc" id="L55" title="All 2 branches covered.">        String role = account.getRole() == null ? &quot;USER&quot; : account.getRole();</span>
 <span class="fc" id="L56">        String encodedRole = URLEncoder.encode(role, StandardCharsets.UTF_8);</span>
-<span class="fc" id="L57">        return LoginResult.successRedirect(&quot;/home?role=&quot; + encodedRole, account.getEmail());</span>
+<span class="fc" id="L57">        String redirect = &quot;/home?role=&quot; + encodedRole;</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (!isBlank(account.getFullName())) {</span>
+<span class="fc" id="L59">            redirect = redirect + &quot;&amp;name=&quot; + URLEncoder.encode(account.getFullName(), StandardCharsets.UTF_8);</span>
+        }
+<span class="fc" id="L61">        return LoginResult.successRedirect(redirect, account.getEmail());</span>
     }
 
     private boolean isBlank(String value) {
-<span class="fc bfc" id="L61" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
+<span class="fc bfc" id="L65" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -28,6 +28,12 @@
 <script>
   const form = document.getElementById('login-form');
   const statusBox = document.getElementById('status');
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get('registered') === '1') {
+    statusBox.classList.add('success');
+    statusBox.textContent = 'Registration successful. Please log in with your new account.';
+  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -45,10 +51,22 @@
       body: JSON.stringify(payload)
     });
 
-    if (response.status === 302) {
-      const nextLocation = response.headers.get('Location') || '/home';
+    if (response.redirected || response.status === 302) {
+      const nextLocation = response.redirected ? response.url : (response.headers.get('Location') || '/home');
       statusBox.classList.add('success');
       statusBox.textContent = 'Login successful. Redirecting...';
+      sessionStorage.setItem('last_login_email', payload.email);
+      try {
+        const destination = new URL(nextLocation, window.location.origin);
+        const fullName = destination.searchParams.get('name');
+        if (fullName) {
+          sessionStorage.setItem('last_login_name', fullName);
+        } else {
+          sessionStorage.removeItem('last_login_name');
+        }
+      } catch (err) {
+        sessionStorage.removeItem('last_login_name');
+      }
       window.location.href = nextLocation;
       return;
     }

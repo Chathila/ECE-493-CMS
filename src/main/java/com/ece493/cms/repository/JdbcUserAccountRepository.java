@@ -34,7 +34,7 @@ public class JdbcUserAccountRepository implements UserAccountRepository {
 
     @Override
     public Optional<UserAccount> findByEmail(String email) {
-        String sql = "SELECT user_id, email, password_hash, password_salt, status, role, created_at FROM user_accounts WHERE email = ?";
+        String sql = "SELECT user_id, full_name, email, password_hash, password_salt, status, role, created_at FROM user_accounts WHERE email = ?";
         try {
             Connection connection = dataSource.getConnection();
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -53,6 +53,7 @@ public class JdbcUserAccountRepository implements UserAccountRepository {
                     resultSet.getString("password_salt"),
                     resultSet.getString("status"),
                     resultSet.getString("role"),
+                    resultSet.getString("full_name"),
                     resultSet.getTimestamp("created_at").toInstant()
             );
             resultSet.close();
@@ -66,15 +67,16 @@ public class JdbcUserAccountRepository implements UserAccountRepository {
 
     @Override
     public void save(UserAccount userAccount) {
-        String sql = "INSERT INTO user_accounts (email, password_hash, password_salt, status, role, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO user_accounts (full_name, email, password_hash, password_salt, status, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, userAccount.getEmail());
-            statement.setString(2, userAccount.getPasswordHash());
-            statement.setString(3, userAccount.getPasswordSalt());
-            statement.setString(4, userAccount.getStatus());
-            statement.setString(5, userAccount.getRole());
-            statement.setTimestamp(6, Timestamp.from(userAccount.getCreatedAt()));
+            statement.setString(1, userAccount.getFullName());
+            statement.setString(2, userAccount.getEmail());
+            statement.setString(3, userAccount.getPasswordHash());
+            statement.setString(4, userAccount.getPasswordSalt());
+            statement.setString(5, userAccount.getStatus());
+            statement.setString(6, userAccount.getRole());
+            statement.setTimestamp(7, Timestamp.from(userAccount.getCreatedAt()));
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to save user account", e);

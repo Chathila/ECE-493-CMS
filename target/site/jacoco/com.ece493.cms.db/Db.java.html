@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -19,33 +20,38 @@ public final class Db {
     }
 
     public static DataSource createDataSource(String url) {
-<span class="fc" id="L22">        JdbcDataSource dataSource = new JdbcDataSource();</span>
-<span class="fc" id="L23">        dataSource.setURL(url);</span>
-<span class="fc" id="L24">        dataSource.setUser(&quot;sa&quot;);</span>
-<span class="fc" id="L25">        dataSource.setPassword(&quot;&quot;);</span>
-<span class="fc" id="L26">        return dataSource;</span>
+<span class="fc" id="L23">        JdbcDataSource dataSource = new JdbcDataSource();</span>
+<span class="fc" id="L24">        dataSource.setURL(url);</span>
+<span class="fc" id="L25">        dataSource.setUser(&quot;sa&quot;);</span>
+<span class="fc" id="L26">        dataSource.setPassword(&quot;&quot;);</span>
+<span class="fc" id="L27">        return dataSource;</span>
     }
 
     public static void runSchema(DataSource dataSource) {
-<span class="fc" id="L30">        String schemaSql = loadResource(&quot;db/schema.sql&quot;);</span>
-<span class="fc" id="L31">        try (Connection connection = dataSource.getConnection();</span>
-<span class="fc" id="L32">             Statement statement = connection.createStatement()) {</span>
-<span class="fc" id="L33">            statement.execute(schemaSql);</span>
-<span class="nc" id="L34">        } catch (SQLException e) {</span>
-<span class="nc" id="L35">            throw new IllegalStateException(&quot;Failed to initialize schema&quot;, e);</span>
-<span class="fc" id="L36">        }</span>
-<span class="fc" id="L37">    }</span>
+<span class="fc" id="L31">        String schemaSql = loadResource(&quot;db/schema.sql&quot;);</span>
+<span class="fc" id="L32">        try (Connection connection = dataSource.getConnection();</span>
+<span class="fc" id="L33">             Statement statement = connection.createStatement()) {</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            for (String sql : Arrays.stream(schemaSql.split(&quot;;&quot;))</span>
+<span class="fc" id="L35">                    .map(String::trim)</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">                    .filter(command -&gt; !command.isEmpty())</span>
+<span class="fc" id="L37">                    .toList()) {</span>
+<span class="fc" id="L38">                statement.execute(sql);</span>
+<span class="fc" id="L39">            }</span>
+<span class="fc" id="L40">        } catch (SQLException e) {</span>
+<span class="fc" id="L41">            throw new IllegalStateException(&quot;Failed to initialize schema&quot;, e);</span>
+<span class="fc" id="L42">        }</span>
+<span class="fc" id="L43">    }</span>
 
     private static String loadResource(String resourcePath) {
-<span class="fc" id="L40">        try (InputStream inputStream = Objects.requireNonNull(</span>
-<span class="fc" id="L41">                Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath),</span>
+<span class="fc" id="L46">        try (InputStream inputStream = Objects.requireNonNull(</span>
+<span class="fc" id="L47">                Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath),</span>
                 &quot;Missing resource: &quot; + resourcePath
         )) {
-<span class="fc" id="L44">            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {</span>
-<span class="fc" id="L45">                return reader.lines().collect(Collectors.joining(&quot;\n&quot;));</span>
+<span class="fc" id="L50">            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {</span>
+<span class="fc" id="L51">                return reader.lines().collect(Collectors.joining(&quot;\n&quot;));</span>
             }
-<span class="nc" id="L47">        } catch (IOException e) {</span>
-<span class="nc" id="L48">            throw new IllegalStateException(&quot;Failed reading resource: &quot; + resourcePath, e);</span>
+<span class="nc" id="L53">        } catch (IOException e) {</span>
+<span class="nc" id="L54">            throw new IllegalStateException(&quot;Failed reading resource: &quot; + resourcePath, e);</span>
         }
     }
 }
