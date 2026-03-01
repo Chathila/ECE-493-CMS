@@ -61,6 +61,7 @@ public class CmsAppServer {
         context.addServlet(new ServletHolder(new PaperSubmissionServlet(paperSubmissionService, submitPaperHtml)), "/papers/submit");
         context.addServlet(new ServletHolder(new DraftSaveServlet(draftSaveService)), "/papers/draft/save");
         context.addServlet(new ServletHolder(new DraftViewServlet(new JdbcPaperSubmissionDraftRepository(dataSource))), "/papers/draft");
+        context.addServlet(new ServletHolder(new DraftListServlet(new JdbcPaperSubmissionDraftRepository(dataSource))), "/papers/drafts");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home/*");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/styles.css", "text/css")), "/styles.css");
@@ -111,8 +112,10 @@ public class CmsAppServer {
 
     public static PaperSubmissionService createPaperSubmissionService(DataSource dataSource, InMemoryFileStorageService fileStorageService) {
         PaperSubmissionRepository repository = new JdbcPaperSubmissionRepository(dataSource);
+        PaperSubmissionDraftRepository draftRepository = new JdbcPaperSubmissionDraftRepository(dataSource);
         return new PaperSubmissionServiceImpl(
                 repository,
+                draftRepository,
                 new DefaultMetadataValidationService(),
                 fileStorageService
         );

@@ -60,12 +60,10 @@ class DraftSaveServiceImplTest {
     @Test
     void savesDraftSuccessfullyWhenChangesExist() {
         StubRepo repo = new StubRepo();
-        repo.existing = Optional.of(new PaperSubmissionDraft(
-                1L, "author@cms.com", "Old Title", "A", "U", "X", "k", "author@cms.com", Instant.now()
-        ));
+        repo.existing = new PaperSubmissionDraft(1L, "author@cms.com", "Old Title", "A", "U", "X", "k", "author@cms.com", Instant.now());
         DraftSaveServiceImpl service = new DraftSaveServiceImpl(repo, request -> null);
 
-        DraftSaveResult result = service.saveDraft("author@cms.com", validRequest());
+        DraftSaveResult result = service.saveDraft("author@cms.com", validRequestWithId(1L));
 
         assertEquals(200, result.getStatusCode());
         assertEquals("Draft saved successfully.", result.getMessage());
@@ -74,8 +72,8 @@ class DraftSaveServiceImplTest {
     @Test
     void returnsNoChangeMessageWhenPayloadMatchesExistingDraft() {
         StubRepo repo = new StubRepo();
-        DraftSaveRequest request = validRequest();
-        repo.existing = Optional.of(new PaperSubmissionDraft(
+        DraftSaveRequest request = validRequestWithId(1L);
+        repo.existing = new PaperSubmissionDraft(
                 1L,
                 "author@cms.com",
                 request.getTitle(),
@@ -85,7 +83,7 @@ class DraftSaveServiceImplTest {
                 request.getKeywords(),
                 request.getContactDetails(),
                 Instant.now()
-        ));
+        );
         DraftSaveServiceImpl service = new DraftSaveServiceImpl(repo, requestArg -> null);
 
         DraftSaveResult result = service.saveDraft("author@cms.com", request);
@@ -97,10 +95,10 @@ class DraftSaveServiceImplTest {
     @Test
     void handlesNullOptionalFieldsDuringSaveAndComparison() {
         StubRepo repo = new StubRepo();
-        DraftSaveRequest request = new DraftSaveRequest("Title", null, null, null, null, "author@cms.com");
-        repo.existing = Optional.of(new PaperSubmissionDraft(
+        DraftSaveRequest request = new DraftSaveRequest(1L, "Title", null, null, null, null, "author@cms.com");
+        repo.existing = new PaperSubmissionDraft(
                 1L, "author@cms.com", "Title", null, null, null, null, "author@cms.com", Instant.now()
-        ));
+        );
         DraftSaveServiceImpl service = new DraftSaveServiceImpl(repo, requestArg -> null);
 
         DraftSaveResult result = service.saveDraft("author@cms.com", request);
@@ -109,30 +107,91 @@ class DraftSaveServiceImplTest {
         assertTrue(result.getMessage().contains("No changes were detected"));
     }
 
+    @Test
+    void createsNewDraftWhenNoDraftIdProvided() {
+        StubRepo repo = new StubRepo();
+        DraftSaveServiceImpl service = new DraftSaveServiceImpl(repo, request -> null);
+
+        DraftSaveResult result = service.saveDraft("author@cms.com", validRequest());
+
+        assertEquals(200, result.getStatusCode());
+        assertEquals(2L, result.getDraftId());
+    }
+
+    @Test
+    void returnsNotFoundWhenUpdatingMissingDraftId() {
+        StubRepo repo = new StubRepo();
+        DraftSaveServiceImpl service = new DraftSaveServiceImpl(repo, request -> null);
+
+        DraftSaveResult result = service.saveDraft("author@cms.com", validRequestWithId(99L));
+
+        assertEquals(404, result.getStatusCode());
+    }
+
     private DraftSaveRequest validRequest() {
-        return new DraftSaveRequest("Title", "A", "U", "Abstract", "k1,k2", "author@cms.com");
+        return new DraftSaveRequest(null, "Title", "A", "U", "Abstract", "k1,k2", "author@cms.com");
+    }
+
+    private DraftSaveRequest validRequestWithId(Long id) {
+        return new DraftSaveRequest(id, "Title", "A", "U", "Abstract", "k1,k2", "author@cms.com");
     }
 
     private static class StubRepo implements PaperSubmissionDraftRepository {
-        private Optional<PaperSubmissionDraft> existing = Optional.empty();
+        private PaperSubmissionDraft existing;
         private boolean throwOnSave;
 
         @Override
-        public Optional<PaperSubmissionDraft> findByAuthorEmail(String authorEmail) {
-            return existing;
+        public Optional<PaperSubmissionDraft> findByIdAndAuthorEmail(long draftId, String authorEmail) {
+            if (existing == null) {
+                return Optional.empty();
+            }
+            if (existing.getDraftId() == draftId && existing.getAuthorEmail().equals(authorEmail)) {
+                return Optional.of(existing);
+            }
+            return Optional.empty();
         }
 
         @Override
-        public void saveOrUpdate(PaperSubmissionDraft draft) {
+        public java.util.List<PaperSubmissionDraft> findAllByAuthorEmail(String authorEmail) {
+            return existing == null ? java.util.List.of() : java.util.List.of(existing);
+        }
+
+        @Override
+        public long save(PaperSubmissionDraft draft) {
             if (throwOnSave) {
                 throw new IllegalStateException("down");
             }
-            existing = Optional.of(draft);
+            existing = new PaperSubmissionDraft(
+                    2L,
+                    draft.getAuthorEmail(),
+                    draft.getTitle(),
+                    draft.getAuthors(),
+                    draft.getAffiliations(),
+                    draft.getPaperAbstract(),
+                    draft.getKeywords(),
+                    draft.getContactDetails(),
+                    draft.getUpdatedAt()
+            );
+            return 2L;
+        }
+
+        @Override
+        public boolean update(PaperSubmissionDraft draft) {
+            if (throwOnSave) {
+                throw new IllegalStateException("down");
+            }
+            existing = draft;
+            return true;
+        }
+
+        @Override
+        public boolean deleteByIdAndAuthorEmail(long draftId, String authorEmail) {
+            return false;
         }
 
         @Override
         public long countAll() {
-            return existing.isPresent() ? 1 : 0;
+            return existing != null ? 1 : 0;
         }
     }
 }

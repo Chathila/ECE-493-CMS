@@ -24,6 +24,7 @@ public class DraftSaveServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String body = readBody(req);
 
+        Long draftId = readLongField(body, "draft_id");
         String title = readTextField(body, "title");
         String authors = readTextOrArrayField(body, "authors");
         String affiliations = readTextOrArrayField(body, "affiliations");
@@ -36,12 +37,17 @@ public class DraftSaveServlet extends HttpServlet {
 
         DraftSaveResult result = draftSaveService.saveDraft(
                 authorEmail,
-                new DraftSaveRequest(title, authors, affiliations, paperAbstract, keywords, contactDetails)
+                new DraftSaveRequest(draftId, title, authors, affiliations, paperAbstract, keywords, contactDetails)
         );
 
         resp.setStatus(result.getStatusCode());
         resp.setContentType("application/json; charset=UTF-8");
-        resp.getWriter().write("{\"message\":\"" + escapeJson(result.getMessage()) + "\"}");
+        String payload = "{\"message\":\"" + escapeJson(result.getMessage()) + "\"";
+        if (result.getDraftId() != null) {
+            payload += ",\"draft_id\":" + result.getDraftId();
+        }
+        payload += "}";
+        resp.getWriter().write(payload);
     }
 
     private String readBody(HttpServletRequest req) throws IOException {
@@ -62,6 +68,15 @@ public class DraftSaveServlet extends HttpServlet {
         Pattern pattern = Pattern.compile("\\\"" + Pattern.quote(fieldName) + "\\\"\\s*:\\s*\\\"([^\\\"]*)\\\"");
         Matcher matcher = pattern.matcher(body);
         return matcher.find() ? matcher.group(1) : null;
+    }
+
+    private Long readLongField(String body, String fieldName) {
+        if (body == null || body.isEmpty()) {
+            return null;
+        }
+        Pattern pattern = Pattern.compile("\\\"" + Pattern.quote(fieldName) + "\\\"\\s*:\\s*(\\d+)");
+        Matcher matcher = pattern.matcher(body);
+        return matcher.find() ? Long.parseLong(matcher.group(1)) : null;
     }
 
     private String readTextOrArrayField(String body, String fieldName) {

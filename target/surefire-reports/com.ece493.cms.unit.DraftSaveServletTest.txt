@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.ece493.cms.unit.DraftSaveServletTest
 -------------------------------------------------------------------------------
-Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.042 s -- in com.ece493.cms.unit.DraftSaveServletTest
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.099 s -- in com.ece493.cms.unit.DraftSaveServletTest

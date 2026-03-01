@@ -25,10 +25,8 @@
         <p class="dashboard-text">Manage all paper-related activities from this area.</p>
         <a class="action-link" href="/papers/submit">Submit Paper</a>
         <div id="draft-panel" class="draft-panel">
-          <p class="dashboard-text"><strong>Draft Status:</strong> <span id="draft-state">Checking for saved draft...</span></p>
-          <p id="draft-title-row" class="dashboard-text" hidden><strong>Title:</strong> <span id="draft-title"></span></p>
-          <p id="draft-contact-row" class="dashboard-text" hidden><strong>Contact:</strong> <span id="draft-contact"></span></p>
-          <a id="draft-edit-link" class="action-link secondary" href="/papers/submit?loadDraft=1" hidden>Edit Draft</a>
+          <p class="dashboard-text"><strong>Drafts:</strong> <span id="draft-state">Checking saved drafts...</span></p>
+          <div id="draft-list"></div>
         </div>
       </article>
     </div>
@@ -84,28 +82,31 @@
 
   async function loadDraftSummary() {
     const stateEl = document.getElementById('draft-state');
-    const titleRow = document.getElementById('draft-title-row');
-    const contactRow = document.getElementById('draft-contact-row');
-    const titleEl = document.getElementById('draft-title');
-    const contactEl = document.getElementById('draft-contact');
-    const editLink = document.getElementById('draft-edit-link');
+    const listEl = document.getElementById('draft-list');
 
-    const response = await fetch('/papers/draft', { method: 'GET' });
+    const response = await fetch('/papers/drafts', { method: 'GET' });
     if (response.status === 200) {
-      const draft = await response.json();
-      stateEl.textContent = 'Saved Draft Available';
-      titleEl.textContent = draft.title || '(Untitled)';
-      contactEl.textContent = draft.contact_details || '(No contact)';
-      titleRow.hidden = false;
-      contactRow.hidden = false;
-      editLink.hidden = false;
+      const drafts = await response.json();
+      if (!Array.isArray(drafts) || drafts.length === 0) {
+        stateEl.textContent = 'No drafts saved yet.';
+        listEl.innerHTML = '';
+        return;
+      }
+      stateEl.textContent = `${drafts.length} draft(s) available.`;
+      listEl.innerHTML = drafts.map((draft) => (
+        `<div class="draft-item">`
+          + `<p class="dashboard-text"><strong>${draft.title || '(Untitled)'}</strong></p>`
+          + `<p class="dashboard-text">Contact: ${draft.contact_details || '(No contact)'}</p>`
+          + `<a class="action-link secondary" href="/papers/submit?loadDraft=${draft.draft_id}">Edit Draft</a>`
+        + `</div>`
+      )).join('');
       return;
     }
-    if (response.status === 404) {
-      stateEl.textContent = 'No draft saved yet.';
+    if (response.status === 401) {
+      stateEl.textContent = 'Log in to view drafts.';
       return;
     }
-    stateEl.textContent = 'Unable to load draft right now.';
+    stateEl.textContent = 'Unable to load drafts right now.';
   }
 
   loadDraftSummary();

@@ -45,18 +45,26 @@ public final class ServletHttpTestSupport {
     }
 
     public static HttpServletRequest getRequest() {
-        return getRequest(null);
+        return getRequest(null, null);
     }
 
     public static HttpServletRequest getRequest(SessionCapture sessionCapture) {
+        return getRequest(sessionCapture, null);
+    }
+
+    public static HttpServletRequest getRequest(SessionCapture sessionCapture, Map<String, String> params) {
         return (HttpServletRequest) Proxy.newProxyInstance(
                 ServletHttpTestSupport.class.getClassLoader(),
                 new Class[]{HttpServletRequest.class},
                 (proxy, method, args) -> {
-                    if ("getMethod".equals(method.getName())) {
+                    String name = method.getName();
+                    if ("getMethod".equals(name)) {
                         return "GET";
                     }
-                    if ("getSession".equals(method.getName())) {
+                    if ("getParameter".equals(name) && args != null && args.length == 1 && params != null) {
+                        return params.get((String) args[0]);
+                    }
+                    if ("getSession".equals(name)) {
                         boolean create = args != null && args.length == 1 && Boolean.TRUE.equals(args[0]);
                         if (sessionCapture == null) {
                             return create ? new SessionCapture().asSession() : null;

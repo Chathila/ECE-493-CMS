@@ -6,6 +6,7 @@ import com.ece493.cms.controller.RegistrationServlet;
 import com.ece493.cms.controller.ChangePasswordServlet;
 import com.ece493.cms.controller.DraftSaveServlet;
 import com.ece493.cms.controller.DraftViewServlet;
+import com.ece493.cms.controller.DraftListServlet;
 import com.ece493.cms.db.Db;
 import com.ece493.cms.model.UserAccount;
 import com.ece493.cms.repository.JdbcPaperSubmissionDraftRepository;
@@ -43,6 +44,7 @@ public class RegistrationIntegrationSupport {
     protected PaperSubmissionServlet paperSubmissionServlet;
     protected DraftSaveServlet draftSaveServlet;
     protected DraftViewServlet draftViewServlet;
+    protected DraftListServlet draftListServlet;
     protected InMemoryFileStorageService fileStorageService;
 
     protected void startApp() {
@@ -70,6 +72,7 @@ public class RegistrationIntegrationSupport {
         fileStorageService = new InMemoryFileStorageService();
         PaperSubmissionService paperSubmissionService = new PaperSubmissionServiceImpl(
                 new JdbcPaperSubmissionRepository(dataSource),
+                new JdbcPaperSubmissionDraftRepository(dataSource),
                 new DefaultMetadataValidationService(),
                 fileStorageService
         );
@@ -84,6 +87,7 @@ public class RegistrationIntegrationSupport {
         paperSubmissionServlet = new PaperSubmissionServlet(paperSubmissionService, loadSubmitPaperHtml());
         draftSaveServlet = new DraftSaveServlet(draftSaveService);
         draftViewServlet = new DraftViewServlet(new JdbcPaperSubmissionDraftRepository(dataSource));
+        draftListServlet = new DraftListServlet(new JdbcPaperSubmissionDraftRepository(dataSource));
     }
 
     protected void stopApp() {
@@ -183,9 +187,18 @@ public class RegistrationIntegrationSupport {
         return response;
     }
 
-    protected ServletHttpTestSupport.ResponseCapture getDraft(ServletHttpTestSupport.SessionCapture session) throws Exception {
+    protected ServletHttpTestSupport.ResponseCapture getDraft(ServletHttpTestSupport.SessionCapture session, String draftId) throws Exception {
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         draftViewServlet.service(
+                ServletHttpTestSupport.getRequest(session, java.util.Map.of("id", draftId)),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getDrafts(ServletHttpTestSupport.SessionCapture session) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        draftListServlet.service(
                 ServletHttpTestSupport.getRequest(session),
                 response.asResponse()
         );

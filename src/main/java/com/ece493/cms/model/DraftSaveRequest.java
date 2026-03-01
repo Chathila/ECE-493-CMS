@@ -1,6 +1,7 @@
 package com.ece493.cms.model;
 
 public class DraftSaveRequest {
+    private final Long draftId;
     private final String title;
     private final String authors;
     private final String affiliations;
@@ -9,6 +10,7 @@ public class DraftSaveRequest {
     private final String contactDetails;
 
     public DraftSaveRequest(
+            Long draftId,
             String title,
             String authors,
             String affiliations,
@@ -16,6 +18,7 @@ public class DraftSaveRequest {
             String keywords,
             String contactDetails
     ) {
+        this.draftId = draftId;
         this.title = title;
         this.authors = authors;
         this.affiliations = affiliations;
@@ -26,6 +29,10 @@ public class DraftSaveRequest {
 
     public String getTitle() {
         return title;
+    }
+
+    public Long getDraftId() {
+        return draftId;
     }
 
     public String getAuthors() {

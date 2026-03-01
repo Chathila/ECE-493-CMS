@@ -28,7 +28,13 @@ public class DraftSaveServiceImpl implements DraftSaveService {
             return DraftSaveResult.error(400, validationMessage);
         }
 
-        Optional<PaperSubmissionDraft> existingDraft = draftRepository.findByAuthorEmail(authorEmail);
+        Optional<PaperSubmissionDraft> existingDraft = Optional.empty();
+        if (request.getDraftId() != null) {
+            existingDraft = draftRepository.findByIdAndAuthorEmail(request.getDraftId(), authorEmail);
+            if (existingDraft.isEmpty()) {
+                return DraftSaveResult.error(404, "Draft not found for update.");
+            }
+        }
         boolean noChanges = existingDraft.isPresent() && matches(existingDraft.get(), request);
 
         PaperSubmissionDraft draft = new PaperSubmissionDraft(
@@ -44,15 +50,20 @@ public class DraftSaveServiceImpl implements DraftSaveService {
         );
 
         try {
-            draftRepository.saveOrUpdate(draft);
+            if (existingDraft.isPresent()) {
+                draftRepository.update(draft);
+            } else {
+                long createdId = draftRepository.save(draft);
+                return DraftSaveResult.success("Draft saved successfully.", createdId);
+            }
         } catch (IllegalStateException e) {
             return DraftSaveResult.error(500, "Draft could not be saved due to a storage error. Please try again.");
         }
 
         if (noChanges) {
-            return DraftSaveResult.success("Draft saved successfully. No changes were detected.");
+            return DraftSaveResult.success("Draft saved successfully. No changes were detected.", draft.getDraftId());
         }
-        return DraftSaveResult.success("Draft saved successfully.");
+        return DraftSaveResult.success("Draft saved successfully.", draft.getDraftId());
     }
 
     private boolean matches(PaperSubmissionDraft draft, DraftSaveRequest request) {

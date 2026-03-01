@@ -10,9 +10,7 @@ com/ece493/cms/unit/DefaultEmailValidationServiceTest.class
 com/ece493/cms/unit/JdbcPaperSubmissionRepositoryTest.class
 com/ece493/cms/acceptance/UC03AcceptanceIT.class
 com/ece493/cms/unit/JdbcUserAccountRepositoryTest$2.class
-com/ece493/cms/unit/DefaultDraftValidationServiceTest.class
 com/ece493/cms/unit/DefaultMetadataValidationServiceTest.class
-com/ece493/cms/unit/JdbcPaperSubmissionDraftRepositoryTest$1.class
 com/ece493/cms/unit/DraftSaveServiceImplTest.class
 com/ece493/cms/integration/ChangePasswordEndpointIT.class
 com/ece493/cms/unit/DefaultPasswordPolicyServiceTest.class
@@ -28,7 +26,6 @@ com/ece493/cms/unit/StaticResourceServletTest.class
 com/ece493/cms/unit/CmsAppServerTest.class
 com/ece493/cms/unit/JdbcUserAccountRepositoryTest$4.class
 com/ece493/cms/unit/DraftSaveServiceImplTest$StubRepo.class
-com/ece493/cms/unit/JdbcPaperSubmissionDraftRepositoryTest.class
 com/ece493/cms/acceptance/UC05AcceptanceIT.class
 com/ece493/cms/integration/RegistrationIntegrationSupport.class
 com/ece493/cms/unit/PaperSubmissionServiceImplTest$StubRepo.class
@@ -46,7 +43,6 @@ com/ece493/cms/unit/PaperSubmissionServiceImplTest$StubStorage.class
 com/ece493/cms/unit/RegistrationServiceImplTest$InMemoryRepo.class
 com/ece493/cms/unit/RegistrationServletTest.class
 com/ece493/cms/unit/PasswordChangeServiceImplTest.class
-com/ece493/cms/unit/DraftViewServletTest$3.class
 com/ece493/cms/unit/JdbcUserAccountRepositoryTest$1.class
 com/ece493/cms/integration/ServletHttpTestSupport$SessionCapture.class
 com/ece493/cms/unit/AuthenticationServiceImplTest$StubRepo.class

@@ -3,26 +3,36 @@
 public class DraftSaveResult {
     private final int statusCode;
     private final String message;
+    private final Long draftId;
 
-<span class="fc" id="L7">    private DraftSaveResult(int statusCode, String message) {</span>
-<span class="fc" id="L8">        this.statusCode = statusCode;</span>
-<span class="fc" id="L9">        this.message = message;</span>
-<span class="fc" id="L10">    }</span>
+<span class="fc" id="L8">    private DraftSaveResult(int statusCode, String message, Long draftId) {</span>
+<span class="fc" id="L9">        this.statusCode = statusCode;</span>
+<span class="fc" id="L10">        this.message = message;</span>
+<span class="fc" id="L11">        this.draftId = draftId;</span>
+<span class="fc" id="L12">    }</span>
 
     public static DraftSaveResult success(String message) {
-<span class="fc" id="L13">        return new DraftSaveResult(200, message);</span>
+<span class="nc" id="L15">        return new DraftSaveResult(200, message, null);</span>
+    }
+
+    public static DraftSaveResult success(String message, Long draftId) {
+<span class="fc" id="L19">        return new DraftSaveResult(200, message, draftId);</span>
     }
 
     public static DraftSaveResult error(int statusCode, String message) {
-<span class="fc" id="L17">        return new DraftSaveResult(statusCode, message);</span>
+<span class="fc" id="L23">        return new DraftSaveResult(statusCode, message, null);</span>
     }
 
     public int getStatusCode() {
-<span class="fc" id="L21">        return statusCode;</span>
+<span class="fc" id="L27">        return statusCode;</span>
     }
 
     public String getMessage() {
-<span class="fc" id="L25">        return message;</span>
+<span class="fc" id="L31">        return message;</span>
+    }
+
+    public Long getDraftId() {
+<span class="fc" id="L35">        return draftId;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

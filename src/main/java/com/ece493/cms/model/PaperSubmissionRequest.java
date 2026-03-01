@@ -1,6 +1,7 @@
 package com.ece493.cms.model;
 
 public class PaperSubmissionRequest {
+    private final Long draftId;
     private final String title;
     private final String authors;
     private final String affiliations;
@@ -18,6 +19,20 @@ public class PaperSubmissionRequest {
             String contactDetails,
             ManuscriptFile manuscriptFile
     ) {
+        this(null, title, authors, affiliations, paperAbstract, keywords, contactDetails, manuscriptFile);
+    }
+
+    public PaperSubmissionRequest(
+            Long draftId,
+            String title,
+            String authors,
+            String affiliations,
+            String paperAbstract,
+            String keywords,
+            String contactDetails,
+            ManuscriptFile manuscriptFile
+    ) {
+        this.draftId = draftId;
         this.title = title;
         this.authors = authors;
         this.affiliations = affiliations;
@@ -25,6 +40,10 @@ public class PaperSubmissionRequest {
         this.keywords = keywords;
         this.contactDetails = contactDetails;
         this.manuscriptFile = manuscriptFile;
+    }
+
+    public Long getDraftId() {
+        return draftId;
     }
 
     public String getTitle() {

@@ -50,6 +50,7 @@
   const statusBox = document.getElementById('status');
   const saveDraftButton = document.getElementById('save-draft-button');
   const params = new URLSearchParams(window.location.search);
+  let loadedDraftId = null;
 
   function toBase64(file) {
     return new Promise((resolve, reject) => {
@@ -73,6 +74,7 @@
     const contentBase64 = file ? await toBase64(file) : '';
 
     const payload = {
+      draft_id: loadedDraftId,
       title: document.getElementById('title').value,
       authors: document.getElementById('authors').value,
       affiliations: document.getElementById('affiliations').value,
@@ -111,6 +113,7 @@
     statusBox.textContent = '';
 
     const payload = {
+      draft_id: loadedDraftId,
       title: document.getElementById('title').value,
       authors: document.getElementById('authors').value,
       affiliations: document.getElementById('affiliations').value,
@@ -125,26 +128,36 @@
       body: JSON.stringify(payload)
     });
 
-    const result = await response.json();
-    if (response.status === 200) {
+    let result = {};
+    try {
+      result = await response.json();
+    } catch (err) {
+      result = { message: 'Draft save response could not be read.' };
+    }
+
+    if (response.ok) {
+      loadedDraftId = result.draft_id || loadedDraftId;
       statusBox.classList.add('success');
-      statusBox.textContent = result.message;
-      window.setTimeout(() => {
-        window.location.href = '/home?tab=papers&draft_saved=1';
-      }, 700);
+      statusBox.textContent = result.message || 'Draft saved successfully.';
+      window.location.assign('/home?tab=papers&draft_saved=1');
       return;
     }
 
     statusBox.classList.add('error');
-    statusBox.textContent = result.message;
+    statusBox.textContent = result.message || 'Draft could not be saved.';
   });
 
   async function loadDraftIntoForm() {
-    const response = await fetch('/papers/draft', { method: 'GET' });
+    const draftId = params.get('loadDraft');
+    if (!draftId) {
+      return;
+    }
+    const response = await fetch(`/papers/draft?id=${encodeURIComponent(draftId)}`, { method: 'GET' });
     if (response.status !== 200) {
       return;
     }
     const draft = await response.json();
+    loadedDraftId = draft.draft_id || null;
     document.getElementById('title').value = draft.title || '';
     document.getElementById('authors').value = draft.authors || '';
     document.getElementById('affiliations').value = draft.affiliations || '';
@@ -156,7 +169,7 @@
     statusBox.textContent = 'Draft loaded. Review fields, attach manuscript file, then submit.';
   }
 
-  if (params.get('loadDraft') === '1') {
+  if (params.get('loadDraft')) {
     loadDraftIntoForm();
   }
 </script>

@@ -1,5 +1,6 @@
 package com.ece493.cms.integration;
 
+import com.ece493.cms.repository.JdbcPaperSubmissionDraftRepository;
 import com.ece493.cms.repository.JdbcPaperSubmissionRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +35,18 @@ class PaperSubmissionEndpointIT extends RegistrationIntegrationSupport {
         assertTrue(response.getBody().contains("Paper submitted successfully"));
         assertEquals(1L, new JdbcPaperSubmissionRepository(dataSource).countAll());
         assertEquals(1L, fileStorageService.storedFileCount());
+    }
+
+    @Test
+    void postSubmitPaperWithDraftIdRemovesDraft() throws Exception {
+        ServletHttpTestSupport.ResponseCapture draftCreate = postDraftSave(validDraftPayload(), loggedInSession("author@cms.com"));
+        String draftId = extractDraftId(draftCreate.getBody());
+
+        ServletHttpTestSupport.ResponseCapture response = postPaperSubmission(validPayloadWithDraftId(draftId), loggedInSession("author@cms.com"));
+
+        assertEquals(200, response.getStatus());
+        assertEquals(1L, new JdbcPaperSubmissionRepository(dataSource).countAll());
+        assertEquals(0L, new JdbcPaperSubmissionDraftRepository(dataSource).countAll());
     }
 
     @Test
@@ -91,5 +104,20 @@ class PaperSubmissionEndpointIT extends RegistrationIntegrationSupport {
 
     private String validPayload() {
         return "{\"title\":\"Valid Paper\",\"authors\":[\"Alice\",\"Bob\"],\"affiliations\":[\"U1\",\"U2\"],\"abstract\":\"A\",\"keywords\":[\"k1\",\"k2\"],\"contact_details\":\"author@cms.com\",\"manuscript_file\":{\"filename\":\"paper.pdf\",\"content_base64\":\"ZGF0YQ==\"}}";
+    }
+
+    private String validPayloadWithDraftId(String draftId) {
+        return "{\"draft_id\":" + draftId + ",\"title\":\"Valid Paper\",\"authors\":[\"Alice\",\"Bob\"],\"affiliations\":[\"U1\",\"U2\"],\"abstract\":\"A\",\"keywords\":[\"k1\",\"k2\"],\"contact_details\":\"author@cms.com\",\"manuscript_file\":{\"filename\":\"paper.pdf\",\"content_base64\":\"ZGF0YQ==\"}}";
+    }
+
+    private String validDraftPayload() {
+        return "{\"title\":\"Draft Title\",\"authors\":[\"Alice\"],\"affiliations\":[\"U1\"],\"abstract\":\"A\",\"keywords\":[\"k1\"],\"contact_details\":\"author@cms.com\"}";
+    }
+
+    private String extractDraftId(String body) {
+        int marker = body.indexOf("\"draft_id\":");
+        int start = marker + "\"draft_id\":".length();
+        int end = body.indexOf('}', start);
+        return body.substring(start, end).trim();
     }
 }

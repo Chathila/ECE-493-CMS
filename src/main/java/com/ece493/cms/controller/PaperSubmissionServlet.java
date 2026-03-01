@@ -40,6 +40,7 @@ public class PaperSubmissionServlet extends HttpServlet {
         String paperAbstract = readTextField(body, "abstract");
         String keywords = readTextOrArrayField(body, "keywords");
         String contactDetails = readTextField(body, "contact_details");
+        Long draftId = readLongField(body, "draft_id");
         String filename = readTextField(body, "filename");
         String contentBase64 = readTextField(body, "content_base64");
 
@@ -49,6 +50,7 @@ public class PaperSubmissionServlet extends HttpServlet {
         PaperSubmissionResult result = paperSubmissionService.submit(
                 authorEmail,
                 new PaperSubmissionRequest(
+                        draftId,
                         title,
                         authors,
                         affiliations,
@@ -114,6 +116,15 @@ public class PaperSubmissionServlet extends HttpServlet {
             builder.append(itemMatcher.group(1));
         }
         return builder.length() == 0 ? null : builder.toString();
+    }
+
+    private Long readLongField(String body, String fieldName) {
+        if (body == null || body.isEmpty()) {
+            return null;
+        }
+        Pattern pattern = Pattern.compile("\\\"" + Pattern.quote(fieldName) + "\\\"\\s*:\\s*(-?\\d+)");
+        Matcher matcher = pattern.matcher(body);
+        return matcher.find() ? Long.parseLong(matcher.group(1)) : null;
     }
 
     private String escapeJson(String value) {

@@ -27,7 +27,23 @@ public class DraftViewServlet extends HttpServlet {
             return;
         }
 
-        Optional<PaperSubmissionDraft> draft = draftRepository.findByAuthorEmail(authorEmail);
+        String draftIdParam = req.getParameter("id");
+        if (draftIdParam == null || draftIdParam.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJsonMessage(resp, "Draft id is required.");
+            return;
+        }
+
+        long draftId;
+        try {
+            draftId = Long.parseLong(draftIdParam);
+        } catch (NumberFormatException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJsonMessage(resp, "Draft id must be numeric.");
+            return;
+        }
+
+        Optional<PaperSubmissionDraft> draft = draftRepository.findByIdAndAuthorEmail(draftId, authorEmail);
         if (draft.isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             writeJsonMessage(resp, "No draft found.");
@@ -39,6 +55,7 @@ public class DraftViewServlet extends HttpServlet {
         resp.setContentType("application/json; charset=UTF-8");
         resp.getWriter().write(
                 "{"
+                        + "\"draft_id\":" + value.getDraftId() + ","
                         + "\"title\":\"" + escapeJson(value.getTitle()) + "\","
                         + "\"authors\":\"" + escapeJson(nullToEmpty(value.getAuthors())) + "\","
                         + "\"affiliations\":\"" + escapeJson(nullToEmpty(value.getAffiliations())) + "\","

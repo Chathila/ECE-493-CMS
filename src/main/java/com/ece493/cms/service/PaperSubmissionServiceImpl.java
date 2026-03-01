@@ -5,21 +5,25 @@ import com.ece493.cms.model.MetadataValidationResult;
 import com.ece493.cms.model.PaperSubmission;
 import com.ece493.cms.model.PaperSubmissionRequest;
 import com.ece493.cms.model.PaperSubmissionResult;
+import com.ece493.cms.repository.PaperSubmissionDraftRepository;
 import com.ece493.cms.repository.PaperSubmissionRepository;
 
 import java.time.Instant;
 
 public class PaperSubmissionServiceImpl implements PaperSubmissionService {
     private final PaperSubmissionRepository paperSubmissionRepository;
+    private final PaperSubmissionDraftRepository paperSubmissionDraftRepository;
     private final MetadataValidationService metadataValidationService;
     private final FileStorageService fileStorageService;
 
     public PaperSubmissionServiceImpl(
             PaperSubmissionRepository paperSubmissionRepository,
+            PaperSubmissionDraftRepository paperSubmissionDraftRepository,
             MetadataValidationService metadataValidationService,
             FileStorageService fileStorageService
     ) {
         this.paperSubmissionRepository = paperSubmissionRepository;
+        this.paperSubmissionDraftRepository = paperSubmissionDraftRepository;
         this.metadataValidationService = metadataValidationService;
         this.fileStorageService = fileStorageService;
     }
@@ -68,6 +72,10 @@ public class PaperSubmissionServiceImpl implements PaperSubmissionService {
                 fileId,
                 Instant.now()
         ));
+
+        if (request.getDraftId() != null) {
+            paperSubmissionDraftRepository.deleteByIdAndAuthorEmail(request.getDraftId(), authorEmail);
+        }
 
         return PaperSubmissionResult.success("Paper submitted successfully.", "/home");
     }

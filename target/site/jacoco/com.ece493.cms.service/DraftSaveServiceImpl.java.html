@@ -28,59 +28,70 @@ public class DraftSaveServiceImpl implements DraftSaveService {
 <span class="fc" id="L28">            return DraftSaveResult.error(400, validationMessage);</span>
         }
 
-<span class="fc" id="L31">        Optional&lt;PaperSubmissionDraft&gt; existingDraft = draftRepository.findByAuthorEmail(authorEmail);</span>
-<span class="fc bfc" id="L32" title="All 4 branches covered.">        boolean noChanges = existingDraft.isPresent() &amp;&amp; matches(existingDraft.get(), request);</span>
+<span class="fc" id="L31">        Optional&lt;PaperSubmissionDraft&gt; existingDraft = Optional.empty();</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        if (request.getDraftId() != null) {</span>
+<span class="fc" id="L33">            existingDraft = draftRepository.findByIdAndAuthorEmail(request.getDraftId(), authorEmail);</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">            if (existingDraft.isEmpty()) {</span>
+<span class="fc" id="L35">                return DraftSaveResult.error(404, &quot;Draft not found for update.&quot;);</span>
+            }
+        }
+<span class="fc bfc" id="L38" title="All 4 branches covered.">        boolean noChanges = existingDraft.isPresent() &amp;&amp; matches(existingDraft.get(), request);</span>
 
-<span class="fc" id="L34">        PaperSubmissionDraft draft = new PaperSubmissionDraft(</span>
-<span class="fc" id="L35">                existingDraft.map(PaperSubmissionDraft::getDraftId).orElse(0L),</span>
-                authorEmail,
-<span class="fc" id="L37">                request.getTitle().trim(),</span>
-<span class="fc" id="L38">                normalize(request.getAuthors()),</span>
-<span class="fc" id="L39">                normalize(request.getAffiliations()),</span>
-<span class="fc" id="L40">                normalize(request.getPaperAbstract()),</span>
-<span class="fc" id="L41">                normalize(request.getKeywords()),</span>
-<span class="fc" id="L42">                request.getContactDetails().trim(),</span>
-<span class="fc" id="L43">                Instant.now()</span>
+<span class="fc" id="L40">        PaperSubmissionDraft draft = new PaperSubmissionDraft(</span>
+<span class="fc" id="L41">                existingDraft.map(PaperSubmissionDraft::getDraftId).orElse(0L),</span>
+<span class="fc" id="L42">                authorEmail,</span>
+<span class="fc" id="L43">                request.getTitle().trim(),</span>
+<span class="fc" id="L44">                normalize(request.getAuthors()),</span>
+<span class="fc" id="L45">                normalize(request.getAffiliations()),</span>
+<span class="fc" id="L46">                normalize(request.getPaperAbstract()),</span>
+<span class="fc" id="L47">                normalize(request.getKeywords()),</span>
+<span class="fc" id="L48">                request.getContactDetails().trim(),</span>
+<span class="fc" id="L49">                Instant.now()</span>
         );
 
         try {
-<span class="fc" id="L47">            draftRepository.saveOrUpdate(draft);</span>
-<span class="fc" id="L48">        } catch (IllegalStateException e) {</span>
-<span class="fc" id="L49">            return DraftSaveResult.error(500, &quot;Draft could not be saved due to a storage error. Please try again.&quot;);</span>
-<span class="fc" id="L50">        }</span>
-
-<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (noChanges) {</span>
-<span class="fc" id="L53">            return DraftSaveResult.success(&quot;Draft saved successfully. No changes were detected.&quot;);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            if (existingDraft.isPresent()) {</span>
+<span class="fc" id="L54">                draftRepository.update(draft);</span>
+<span class="fc" id="L55">            } else {</span>
+<span class="fc" id="L56">                long createdId = draftRepository.save(draft);</span>
+<span class="fc" id="L57">                return DraftSaveResult.success(&quot;Draft saved successfully.&quot;, createdId);</span>
+            }
+<span class="fc" id="L59">        } catch (IllegalStateException e) {</span>
+<span class="fc" id="L60">            return DraftSaveResult.error(500, &quot;Draft could not be saved due to a storage error. Please try again.&quot;);</span>
         }
-<span class="fc" id="L55">        return DraftSaveResult.success(&quot;Draft saved successfully.&quot;);</span>
+
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (noChanges) {</span>
+<span class="fc" id="L64">            return DraftSaveResult.success(&quot;Draft saved successfully. No changes were detected.&quot;, draft.getDraftId());</span>
+        }
+<span class="fc" id="L66">        return DraftSaveResult.success(&quot;Draft saved successfully.&quot;, draft.getDraftId());</span>
     }
 
     private boolean matches(PaperSubmissionDraft draft, DraftSaveRequest request) {
-<span class="fc" id="L59">        String existing = String.join(&quot;|&quot;,</span>
-<span class="fc" id="L60">                normalize(draft.getTitle()),</span>
-<span class="fc" id="L61">                normalize(draft.getAuthors()),</span>
-<span class="fc" id="L62">                normalize(draft.getAffiliations()),</span>
-<span class="fc" id="L63">                normalize(draft.getPaperAbstract()),</span>
-<span class="fc" id="L64">                normalize(draft.getKeywords()),</span>
-<span class="fc" id="L65">                normalize(draft.getContactDetails())</span>
+<span class="fc" id="L70">        String existing = String.join(&quot;|&quot;,</span>
+<span class="fc" id="L71">                normalize(draft.getTitle()),</span>
+<span class="fc" id="L72">                normalize(draft.getAuthors()),</span>
+<span class="fc" id="L73">                normalize(draft.getAffiliations()),</span>
+<span class="fc" id="L74">                normalize(draft.getPaperAbstract()),</span>
+<span class="fc" id="L75">                normalize(draft.getKeywords()),</span>
+<span class="fc" id="L76">                normalize(draft.getContactDetails())</span>
         );
-<span class="fc" id="L67">        String incoming = String.join(&quot;|&quot;,</span>
-<span class="fc" id="L68">                normalize(request.getTitle()),</span>
-<span class="fc" id="L69">                normalize(request.getAuthors()),</span>
-<span class="fc" id="L70">                normalize(request.getAffiliations()),</span>
-<span class="fc" id="L71">                normalize(request.getPaperAbstract()),</span>
-<span class="fc" id="L72">                normalize(request.getKeywords()),</span>
-<span class="fc" id="L73">                normalize(request.getContactDetails())</span>
+<span class="fc" id="L78">        String incoming = String.join(&quot;|&quot;,</span>
+<span class="fc" id="L79">                normalize(request.getTitle()),</span>
+<span class="fc" id="L80">                normalize(request.getAuthors()),</span>
+<span class="fc" id="L81">                normalize(request.getAffiliations()),</span>
+<span class="fc" id="L82">                normalize(request.getPaperAbstract()),</span>
+<span class="fc" id="L83">                normalize(request.getKeywords()),</span>
+<span class="fc" id="L84">                normalize(request.getContactDetails())</span>
         );
-<span class="fc" id="L75">        return existing.equals(incoming);</span>
+<span class="fc" id="L86">        return existing.equals(incoming);</span>
     }
 
     private String normalize(String value) {
-<span class="fc bfc" id="L79" title="All 2 branches covered.">        return value == null ? &quot;&quot; : value.trim();</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        return value == null ? &quot;&quot; : value.trim();</span>
     }
 
     private boolean isBlank(String value) {
-<span class="fc bfc" id="L83" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
+<span class="fc bfc" id="L94" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

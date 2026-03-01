@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DraftSaveServletTest {
     @Test
     void postReturnsSuccessJson() throws Exception {
-        DraftSaveService service = (authorEmail, request) -> DraftSaveResult.success("ok");
+        DraftSaveService service = (authorEmail, request) -> DraftSaveResult.success("ok", 5L);
         DraftSaveServlet servlet = new DraftSaveServlet(service);
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         ServletHttpTestSupport.SessionCapture session = ServletHttpTestSupport.sessionCapture();
@@ -25,6 +25,7 @@ class DraftSaveServletTest {
 
         assertEquals(200, response.getStatus());
         assertTrue(response.getBody().contains("ok"));
+        assertTrue(response.getBody().contains("\"draft_id\":5"));
     }
 
     @Test
@@ -127,7 +128,22 @@ class DraftSaveServletTest {
         assertNull(value);
     }
 
+    @Test
+    void readLongFieldHandlesNullEmptyAndPresent() throws Exception {
+        DraftSaveServlet servlet = new DraftSaveServlet((authorEmail, request) -> DraftSaveResult.success("ok"));
+        Method method = DraftSaveServlet.class.getDeclaredMethod("readLongField", String.class, String.class);
+        method.setAccessible(true);
+
+        Object nullValue = method.invoke(servlet, null, "draft_id");
+        Object emptyValue = method.invoke(servlet, "", "draft_id");
+        Object presentValue = method.invoke(servlet, "{\"draft_id\":42}", "draft_id");
+
+        assertNull(nullValue);
+        assertNull(emptyValue);
+        assertEquals(42L, presentValue);
+    }
+
     private String validPayload() {
-        return "{\"title\":\"T\",\"authors\":[\"A\"],\"affiliations\":[\"U\"],\"abstract\":\"X\",\"keywords\":[\"k\"],\"contact_details\":\"author@cms.com\"}";
+        return "{\"draft_id\":1,\"title\":\"T\",\"authors\":[\"A\"],\"affiliations\":[\"U\"],\"abstract\":\"X\",\"keywords\":[\"k\"],\"contact_details\":\"author@cms.com\"}";
     }
 }

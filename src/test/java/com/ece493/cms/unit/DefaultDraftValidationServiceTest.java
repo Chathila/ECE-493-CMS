@@ -21,7 +21,7 @@ class DefaultDraftValidationServiceTest {
     void rejectsMissingRequiredFields() {
         DefaultDraftValidationService service = new DefaultDraftValidationService();
 
-        String message = service.validate(new DraftSaveRequest("", "A", "U", "Abstract", "k", ""));
+        String message = service.validate(new DraftSaveRequest(null, "", "A", "U", "Abstract", "k", ""));
 
         assertTrue(message.contains("Title and corresponding author email"));
     }
@@ -30,7 +30,7 @@ class DefaultDraftValidationServiceTest {
     void rejectsMissingRequiredFieldsWhenNull() {
         DefaultDraftValidationService service = new DefaultDraftValidationService();
 
-        String message = service.validate(new DraftSaveRequest(null, "A", "U", "Abstract", "k", "a@b.com"));
+        String message = service.validate(new DraftSaveRequest(null, null, "A", "U", "Abstract", "k", "a@b.com"));
 
         assertTrue(message.contains("Title and corresponding author email"));
     }
@@ -39,7 +39,7 @@ class DefaultDraftValidationServiceTest {
     void rejectsInvalidEmail() {
         DefaultDraftValidationService service = new DefaultDraftValidationService();
 
-        String message = service.validate(new DraftSaveRequest("T", "A", "U", "Abstract", "k", "not-email"));
+        String message = service.validate(new DraftSaveRequest(null, "T", "A", "U", "Abstract", "k", "not-email"));
 
         assertTrue(message.contains("valid corresponding author email"));
     }
@@ -48,7 +48,7 @@ class DefaultDraftValidationServiceTest {
     void rejectsInvalidCharacters() {
         DefaultDraftValidationService service = new DefaultDraftValidationService();
 
-        String message = service.validate(new DraftSaveRequest("T<bad>", "A", "U", "Abstract", "k", "a@b.com"));
+        String message = service.validate(new DraftSaveRequest(null, "T<bad>", "A", "U", "Abstract", "k", "a@b.com"));
 
         assertTrue(message.contains("unsupported characters"));
     }
@@ -57,10 +57,10 @@ class DefaultDraftValidationServiceTest {
     void rejectsInvalidCharactersInAuthorsAndAffiliationsAndAbstractAndKeywords() {
         DefaultDraftValidationService service = new DefaultDraftValidationService();
 
-        String authorMessage = service.validate(new DraftSaveRequest("Title", "A<bad>", "U", "Abstract", "k", "a@b.com"));
-        String affiliationMessage = service.validate(new DraftSaveRequest("Title", "A", "U<bad>", "Abstract", "k", "a@b.com"));
-        String abstractMessage = service.validate(new DraftSaveRequest("Title", "A", "U", "Abstract>bad", "k", "a@b.com"));
-        String keywordsMessage = service.validate(new DraftSaveRequest("Title", "A", "U", "Abstract", "k>bad", "a@b.com"));
+        String authorMessage = service.validate(new DraftSaveRequest(null, "Title", "A<bad>", "U", "Abstract", "k", "a@b.com"));
+        String affiliationMessage = service.validate(new DraftSaveRequest(null, "Title", "A", "U<bad>", "Abstract", "k", "a@b.com"));
+        String abstractMessage = service.validate(new DraftSaveRequest(null, "Title", "A", "U", "Abstract>bad", "k", "a@b.com"));
+        String keywordsMessage = service.validate(new DraftSaveRequest(null, "Title", "A", "U", "Abstract", "k>bad", "a@b.com"));
 
         assertTrue(authorMessage.contains("unsupported characters"));
         assertTrue(affiliationMessage.contains("unsupported characters"));
@@ -72,10 +72,10 @@ class DefaultDraftValidationServiceTest {
     void rejectsBlankAndMalformedEmailVariants() {
         DefaultDraftValidationService service = new DefaultDraftValidationService();
 
-        String blank = service.validate(new DraftSaveRequest("Title", "A", "U", "Abstract", "k", " "));
-        String missingAt = service.validate(new DraftSaveRequest("Title", "A", "U", "Abstract", "k", "ab.com"));
-        String missingDot = service.validate(new DraftSaveRequest("Title", "A", "U", "Abstract", "k", "a@bcom"));
-        String trailingDot = service.validate(new DraftSaveRequest("Title", "A", "U", "Abstract", "k", "a@b."));
+        String blank = service.validate(new DraftSaveRequest(null, "Title", "A", "U", "Abstract", "k", " "));
+        String missingAt = service.validate(new DraftSaveRequest(null, "Title", "A", "U", "Abstract", "k", "ab.com"));
+        String missingDot = service.validate(new DraftSaveRequest(null, "Title", "A", "U", "Abstract", "k", "a@bcom"));
+        String trailingDot = service.validate(new DraftSaveRequest(null, "Title", "A", "U", "Abstract", "k", "a@b."));
 
         assertTrue(blank.contains("Title and corresponding author email"));
         assertTrue(missingAt.contains("valid corresponding author email"));
@@ -87,7 +87,7 @@ class DefaultDraftValidationServiceTest {
     void returnsNullForValidDraft() {
         DefaultDraftValidationService service = new DefaultDraftValidationService();
 
-        String message = service.validate(new DraftSaveRequest("Title", "", "", "", "", "a@b.com"));
+        String message = service.validate(new DraftSaveRequest(null, "Title", "", "", "", "", "a@b.com"));
 
         assertNull(message);
     }
@@ -96,7 +96,7 @@ class DefaultDraftValidationServiceTest {
     void allowsNullOptionalFieldsWithoutInvalidCharacterFailure() {
         DefaultDraftValidationService service = new DefaultDraftValidationService();
 
-        String message = service.validate(new DraftSaveRequest("Title", null, null, null, null, "a@b.com"));
+        String message = service.validate(new DraftSaveRequest(null, "Title", null, null, null, null, "a@b.com"));
 
         assertNull(message);
     }
