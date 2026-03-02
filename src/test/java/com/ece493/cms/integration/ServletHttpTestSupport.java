@@ -3,14 +3,18 @@ package com.ece493.cms.integration;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.WriteListener;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 public final class ServletHttpTestSupport {
     private ServletHttpTestSupport() {
@@ -52,14 +56,18 @@ public final class ServletHttpTestSupport {
     }
 
     public static HttpServletRequest getRequest() {
-        return getRequest(null, null);
+        return getRequest(null, null, null);
     }
 
     public static HttpServletRequest getRequest(SessionCapture sessionCapture) {
-        return getRequest(sessionCapture, null);
+        return getRequest(sessionCapture, null, null);
     }
 
     public static HttpServletRequest getRequest(SessionCapture sessionCapture, Map<String, String> params) {
+        return getRequest(sessionCapture, params, null);
+    }
+
+    public static HttpServletRequest getRequest(SessionCapture sessionCapture, Map<String, String> params, String requestUri) {
         return (HttpServletRequest) Proxy.newProxyInstance(
                 ServletHttpTestSupport.class.getClassLoader(),
                 new Class[]{HttpServletRequest.class},
@@ -70,6 +78,9 @@ public final class ServletHttpTestSupport {
                     }
                     if ("getParameter".equals(name) && args != null && args.length == 1 && params != null) {
                         return params.get((String) args[0]);
+                    }
+                    if ("getRequestURI".equals(name)) {
+                        return requestUri;
                     }
                     if ("getSession".equals(name)) {
                         boolean create = args != null && args.length == 1 && Boolean.TRUE.equals(args[0]);
@@ -93,6 +104,7 @@ public final class ServletHttpTestSupport {
 
     public static final class ResponseCapture {
         private final StringWriter bodyWriter = new StringWriter();
+        private final ByteArrayOutputStream outputStreamBody = new ByteArrayOutputStream();
         private final PrintWriter printWriter = new PrintWriter(bodyWriter, true);
         private final Map<String, String> headers = new HashMap<>();
         private int status = 200;
@@ -128,6 +140,23 @@ public final class ServletHttpTestSupport {
                         if ("getWriter".equals(name)) {
                             return printWriter;
                         }
+                        if ("getOutputStream".equals(name)) {
+                            return new ServletOutputStream() {
+                                @Override
+                                public boolean isReady() {
+                                    return true;
+                                }
+
+                                @Override
+                                public void setWriteListener(WriteListener writeListener) {
+                                }
+
+                                @Override
+                                public void write(int b) {
+                                    outputStreamBody.write(b);
+                                }
+                            };
+                        }
                         return defaultValue(method.getReturnType());
                     }
             );
@@ -139,6 +168,9 @@ public final class ServletHttpTestSupport {
 
         public String getBody() {
             printWriter.flush();
+            if (outputStreamBody.size() > 0) {
+                return outputStreamBody.toString(StandardCharsets.UTF_8);
+            }
             return bodyWriter.toString();
         }
 

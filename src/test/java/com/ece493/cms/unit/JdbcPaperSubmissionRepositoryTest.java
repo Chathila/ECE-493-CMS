@@ -33,6 +33,8 @@ class JdbcPaperSubmissionRepositoryTest {
         assertEquals(2L, repository.countAll());
         assertEquals(2L, repository.findAllByAuthorEmail("author@cms.com").size());
         assertEquals(0L, repository.findAllByAuthorEmail("nobody@cms.com").size());
+        assertTrue(repository.findBySubmissionId(firstId).isPresent());
+        assertTrue(repository.findBySubmissionId(99999L).isEmpty());
         assertTrue(secondId > firstId);
     }
 
@@ -42,6 +44,7 @@ class JdbcPaperSubmissionRepositoryTest {
 
         assertThrows(IllegalStateException.class, () -> repository.save(new PaperSubmission(0L, "a", "t", "a", "u", "ab", "k", "c", 1L, Instant.now())));
         assertThrows(IllegalStateException.class, () -> repository.findAllByAuthorEmail("a"));
+        assertThrows(IllegalStateException.class, () -> repository.findBySubmissionId(1L));
         assertThrows(IllegalStateException.class, repository::countAll);
     }
 
@@ -52,6 +55,34 @@ class JdbcPaperSubmissionRepositoryTest {
         assertThrows(IllegalStateException.class, () -> repository.save(new PaperSubmission(
                 0L, "a@cms.com", "T", "A", "U", "Ab", "k", "a@cms.com", 1L, Instant.now()
         )));
+    }
+
+    @Test
+    void findBySubmissionIdWrapsExecuteQueryFailures() {
+        JdbcPaperSubmissionRepository repository = new JdbcPaperSubmissionRepository(executeQueryFailureDataSource());
+
+        assertThrows(IllegalStateException.class, () -> repository.findBySubmissionId(1L));
+    }
+
+    @Test
+    void findBySubmissionIdReturnsEmptyWhenNoRows() {
+        JdbcPaperSubmissionRepository repository = new JdbcPaperSubmissionRepository(resultSetCloseFailureDataSource());
+
+        assertTrue(repository.findBySubmissionId(1L).isEmpty());
+    }
+
+    @Test
+    void findBySubmissionIdWrapsStatementCloseFailures() {
+        JdbcPaperSubmissionRepository repository = new JdbcPaperSubmissionRepository(statementCloseFailureDataSource());
+
+        assertTrue(repository.findBySubmissionId(1L).isEmpty());
+    }
+
+    @Test
+    void findBySubmissionIdWrapsStatementCloseFailuresAfterRowRead() {
+        JdbcPaperSubmissionRepository repository = new JdbcPaperSubmissionRepository(statementCloseFailureWithRowDataSource());
+
+        assertTrue(repository.findBySubmissionId(1L).isPresent());
     }
 
     private DataSource failingDataSource() {
@@ -185,6 +216,397 @@ class JdbcPaperSubmissionRepositoryTest {
                         return false;
                     }
                     throw new UnsupportedOperationException(name);
+                }
+        );
+    }
+
+    private DataSource executeQueryFailureDataSource() {
+        return new DataSource() {
+            @Override
+            public Connection getConnection() {
+                return (Connection) Proxy.newProxyInstance(
+                        getClass().getClassLoader(),
+                        new Class[]{Connection.class},
+                        (proxy, method, args) -> {
+                            if ("prepareStatement".equals(method.getName())) {
+                                return executeQueryFailureStatement();
+                            }
+                            if ("close".equals(method.getName())) {
+                                return null;
+                            }
+                            if ("isClosed".equals(method.getName())) {
+                                return false;
+                            }
+                            throw new UnsupportedOperationException(method.getName());
+                        }
+                );
+            }
+
+            @Override
+            public Connection getConnection(String username, String password) {
+                return getConnection();
+            }
+
+            @Override
+            public <T> T unwrap(Class<T> iface) throws SQLException {
+                throw new SQLException("unsupported");
+            }
+
+            @Override
+            public boolean isWrapperFor(Class<?> iface) {
+                return false;
+            }
+
+            @Override
+            public PrintWriter getLogWriter() {
+                return null;
+            }
+
+            @Override
+            public void setLogWriter(PrintWriter out) {
+            }
+
+            @Override
+            public void setLoginTimeout(int seconds) {
+            }
+
+            @Override
+            public int getLoginTimeout() {
+                return 0;
+            }
+
+            @Override
+            public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+                throw new SQLFeatureNotSupportedException("unsupported");
+            }
+        };
+    }
+
+    private PreparedStatement executeQueryFailureStatement() {
+        return (PreparedStatement) Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class[]{PreparedStatement.class},
+                (proxy, method, args) -> {
+                    String name = method.getName();
+                    if (name.startsWith("set")) {
+                        return null;
+                    }
+                    if ("executeQuery".equals(name)) {
+                        throw new SQLException("query failed");
+                    }
+                    if ("close".equals(name)) {
+                        return null;
+                    }
+                    if ("isClosed".equals(name)) {
+                        return false;
+                    }
+                    throw new UnsupportedOperationException(name);
+                }
+        );
+    }
+
+    private DataSource resultSetCloseFailureDataSource() {
+        return new DataSource() {
+            @Override
+            public Connection getConnection() {
+                return (Connection) Proxy.newProxyInstance(
+                        getClass().getClassLoader(),
+                        new Class[]{Connection.class},
+                        (proxy, method, args) -> {
+                            if ("prepareStatement".equals(method.getName())) {
+                                return resultSetCloseFailureStatement();
+                            }
+                            if ("close".equals(method.getName())) {
+                                return null;
+                            }
+                            if ("isClosed".equals(method.getName())) {
+                                return false;
+                            }
+                            throw new UnsupportedOperationException(method.getName());
+                        }
+                );
+            }
+
+            @Override
+            public Connection getConnection(String username, String password) {
+                return getConnection();
+            }
+
+            @Override
+            public <T> T unwrap(Class<T> iface) throws SQLException {
+                throw new SQLException("unsupported");
+            }
+
+            @Override
+            public boolean isWrapperFor(Class<?> iface) {
+                return false;
+            }
+
+            @Override
+            public PrintWriter getLogWriter() {
+                return null;
+            }
+
+            @Override
+            public void setLogWriter(PrintWriter out) {
+            }
+
+            @Override
+            public void setLoginTimeout(int seconds) {
+            }
+
+            @Override
+            public int getLoginTimeout() {
+                return 0;
+            }
+
+            @Override
+            public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+                throw new SQLFeatureNotSupportedException("unsupported");
+            }
+        };
+    }
+
+    private PreparedStatement resultSetCloseFailureStatement() {
+        return (PreparedStatement) Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class[]{PreparedStatement.class},
+                (proxy, method, args) -> {
+                    String name = method.getName();
+                    if (name.startsWith("set")) {
+                        return null;
+                    }
+                    if ("executeQuery".equals(name)) {
+                        return resultSetWithCloseFailure();
+                    }
+                    if ("close".equals(name)) {
+                        return null;
+                    }
+                    if ("isClosed".equals(name)) {
+                        return false;
+                    }
+                    throw new UnsupportedOperationException(name);
+                }
+        );
+    }
+
+    private ResultSet resultSetWithCloseFailure() {
+        return (ResultSet) Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class[]{ResultSet.class},
+                (proxy, method, args) -> {
+                    if ("next".equals(method.getName())) {
+                        return false;
+                    }
+                    if ("close".equals(method.getName())) {
+                        throw new SQLException("close failed");
+                    }
+                    throw new UnsupportedOperationException(method.getName());
+                }
+        );
+    }
+
+    private DataSource statementCloseFailureDataSource() {
+        return new DataSource() {
+            @Override
+            public Connection getConnection() {
+                return (Connection) Proxy.newProxyInstance(
+                        getClass().getClassLoader(),
+                        new Class[]{Connection.class},
+                        (proxy, method, args) -> {
+                            if ("prepareStatement".equals(method.getName())) {
+                                return statementWithCloseFailure();
+                            }
+                            if ("close".equals(method.getName())) {
+                                return null;
+                            }
+                            if ("isClosed".equals(method.getName())) {
+                                return false;
+                            }
+                            throw new UnsupportedOperationException(method.getName());
+                        }
+                );
+            }
+
+            @Override
+            public Connection getConnection(String username, String password) {
+                return getConnection();
+            }
+
+            @Override
+            public <T> T unwrap(Class<T> iface) throws SQLException {
+                throw new SQLException("unsupported");
+            }
+
+            @Override
+            public boolean isWrapperFor(Class<?> iface) {
+                return false;
+            }
+
+            @Override
+            public PrintWriter getLogWriter() {
+                return null;
+            }
+
+            @Override
+            public void setLogWriter(PrintWriter out) {
+            }
+
+            @Override
+            public void setLoginTimeout(int seconds) {
+            }
+
+            @Override
+            public int getLoginTimeout() {
+                return 0;
+            }
+
+            @Override
+            public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+                throw new SQLFeatureNotSupportedException("unsupported");
+            }
+        };
+    }
+
+    private PreparedStatement statementWithCloseFailure() {
+        return (PreparedStatement) Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class[]{PreparedStatement.class},
+                (proxy, method, args) -> {
+                    String name = method.getName();
+                    if (name.startsWith("set")) {
+                        return null;
+                    }
+                    if ("executeQuery".equals(name)) {
+                        return emptyResultSet();
+                    }
+                    if ("close".equals(name)) {
+                        throw new SQLException("statement close failed");
+                    }
+                    if ("isClosed".equals(name)) {
+                        return false;
+                    }
+                    throw new UnsupportedOperationException(name);
+                }
+        );
+    }
+
+    private DataSource statementCloseFailureWithRowDataSource() {
+        return new DataSource() {
+            @Override
+            public Connection getConnection() {
+                return (Connection) Proxy.newProxyInstance(
+                        getClass().getClassLoader(),
+                        new Class[]{Connection.class},
+                        (proxy, method, args) -> {
+                            if ("prepareStatement".equals(method.getName())) {
+                                return statementWithCloseFailureAndRow();
+                            }
+                            if ("close".equals(method.getName())) {
+                                return null;
+                            }
+                            if ("isClosed".equals(method.getName())) {
+                                return false;
+                            }
+                            throw new UnsupportedOperationException(method.getName());
+                        }
+                );
+            }
+
+            @Override
+            public Connection getConnection(String username, String password) {
+                return getConnection();
+            }
+
+            @Override
+            public <T> T unwrap(Class<T> iface) throws SQLException {
+                throw new SQLException("unsupported");
+            }
+
+            @Override
+            public boolean isWrapperFor(Class<?> iface) {
+                return false;
+            }
+
+            @Override
+            public PrintWriter getLogWriter() {
+                return null;
+            }
+
+            @Override
+            public void setLogWriter(PrintWriter out) {
+            }
+
+            @Override
+            public void setLoginTimeout(int seconds) {
+            }
+
+            @Override
+            public int getLoginTimeout() {
+                return 0;
+            }
+
+            @Override
+            public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+                throw new SQLFeatureNotSupportedException("unsupported");
+            }
+        };
+    }
+
+    private PreparedStatement statementWithCloseFailureAndRow() {
+        return (PreparedStatement) Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class[]{PreparedStatement.class},
+                (proxy, method, args) -> {
+                    String name = method.getName();
+                    if (name.startsWith("set")) {
+                        return null;
+                    }
+                    if ("executeQuery".equals(name)) {
+                        return singleRowResultSet();
+                    }
+                    if ("close".equals(name)) {
+                        throw new SQLException("statement close failed");
+                    }
+                    if ("isClosed".equals(name)) {
+                        return false;
+                    }
+                    throw new UnsupportedOperationException(name);
+                }
+        );
+    }
+
+    private ResultSet singleRowResultSet() {
+        return (ResultSet) Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class[]{ResultSet.class},
+                new java.lang.reflect.InvocationHandler() {
+                    private boolean read;
+
+                    @Override
+                    public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
+                        String name = method.getName();
+                        if ("next".equals(name)) {
+                            if (!read) {
+                                read = true;
+                                return true;
+                            }
+                            return false;
+                        }
+                        if ("getLong".equals(name)) {
+                            return 1L;
+                        }
+                        if ("getString".equals(name)) {
+                            return "v";
+                        }
+                        if ("getTimestamp".equals(name)) {
+                            return java.sql.Timestamp.from(Instant.now());
+                        }
+                        if ("close".equals(name)) {
+                            return null;
+                        }
+                        throw new UnsupportedOperationException(name);
+                    }
                 }
         );
     }

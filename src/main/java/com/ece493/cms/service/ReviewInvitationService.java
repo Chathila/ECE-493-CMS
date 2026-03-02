@@ -4,6 +4,7 @@ import com.ece493.cms.model.DeliveryFailureRecord;
 import com.ece493.cms.model.ReviewInvitation;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 public class ReviewInvitationService {
     public enum SendStatus {
@@ -64,11 +65,13 @@ public class ReviewInvitationService {
             ReviewInvitation failedInvitation = invitationRepository.save(new ReviewInvitation(
                     0L,
                     assignmentId,
+                    editorEmail,
                     refereeEmail,
                     paperId,
                     "failed",
                     content,
-                    Instant.now()
+                    Instant.now(),
+                    Instant.now().plus(7, ChronoUnit.DAYS)
             ));
             failureRepository.save(new DeliveryFailureRecord(
                     0L,
@@ -89,11 +92,13 @@ public class ReviewInvitationService {
             ReviewInvitation failedInvitation = invitationRepository.save(new ReviewInvitation(
                     0L,
                     assignmentId,
+                    editorEmail,
                     refereeEmail,
                     paperId,
                     "failed",
                     content,
-                    Instant.now()
+                    Instant.now(),
+                    Instant.now().plus(7, ChronoUnit.DAYS)
             ));
             failureRepository.save(new DeliveryFailureRecord(
                     0L,
@@ -111,11 +116,13 @@ public class ReviewInvitationService {
         invitationRepository.save(new ReviewInvitation(
                 0L,
                 assignmentId,
+                editorEmail,
                 refereeEmail,
                 paperId,
-                "sent",
+                "open",
                 content,
-                Instant.now()
+                Instant.now(),
+                Instant.now().plus(7, ChronoUnit.DAYS)
         ));
         return new SendResult(SendStatus.SENT, "Invitation sent.");
     }

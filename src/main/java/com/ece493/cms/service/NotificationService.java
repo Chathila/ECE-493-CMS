@@ -8,4 +8,6 @@ public interface NotificationService {
     }
 
     void sendReviewInvitations(String editorEmail, String paperId, List<String> refereeEmails);
+
+    void notifyEditorDecision(String editorEmail, String decision);
 }

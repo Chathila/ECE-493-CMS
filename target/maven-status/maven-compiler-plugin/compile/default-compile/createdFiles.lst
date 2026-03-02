@@ -6,6 +6,7 @@ com/ece493/cms/model/LoginResult.class
 com/ece493/cms/model/FileValidationResult.class
 com/ece493/cms/service/DefaultPasswordPolicyService.class
 com/ece493/cms/service/ReviewInvitationRepository.class
+com/ece493/cms/service/ReviewAssignmentService.class
 com/ece493/cms/service/InMemoryEditorNotificationService.class
 com/ece493/cms/service/InMemoryEditorNotificationService$EditorNotification.class
 com/ece493/cms/controller/StaticResourceServlet.class
@@ -29,12 +30,14 @@ com/ece493/cms/model/DraftSaveRequest.class
 com/ece493/cms/service/InvitationValidationService.class
 com/ece493/cms/service/MetadataValidationService.class
 com/ece493/cms/service/DefaultAuthenticationAvailabilityService.class
+com/ece493/cms/controller/ReviewDashboardServlet.class
 com/ece493/cms/model/ManuscriptFile.class
 com/ece493/cms/service/AuthenticationAvailabilityService.class
 com/ece493/cms/service/DraftSaveServiceImpl.class
 com/ece493/cms/model/PaperSubmissionResult.class
 com/ece493/cms/repository/JdbcRefereeAssignmentRepository.class
 com/ece493/cms/service/InvitationComposer.class
+com/ece493/cms/controller/InvitationResponseServlet.class
 com/ece493/cms/service/AuthenticationServiceImpl.class
 com/ece493/cms/model/RefereeAssignment.class
 com/ece493/cms/model/DraftSaveResult.class
@@ -48,6 +51,7 @@ com/ece493/cms/service/EditorNotificationService.class
 com/ece493/cms/model/RegistrationSubmission.class
 com/ece493/cms/service/DefaultWorkloadCheckService.class
 com/ece493/cms/repository/JdbcPaperSubmissionDraftRepository.class
+com/ece493/cms/model/InvitationResponseResult.class
 com/ece493/cms/service/PasswordPolicyService.class
 com/ece493/cms/model/PasswordChangeResult.class
 com/ece493/cms/service/FileStorageService.class
@@ -74,6 +78,7 @@ com/ece493/cms/controller/RegistrationServlet.class
 com/ece493/cms/model/PaperSubmission.class
 com/ece493/cms/service/PasswordChangeService.class
 com/ece493/cms/model/LoginSubmission.class
+com/ece493/cms/service/InMemoryInvitationResponseRepository.class
 com/ece493/cms/service/FileValidationServiceImpl.class
 com/ece493/cms/service/ReviewInvitationService$SendStatus.class
 com/ece493/cms/model/PasswordChangeRequest.class
@@ -83,10 +88,13 @@ com/ece493/cms/model/RegistrationResult.class
 com/ece493/cms/model/Referee.class
 com/ece493/cms/controller/DraftListServlet.class
 com/ece493/cms/service/WorkloadCheckService.class
+com/ece493/cms/service/InvitationResponseRepository.class
 com/ece493/cms/service/RefereeAssignmentService.class
 com/ece493/cms/service/FileValidationService.class
 com/ece493/cms/service/RefereeAssignmentServiceImpl.class
+com/ece493/cms/model/InvitationResponse.class
 com/ece493/cms/service/NotificationService.class
+com/ece493/cms/service/InvitationResponseService.class
 com/ece493/cms/controller/FileValidationServlet.class
 com/ece493/cms/controller/PaperSubmissionListServlet.class
 com/ece493/cms/model/RefereeAssignmentResult.class

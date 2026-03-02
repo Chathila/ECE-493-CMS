@@ -4,30 +4,31 @@ import com.ece493.cms.model.DeliveryFailureRecord;
 import com.ece493.cms.model.ReviewInvitation;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 public class ReviewInvitationService {
-<span class="fc" id="L9">    public enum SendStatus {</span>
-<span class="fc" id="L10">        SENT,</span>
-<span class="fc" id="L11">        DUPLICATE_SUPPRESSED,</span>
-<span class="fc" id="L12">        INVALID_EMAIL,</span>
-<span class="fc" id="L13">        DELIVERY_FAILURE</span>
+<span class="fc" id="L10">    public enum SendStatus {</span>
+<span class="fc" id="L11">        SENT,</span>
+<span class="fc" id="L12">        DUPLICATE_SUPPRESSED,</span>
+<span class="fc" id="L13">        INVALID_EMAIL,</span>
+<span class="fc" id="L14">        DELIVERY_FAILURE</span>
     }
 
     public static final class SendResult {
         private final SendStatus status;
         private final String message;
 
-<span class="fc" id="L20">        public SendResult(SendStatus status, String message) {</span>
-<span class="fc" id="L21">            this.status = status;</span>
-<span class="fc" id="L22">            this.message = message;</span>
-<span class="fc" id="L23">        }</span>
+<span class="fc" id="L21">        public SendResult(SendStatus status, String message) {</span>
+<span class="fc" id="L22">            this.status = status;</span>
+<span class="fc" id="L23">            this.message = message;</span>
+<span class="fc" id="L24">        }</span>
 
         public SendStatus getStatus() {
-<span class="fc" id="L26">            return status;</span>
+<span class="fc" id="L27">            return status;</span>
         }
 
         public String getMessage() {
-<span class="fc" id="L30">            return message;</span>
+<span class="fc" id="L31">            return message;</span>
         }
     }
 
@@ -45,79 +46,85 @@ public class ReviewInvitationService {
             EditorNotificationService editorNotificationService,
             InvitationValidationService invitationValidationService,
             InvitationComposer invitationComposer
-<span class="fc" id="L48">    ) {</span>
-<span class="fc" id="L49">        this.invitationRepository = invitationRepository;</span>
-<span class="fc" id="L50">        this.failureRepository = failureRepository;</span>
-<span class="fc" id="L51">        this.emailDeliveryService = emailDeliveryService;</span>
-<span class="fc" id="L52">        this.editorNotificationService = editorNotificationService;</span>
-<span class="fc" id="L53">        this.invitationValidationService = invitationValidationService;</span>
-<span class="fc" id="L54">        this.invitationComposer = invitationComposer;</span>
-<span class="fc" id="L55">    }</span>
+<span class="fc" id="L49">    ) {</span>
+<span class="fc" id="L50">        this.invitationRepository = invitationRepository;</span>
+<span class="fc" id="L51">        this.failureRepository = failureRepository;</span>
+<span class="fc" id="L52">        this.emailDeliveryService = emailDeliveryService;</span>
+<span class="fc" id="L53">        this.editorNotificationService = editorNotificationService;</span>
+<span class="fc" id="L54">        this.invitationValidationService = invitationValidationService;</span>
+<span class="fc" id="L55">        this.invitationComposer = invitationComposer;</span>
+<span class="fc" id="L56">    }</span>
 
     public SendResult sendInvitation(String editorEmail, String assignmentId, String paperId, String refereeEmail) {
-<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (invitationValidationService.isDuplicateInvitation(paperId, refereeEmail, invitationRepository)) {</span>
-<span class="fc" id="L59">            return new SendResult(SendStatus.DUPLICATE_SUPPRESSED, &quot;Duplicate invitation suppressed.&quot;);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (invitationValidationService.isDuplicateInvitation(paperId, refereeEmail, invitationRepository)) {</span>
+<span class="fc" id="L60">            return new SendResult(SendStatus.DUPLICATE_SUPPRESSED, &quot;Duplicate invitation suppressed.&quot;);</span>
         }
 
-<span class="fc" id="L62">        String content = invitationComposer.compose(paperId);</span>
-<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (!invitationValidationService.isValidEmail(refereeEmail)) {</span>
-<span class="fc" id="L64">            ReviewInvitation failedInvitation = invitationRepository.save(new ReviewInvitation(</span>
+<span class="fc" id="L63">        String content = invitationComposer.compose(paperId);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (!invitationValidationService.isValidEmail(refereeEmail)) {</span>
+<span class="fc" id="L65">            ReviewInvitation failedInvitation = invitationRepository.save(new ReviewInvitation(</span>
                     0L,
                     assignmentId,
+                    editorEmail,
                     refereeEmail,
                     paperId,
                     &quot;failed&quot;,
                     content,
-<span class="fc" id="L71">                    Instant.now()</span>
+<span class="fc" id="L73">                    Instant.now(),</span>
+<span class="fc" id="L74">                    Instant.now().plus(7, ChronoUnit.DAYS)</span>
             ));
-<span class="fc" id="L73">            failureRepository.save(new DeliveryFailureRecord(</span>
+<span class="fc" id="L76">            failureRepository.save(new DeliveryFailureRecord(</span>
                     0L,
-<span class="fc" id="L75">                    failedInvitation.getInvitationId(),</span>
+<span class="fc" id="L78">                    failedInvitation.getInvitationId(),</span>
                     &quot;Invalid referee email address.&quot;,
-<span class="fc" id="L77">                    Instant.now()</span>
+<span class="fc" id="L80">                    Instant.now()</span>
             ));
-<span class="fc" id="L79">            editorNotificationService.notifyEditor(</span>
+<span class="fc" id="L82">            editorNotificationService.notifyEditor(</span>
                     editorEmail,
                     &quot;Invitation delivery failed for &quot; + refereeEmail + &quot;. Please update the referee contact information.&quot;
             );
-<span class="fc" id="L83">            return new SendResult(SendStatus.INVALID_EMAIL, &quot;Invalid referee email address.&quot;);</span>
+<span class="fc" id="L86">            return new SendResult(SendStatus.INVALID_EMAIL, &quot;Invalid referee email address.&quot;);</span>
         }
 
         try {
-<span class="fc" id="L87">            emailDeliveryService.send(refereeEmail, &quot;Review Invitation&quot;, content);</span>
-<span class="fc" id="L88">        } catch (IllegalStateException e) {</span>
-<span class="fc" id="L89">            ReviewInvitation failedInvitation = invitationRepository.save(new ReviewInvitation(</span>
+<span class="fc" id="L90">            emailDeliveryService.send(refereeEmail, &quot;Review Invitation&quot;, content);</span>
+<span class="fc" id="L91">        } catch (IllegalStateException e) {</span>
+<span class="fc" id="L92">            ReviewInvitation failedInvitation = invitationRepository.save(new ReviewInvitation(</span>
                     0L,
                     assignmentId,
+                    editorEmail,
                     refereeEmail,
                     paperId,
                     &quot;failed&quot;,
                     content,
-<span class="fc" id="L96">                    Instant.now()</span>
+<span class="fc" id="L100">                    Instant.now(),</span>
+<span class="fc" id="L101">                    Instant.now().plus(7, ChronoUnit.DAYS)</span>
             ));
-<span class="fc" id="L98">            failureRepository.save(new DeliveryFailureRecord(</span>
+<span class="fc" id="L103">            failureRepository.save(new DeliveryFailureRecord(</span>
                     0L,
-<span class="fc" id="L100">                    failedInvitation.getInvitationId(),</span>
+<span class="fc" id="L105">                    failedInvitation.getInvitationId(),</span>
                     &quot;Email delivery service unavailable.&quot;,
-<span class="fc" id="L102">                    Instant.now()</span>
+<span class="fc" id="L107">                    Instant.now()</span>
             ));
-<span class="fc" id="L104">            editorNotificationService.notifyEditor(</span>
+<span class="fc" id="L109">            editorNotificationService.notifyEditor(</span>
                     editorEmail,
                     &quot;Invitation delivery issue for &quot; + refereeEmail + &quot;.&quot;
             );
-<span class="fc" id="L108">            return new SendResult(SendStatus.DELIVERY_FAILURE, &quot;Invitation delivery failed.&quot;);</span>
-<span class="fc" id="L109">        }</span>
+<span class="fc" id="L113">            return new SendResult(SendStatus.DELIVERY_FAILURE, &quot;Invitation delivery failed.&quot;);</span>
+<span class="fc" id="L114">        }</span>
 
-<span class="fc" id="L111">        invitationRepository.save(new ReviewInvitation(</span>
+<span class="fc" id="L116">        invitationRepository.save(new ReviewInvitation(</span>
                 0L,
                 assignmentId,
+                editorEmail,
                 refereeEmail,
                 paperId,
-                &quot;sent&quot;,
+                &quot;open&quot;,
                 content,
-<span class="fc" id="L118">                Instant.now()</span>
+<span class="fc" id="L124">                Instant.now(),</span>
+<span class="fc" id="L125">                Instant.now().plus(7, ChronoUnit.DAYS)</span>
         ));
-<span class="fc" id="L120">        return new SendResult(SendStatus.SENT, &quot;Invitation sent.&quot;);</span>
+<span class="fc" id="L127">        return new SendResult(SendStatus.SENT, &quot;Invitation sent.&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

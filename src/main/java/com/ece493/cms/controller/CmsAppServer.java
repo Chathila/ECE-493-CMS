@@ -24,6 +24,7 @@ import com.ece493.cms.service.FileValidationService;
 import com.ece493.cms.service.FileValidationServiceImpl;
 import com.ece493.cms.service.InMemoryFileStorageService;
 import com.ece493.cms.service.InMemoryNotificationService;
+import com.ece493.cms.service.InvitationResponseService;
 import com.ece493.cms.service.NotificationService;
 import com.ece493.cms.service.PasswordChangeService;
 import com.ece493.cms.service.PasswordChangeServiceImpl;
@@ -56,6 +57,12 @@ public class CmsAppServer {
         PaperSubmissionService paperSubmissionService = createPaperSubmissionService(dataSource, fileStorageService);
         FileValidationService fileValidationService = createFileValidationService(fileStorageService);
         RefereeAssignmentService refereeAssignmentService = createRefereeAssignmentService(dataSource, notificationService);
+        InvitationResponseService invitationResponseService = new InvitationResponseService(
+                notificationService.invitationRepository(),
+                notificationService.invitationResponseRepository(),
+                notificationService.reviewAssignmentService(),
+                notificationService
+        );
         DraftSaveService draftSaveService = createDraftSaveService(dataSource);
         String registerHtml = loadRegisterHtml();
         String loginHtml = loadLoginHtml();
@@ -76,7 +83,16 @@ public class CmsAppServer {
         context.addServlet(new ServletHolder(new DraftSaveServlet(draftSaveService)), "/papers/draft/save");
         context.addServlet(new ServletHolder(new DraftViewServlet(new JdbcPaperSubmissionDraftRepository(dataSource))), "/papers/draft");
         context.addServlet(new ServletHolder(new DraftListServlet(new JdbcPaperSubmissionDraftRepository(dataSource))), "/papers/drafts");
+        PaperDetailsServlet paperDetailsServlet = new PaperDetailsServlet(new JdbcPaperSubmissionRepository(dataSource), fileStorageService);
+        context.addServlet(new ServletHolder(paperDetailsServlet), "/papers/details/*");
+        context.addServlet(new ServletHolder(paperDetailsServlet), "/papers/files/*");
         context.addServlet(new ServletHolder(new RefereeAssignmentServlet(refereeAssignmentService, assignRefereesHtml)), "/papers/*");
+        context.addServlet(new ServletHolder(new InvitationResponseServlet(invitationResponseService)), "/invitations/*");
+        context.addServlet(new ServletHolder(new ReviewDashboardServlet(
+                notificationService.invitationRepository(),
+                notificationService.reviewAssignmentService(),
+                new JdbcPaperSubmissionRepository(dataSource)
+        )), "/reviews/dashboard");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home/*");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/styles.css", "text/css")), "/styles.css");

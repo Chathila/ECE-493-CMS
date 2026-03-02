@@ -420,3 +420,56 @@ Both commands succeed in the final UC-05 state.
 ## Spec-Kit Command Note
 
 - `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-09 was implemented directly from existing spec-kit artifacts.
+
+---
+
+# Lab 3 Report Notes (UC-10 Run)
+
+## Scope Completed
+
+- Implemented UC-10 accept/reject review invitation flow from:
+  - `specs/UC-10-accept-reject-review-invitation/spec.md`
+  - `specs/UC-10-accept-reject-review-invitation/plan.md`
+  - `specs/UC-10-accept-reject-review-invitation/tasks.md`
+  - `specs/UC-10-accept-reject-review-invitation/contracts/review-invitation-response.openapi.yaml`
+  - `UC-10_tests.md`
+- Added invitation response domain and service layer:
+  - `InvitationResponse` model and result model
+  - `InvitationResponseService` with accept/reject recording, single-response lock, expired invitation checks, and database-failure retry message handling
+  - `InvitationResponseRepository` and in-memory implementation
+  - `ReviewAssignmentService` for assignment status transitions (`pending` -> `accepted`/`rejected`)
+- Extended invitation persistence and notification integration to support UC-10:
+  - invitation lookup by id and status updates (`open`/`expired`/`responded`)
+  - editor decision-only notifications (`accept` or `reject`)
+  - invitation expiry support for response blocking and view blocking
+- Added invitation response controller endpoint behavior:
+  - `GET /invitations/{invitation_id}` blocks expired invitations
+  - `POST /invitations/{invitation_id}/response` records decisions and returns assignment status
+- Added UC-10 automated test coverage:
+  - acceptance tests for AT-01..AT-04
+  - integration endpoint tests for response flow
+  - unit tests for service logic, servlet parsing/paths, assignment state transitions, and in-memory repositories
+- Added UC-10 traceability mapping.
+
+## Commands Run
+
+1. `/speckit.implement` (not available in this environment)
+2. `mvn test`
+3. `mvn verify`
+
+`mvn test` and `mvn verify` succeed in the final UC-10 state.
+
+## Coverage
+
+- JaCoCo report directory:
+  - `target/site/jacoco/index.html`
+- Final branch coverage:
+  - `BRANCH missed=0 covered=568 ratio=100.00%`
+
+## Traceability
+
+- `traceability/UC-10-traceability.md` maps AT-01..AT-04 to automated tests.
+
+## Spec-Kit Command Note
+
+- `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-10 was implemented directly from existing spec-kit artifacts.

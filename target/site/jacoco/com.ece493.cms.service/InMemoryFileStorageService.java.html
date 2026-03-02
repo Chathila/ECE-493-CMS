@@ -4,63 +4,69 @@ import com.ece493.cms.model.ManuscriptFile;
 
 import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-<span class="fc" id="L10">public class InMemoryFileStorageService implements FileStorageService {</span>
+<span class="fc" id="L11">public class InMemoryFileStorageService implements FileStorageService {</span>
     public static final long MAX_FILE_SIZE_BYTES = 20L * 1024L * 1024L;
 
-<span class="fc" id="L13">    private final Map&lt;Long, ManuscriptFile&gt; storage = new ConcurrentHashMap&lt;&gt;();</span>
-<span class="fc" id="L14">    private final AtomicLong sequence = new AtomicLong(0L);</span>
-<span class="fc" id="L15">    private volatile boolean available = true;</span>
+<span class="fc" id="L14">    private final Map&lt;Long, ManuscriptFile&gt; storage = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L15">    private final AtomicLong sequence = new AtomicLong(0L);</span>
+<span class="fc" id="L16">    private volatile boolean available = true;</span>
 
     @Override
     public boolean isSupportedFormat(String filename) {
-<span class="fc bfc" id="L19" title="All 2 branches covered.">        if (filename == null) {</span>
-<span class="fc" id="L20">            return false;</span>
+<span class="fc bfc" id="L20" title="All 2 branches covered.">        if (filename == null) {</span>
+<span class="fc" id="L21">            return false;</span>
         }
-<span class="fc" id="L22">        String normalized = filename.trim().toLowerCase();</span>
-<span class="fc bfc" id="L23" title="All 4 branches covered.">        return normalized.endsWith(&quot;.pdf&quot;) || normalized.endsWith(&quot;.docx&quot;);</span>
+<span class="fc" id="L23">        String normalized = filename.trim().toLowerCase();</span>
+<span class="fc bfc" id="L24" title="All 4 branches covered.">        return normalized.endsWith(&quot;.pdf&quot;) || normalized.endsWith(&quot;.docx&quot;);</span>
     }
 
     @Override
     public boolean isWithinSizeLimit(long sizeBytes) {
-<span class="fc bfc" id="L28" title="All 4 branches covered.">        return sizeBytes &gt;= 0 &amp;&amp; sizeBytes &lt;= MAX_FILE_SIZE_BYTES;</span>
+<span class="fc bfc" id="L29" title="All 4 branches covered.">        return sizeBytes &gt;= 0 &amp;&amp; sizeBytes &lt;= MAX_FILE_SIZE_BYTES;</span>
     }
 
     @Override
     public long computeFileSizeBytes(String contentBase64) {
-<span class="fc bfc" id="L33" title="All 2 branches covered.">        if (contentBase64 == null) {</span>
-<span class="fc" id="L34">            return -1;</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (contentBase64 == null) {</span>
+<span class="fc" id="L35">            return -1;</span>
         }
         try {
-<span class="fc" id="L37">            return Base64.getDecoder().decode(contentBase64).length;</span>
-<span class="fc" id="L38">        } catch (IllegalArgumentException e) {</span>
-<span class="fc" id="L39">            return -1;</span>
+<span class="fc" id="L38">            return Base64.getDecoder().decode(contentBase64).length;</span>
+<span class="fc" id="L39">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L40">            return -1;</span>
         }
     }
 
     @Override
     public long store(ManuscriptFile manuscriptFile) {
-<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (!available) {</span>
-<span class="fc" id="L46">            throw new IllegalStateException(&quot;File upload/storage unavailable&quot;);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (!available) {</span>
+<span class="fc" id="L47">            throw new IllegalStateException(&quot;File upload/storage unavailable&quot;);</span>
         }
-<span class="fc" id="L48">        long id = sequence.incrementAndGet();</span>
-<span class="fc" id="L49">        storage.put(id, manuscriptFile);</span>
-<span class="fc" id="L50">        return id;</span>
+<span class="fc" id="L49">        long id = sequence.incrementAndGet();</span>
+<span class="fc" id="L50">        storage.put(id, manuscriptFile);</span>
+<span class="fc" id="L51">        return id;</span>
+    }
+
+    @Override
+    public Optional&lt;ManuscriptFile&gt; findById(long fileId) {
+<span class="fc" id="L56">        return Optional.ofNullable(storage.get(fileId));</span>
     }
 
     @Override
     public boolean isAvailable() {
-<span class="fc" id="L55">        return available;</span>
+<span class="fc" id="L61">        return available;</span>
     }
 
     public void setAvailable(boolean available) {
-<span class="fc" id="L59">        this.available = available;</span>
-<span class="fc" id="L60">    }</span>
+<span class="fc" id="L65">        this.available = available;</span>
+<span class="fc" id="L66">    }</span>
 
     public long storedFileCount() {
-<span class="fc" id="L63">        return storage.size();</span>
+<span class="fc" id="L69">        return storage.size();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

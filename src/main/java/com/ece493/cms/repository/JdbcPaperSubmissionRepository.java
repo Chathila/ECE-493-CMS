@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class JdbcPaperSubmissionRepository implements PaperSubmissionRepository {
     private final DataSource dataSource;
@@ -74,6 +75,41 @@ public class JdbcPaperSubmissionRepository implements PaperSubmissionRepository 
     }
 
     @Override
+    public Optional<PaperSubmission> findBySubmissionId(long submissionId) {
+        String sql = "SELECT submission_id, author_email, title, authors, affiliations, abstract_text, keywords, contact_details, manuscript_file_id, submitted_at FROM paper_submissions WHERE submission_id = ?";
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = dataSource.getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setLong(1, submissionId);
+            resultSet = statement.executeQuery();
+            if (!resultSet.next()) {
+                return Optional.empty();
+            }
+            return Optional.of(new PaperSubmission(
+                    resultSet.getLong("submission_id"),
+                    resultSet.getString("author_email"),
+                    resultSet.getString("title"),
+                    resultSet.getString("authors"),
+                    resultSet.getString("affiliations"),
+                    resultSet.getString("abstract_text"),
+                    resultSet.getString("keywords"),
+                    resultSet.getString("contact_details"),
+                    resultSet.getLong("manuscript_file_id"),
+                    resultSet.getTimestamp("submitted_at").toInstant()
+            ));
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to retrieve paper submission", e);
+        } finally {
+            closeQuietly(resultSet);
+            closeQuietly(statement);
+            closeQuietly(connection);
+        }
+    }
+
+    @Override
     public long countAll() {
         String sql = "SELECT COUNT(1) FROM paper_submissions";
         try (Connection connection = dataSource.getConnection();
@@ -83,6 +119,14 @@ public class JdbcPaperSubmissionRepository implements PaperSubmissionRepository 
             return resultSet.getLong(1);
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to count paper submissions", e);
+        }
+    }
+
+    private void closeQuietly(AutoCloseable closeable) {
+        try {
+            closeable.close();
+        } catch (Exception ignored) {
+            // Deliberately ignore close failures while retrieving optional lookup data.
         }
     }
 }

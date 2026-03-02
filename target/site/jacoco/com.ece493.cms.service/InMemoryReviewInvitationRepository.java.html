@@ -3,39 +3,71 @@
 import com.ece493.cms.model.ReviewInvitation;
 
 import java.util.ArrayList;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
-<span class="fc" id="L10">public class InMemoryReviewInvitationRepository implements ReviewInvitationRepository {</span>
-<span class="fc" id="L11">    private final AtomicLong idSequence = new AtomicLong(1L);</span>
-<span class="fc" id="L12">    private final List&lt;ReviewInvitation&gt; invitations = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L11">public class InMemoryReviewInvitationRepository implements ReviewInvitationRepository {</span>
+<span class="fc" id="L12">    private final AtomicLong idSequence = new AtomicLong(1L);</span>
+<span class="fc" id="L13">    private final List&lt;ReviewInvitation&gt; invitations = new ArrayList&lt;&gt;();</span>
 
     @Override
     public ReviewInvitation save(ReviewInvitation invitation) {
-<span class="fc" id="L16">        ReviewInvitation stored = new ReviewInvitation(</span>
-<span class="fc" id="L17">                idSequence.getAndIncrement(),</span>
-<span class="fc" id="L18">                invitation.getAssignmentId(),</span>
-<span class="fc" id="L19">                invitation.getRefereeEmail(),</span>
-<span class="fc" id="L20">                invitation.getPaperId(),</span>
-<span class="fc" id="L21">                invitation.getStatus(),</span>
-<span class="fc" id="L22">                invitation.getContent(),</span>
-<span class="fc" id="L23">                invitation.getSentAt()</span>
+<span class="fc" id="L17">        ReviewInvitation stored = new ReviewInvitation(</span>
+<span class="fc" id="L18">                idSequence.getAndIncrement(),</span>
+<span class="fc" id="L19">                invitation.getAssignmentId(),</span>
+<span class="fc" id="L20">                invitation.getEditorEmail(),</span>
+<span class="fc" id="L21">                invitation.getRefereeEmail(),</span>
+<span class="fc" id="L22">                invitation.getPaperId(),</span>
+<span class="fc" id="L23">                invitation.getStatus(),</span>
+<span class="fc" id="L24">                invitation.getContent(),</span>
+<span class="fc" id="L25">                invitation.getSentAt(),</span>
+<span class="fc" id="L26">                invitation.getExpiresAt()</span>
         );
-<span class="fc" id="L25">        invitations.add(stored);</span>
-<span class="fc" id="L26">        return stored;</span>
+<span class="fc" id="L28">        invitations.add(stored);</span>
+<span class="fc" id="L29">        return stored;</span>
     }
 
     @Override
     public Optional&lt;ReviewInvitation&gt; findByPaperIdAndRefereeEmail(String paperId, String refereeEmail) {
-<span class="fc" id="L31">        return invitations.stream()</span>
-<span class="fc bfc" id="L32" title="All 4 branches covered.">                .filter(invitation -&gt; paperId.equals(invitation.getPaperId()) &amp;&amp; refereeEmail.equals(invitation.getRefereeEmail()))</span>
-<span class="fc" id="L33">                .findFirst();</span>
+<span class="fc" id="L34">        return invitations.stream()</span>
+<span class="fc bfc" id="L35" title="All 4 branches covered.">                .filter(invitation -&gt; paperId.equals(invitation.getPaperId()) &amp;&amp; refereeEmail.equals(invitation.getRefereeEmail()))</span>
+<span class="fc" id="L36">                .findFirst();</span>
+    }
+
+    @Override
+    public Optional&lt;ReviewInvitation&gt; findByInvitationId(long invitationId) {
+<span class="fc" id="L41">        return invitations.stream()</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">                .filter(invitation -&gt; invitation.getInvitationId() == invitationId)</span>
+<span class="fc" id="L43">                .findFirst();</span>
+    }
+
+    @Override
+    public boolean updateStatusAndExpiry(long invitationId, String status, Instant expiresAt) {
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        for (int i = 0; i &lt; invitations.size(); i++) {</span>
+<span class="fc" id="L49">            ReviewInvitation invitation = invitations.get(i);</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            if (invitation.getInvitationId() == invitationId) {</span>
+<span class="fc" id="L51">                invitations.set(i, new ReviewInvitation(</span>
+<span class="fc" id="L52">                        invitation.getInvitationId(),</span>
+<span class="fc" id="L53">                        invitation.getAssignmentId(),</span>
+<span class="fc" id="L54">                        invitation.getEditorEmail(),</span>
+<span class="fc" id="L55">                        invitation.getRefereeEmail(),</span>
+<span class="fc" id="L56">                        invitation.getPaperId(),</span>
+                        status,
+<span class="fc" id="L58">                        invitation.getContent(),</span>
+<span class="fc" id="L59">                        invitation.getSentAt(),</span>
+                        expiresAt
+                ));
+<span class="fc" id="L62">                return true;</span>
+            }
+        }
+<span class="fc" id="L65">        return false;</span>
     }
 
     @Override
     public List&lt;ReviewInvitation&gt; findAll() {
-<span class="nc" id="L38">        return List.copyOf(invitations);</span>
+<span class="fc" id="L70">        return List.copyOf(invitations);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

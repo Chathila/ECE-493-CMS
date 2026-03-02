@@ -280,5 +280,10 @@ class RefereeAssignmentServiceImplTest {
             }
             lastEmails = refereeEmails;
         }
+
+        @Override
+        public void notifyEditorDecision(String editorEmail, String decision) {
+            // no-op for these tests
+        }
     }
 }

@@ -2,6 +2,8 @@
 
 import com.ece493.cms.model.ManuscriptFile;
 
+import java.util.Optional;
+
 public interface FileStorageService {
     boolean isSupportedFormat(String filename);
 
@@ -11,8 +13,12 @@ public interface FileStorageService {
 
     long store(ManuscriptFile manuscriptFile);
 
+    default Optional&lt;ManuscriptFile&gt; findById(long fileId) {
+<span class="nc" id="L17">        return Optional.empty();</span>
+    }
+
     default boolean isAvailable() {
-<span class="nc" id="L15">        return true;</span>
+<span class="nc" id="L21">        return true;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

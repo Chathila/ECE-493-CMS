@@ -4,6 +4,7 @@ import com.ece493.cms.model.ManuscriptFile;
 
 import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -48,6 +49,11 @@ public class InMemoryFileStorageService implements FileStorageService {
         long id = sequence.incrementAndGet();
         storage.put(id, manuscriptFile);
         return id;
+    }
+
+    @Override
+    public Optional<ManuscriptFile> findById(long fileId) {
+        return Optional.ofNullable(storage.get(fileId));
     }
 
     @Override

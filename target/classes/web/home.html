@@ -33,6 +33,14 @@
           <p class="dashboard-text"><strong>Drafts:</strong> <span id="draft-state">Checking saved drafts...</span></p>
           <div id="draft-list"></div>
         </div>
+        <div id="review-requests-panel" class="draft-panel">
+          <p class="dashboard-text"><strong>Review Requests:</strong> <span id="review-requests-state">Checking review requests...</span></p>
+          <div id="review-requests-list"></div>
+        </div>
+        <div id="editor-review-panel" class="draft-panel">
+          <p class="dashboard-text"><strong>Editor Review Status:</strong> <span id="editor-review-state">Checking referee approvals...</span></p>
+          <div id="editor-review-list"></div>
+        </div>
       </article>
     </div>
 
@@ -132,8 +140,30 @@
           + `<p class="dashboard-text"><strong>${submission.title || '(Untitled)'}</strong></p>`
           + `<p class="dashboard-text">Contact: ${submission.contact_details || '(No contact)'}</p>`
           + `<a class="action-link secondary" href="/papers/${submission.submission_id}/referees/assign">Add Referees</a>`
+          + `<button class="register-submit secondary-action" data-view-paper-id="${submission.submission_id}" type="button">View Paper Details</button>`
+          + `<a class="action-link secondary" href="/papers/files/${submission.manuscript_file_id}" target="_blank" rel="noopener">Download File</a>`
+          + `<div id="paper-details-${submission.submission_id}" class="draft-panel" style="display:none;"></div>`
         + `</div>`
       )).join('');
+      listEl.querySelectorAll('button[data-view-paper-id]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const detailsEl = document.getElementById(`paper-details-${button.dataset.viewPaperId}`);
+          if (detailsEl.style.display === 'block') {
+            detailsEl.style.display = 'none';
+            return;
+          }
+          detailsEl.style.display = 'block';
+          detailsEl.innerHTML = '<p class="dashboard-text">Loading paper details...</p>';
+          const detailsResponse = await fetch(`/papers/details/${button.dataset.viewPaperId}`, { method: 'GET' });
+          if (detailsResponse.status !== 200) {
+            detailsEl.innerHTML = '<p class="dashboard-text">Unable to load paper details.</p>';
+            return;
+          }
+          const details = await detailsResponse.json();
+          detailsEl.innerHTML = renderPaperDetails(details)
+            + `<a class="action-link secondary" href="${details.download_url}" target="_blank" rel="noopener">Download File</a>`;
+        });
+      });
       return;
     }
     if (response.status === 401) {
@@ -143,8 +173,189 @@
     stateEl.textContent = 'Unable to load submitted papers right now.';
   }
 
+  function textOrPlaceholder(value, placeholder) {
+    return value && value.trim() ? value : placeholder;
+  }
+
+  function renderPaperDetails(item) {
+    return (
+      `<p class="dashboard-text"><strong>Paper:</strong> ${textOrPlaceholder(item.paper_title, '(Untitled)')}</p>`
+      + `<p class="dashboard-text"><strong>Authors:</strong> ${textOrPlaceholder(item.authors, '(Not provided)')}</p>`
+      + `<p class="dashboard-text"><strong>Affiliations:</strong> ${textOrPlaceholder(item.affiliations, '(Not provided)')}</p>`
+      + `<p class="dashboard-text"><strong>Abstract:</strong> ${textOrPlaceholder(item.abstract_text, '(Not provided)')}</p>`
+      + `<p class="dashboard-text"><strong>Keywords:</strong> ${textOrPlaceholder(item.keywords, '(Not provided)')}</p>`
+      + `<p class="dashboard-text"><strong>Contact:</strong> ${textOrPlaceholder(item.contact_details, '(Not provided)')}</p>`
+    );
+  }
+
+  function downloadLink(item) {
+    if (!item.download_url || !item.download_url.trim()) {
+      return '';
+    }
+    return `<a class="action-link secondary" href="${item.download_url}" target="_blank" rel="noopener">Download File</a>`;
+  }
+
+  function prettyStatus(status) {
+    if (status === 'accepted') {
+      return 'Invitation Accepted';
+    }
+    if (status === 'approved') {
+      return 'Approval Submitted';
+    }
+    if (status === 'rejected') {
+      return 'Declined';
+    }
+    if (status === 'expired') {
+      return 'Expired';
+    }
+    return 'Pending';
+  }
+
+  async function submitReviewDecision(invitationId, decision) {
+    const response = await fetch(`/invitations/${invitationId}/response`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ decision })
+    });
+    if (response.status !== 200) {
+      throw new Error('Decision could not be saved.');
+    }
+    await loadReviewDashboard();
+  }
+
+  async function submitReviewApproval(invitationId) {
+    const response = await fetch(`/invitations/${invitationId}/approval`, {
+      method: 'POST'
+    });
+    if (response.status !== 200) {
+      throw new Error('Approval could not be submitted.');
+    }
+    await loadReviewDashboard();
+  }
+
+  function renderReviewRequests(requests) {
+    const stateEl = document.getElementById('review-requests-state');
+    const listEl = document.getElementById('review-requests-list');
+    const panel = document.getElementById('review-requests-panel');
+    const shouldShow = role === 'REFEREE' || role === 'REVIEWER' || requests.length > 0;
+    panel.style.display = shouldShow ? 'block' : 'none';
+    if (!shouldShow) {
+      return;
+    }
+
+    if (requests.length === 0) {
+      stateEl.textContent = 'No review requests right now.';
+      listEl.innerHTML = '';
+      return;
+    }
+
+    stateEl.textContent = `${requests.length} request(s) available.`;
+    listEl.innerHTML = requests.map((request) => (
+      `<div class="draft-item">`
+        + `<p class="dashboard-text"><strong>Paper:</strong> ${textOrPlaceholder(request.paper_title, '(Untitled)')}</p>`
+        + `<p class="dashboard-text"><strong>Status:</strong> ${prettyStatus(request.status)}</p>`
+        + (request.status === 'pending'
+          ? `<div class="dual-actions">`
+              + `<button class="register-submit secondary-action" data-invitation-id="${request.invitation_id}" data-decision="accept" type="button">Accept Review Request</button>`
+              + `<button class="register-submit secondary-action" data-invitation-id="${request.invitation_id}" data-decision="reject" type="button">Decline Invitation</button>`
+            + `</div>`
+          : (request.status === 'accepted' || request.status === 'approved'
+            ? `<button class="register-submit secondary-action" data-request-details-id="${request.invitation_id}" type="button">View Paper Details</button>`
+              + `<div id="request-details-${request.invitation_id}" class="draft-panel" style="display:none;">`
+                + renderPaperDetails(request)
+                + downloadLink(request)
+              + `</div>`
+              + (request.status === 'accepted'
+                ? `<button class="register-submit secondary-action" data-invitation-id="${request.invitation_id}" data-submit-approval="true" type="button">Submit Approval</button>`
+                : '')
+            : ''))
+      + `</div>`
+    )).join('');
+
+    listEl.querySelectorAll('button[data-decision]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        try {
+          await submitReviewDecision(button.dataset.invitationId, button.dataset.decision);
+        } catch (error) {
+          stateEl.textContent = error.message;
+        } finally {
+          button.disabled = false;
+        }
+      });
+    });
+
+    listEl.querySelectorAll('button[data-submit-approval]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        try {
+          await submitReviewApproval(button.dataset.invitationId);
+        } catch (error) {
+          stateEl.textContent = error.message;
+        } finally {
+          button.disabled = false;
+        }
+      });
+    });
+
+    listEl.querySelectorAll('button[data-request-details-id]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const detailsEl = document.getElementById(`request-details-${button.dataset.requestDetailsId}`);
+        detailsEl.style.display = detailsEl.style.display === 'block' ? 'none' : 'block';
+      });
+    });
+  }
+
+  function renderEditorPapers(editorPapers) {
+    const stateEl = document.getElementById('editor-review-state');
+    const listEl = document.getElementById('editor-review-list');
+    const panel = document.getElementById('editor-review-panel');
+    const shouldShow = role === 'EDITOR' || editorPapers.length > 0;
+    panel.style.display = shouldShow ? 'block' : 'none';
+    if (!shouldShow) {
+      return;
+    }
+
+    if (editorPapers.length === 0) {
+      stateEl.textContent = 'No assigned papers with referee decisions yet.';
+      listEl.innerHTML = '';
+      return;
+    }
+
+    stateEl.textContent = `${editorPapers.length} paper(s) with review assignments.`;
+    listEl.innerHTML = editorPapers.map((paper) => (
+      `<div class="draft-item">`
+        + renderPaperDetails(paper)
+        + `<p class="dashboard-text"><strong>Approved by:</strong> ${paper.approved_reviewers.length ? paper.approved_reviewers.join(', ') : '(None yet)'}</p>`
+        + paper.reviewers.map((reviewer) => (
+          `<p class="dashboard-text"><strong>${reviewer.email}</strong>: ${prettyStatus(reviewer.status)}</p>`
+        )).join('')
+      + `</div>`
+    )).join('');
+  }
+
+  async function loadReviewDashboard() {
+    const requestStateEl = document.getElementById('review-requests-state');
+    const editorStateEl = document.getElementById('editor-review-state');
+    const response = await fetch('/reviews/dashboard', { method: 'GET' });
+    if (response.status === 200) {
+      const data = await response.json();
+      renderReviewRequests(Array.isArray(data.review_requests) ? data.review_requests : []);
+      renderEditorPapers(Array.isArray(data.editor_papers) ? data.editor_papers : []);
+      return;
+    }
+    if (response.status === 401) {
+      requestStateEl.textContent = 'Log in to view review requests.';
+      editorStateEl.textContent = 'Log in to view editor review status.';
+      return;
+    }
+    requestStateEl.textContent = 'Unable to load review requests right now.';
+    editorStateEl.textContent = 'Unable to load editor review status right now.';
+  }
+
   loadSubmissionSummary();
   loadDraftSummary();
+  loadReviewDashboard();
 </script>
 </body>
 </html>

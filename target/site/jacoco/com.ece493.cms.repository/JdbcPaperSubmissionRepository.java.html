@@ -10,80 +10,124 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class JdbcPaperSubmissionRepository implements PaperSubmissionRepository {
     private final DataSource dataSource;
 
-<span class="fc" id="L17">    public JdbcPaperSubmissionRepository(DataSource dataSource) {</span>
-<span class="fc" id="L18">        this.dataSource = dataSource;</span>
-<span class="fc" id="L19">    }</span>
+<span class="fc" id="L18">    public JdbcPaperSubmissionRepository(DataSource dataSource) {</span>
+<span class="fc" id="L19">        this.dataSource = dataSource;</span>
+<span class="fc" id="L20">    }</span>
 
     @Override
     public long save(PaperSubmission paperSubmission) {
-<span class="fc" id="L23">        String sql = &quot;INSERT INTO paper_submissions (author_email, title, authors, affiliations, abstract_text, keywords, contact_details, manuscript_file_id, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
-<span class="fc" id="L24">        try (Connection connection = dataSource.getConnection();</span>
-<span class="fc" id="L25">             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {</span>
-<span class="fc" id="L26">            statement.setString(1, paperSubmission.getAuthorEmail());</span>
-<span class="fc" id="L27">            statement.setString(2, paperSubmission.getTitle());</span>
-<span class="fc" id="L28">            statement.setString(3, paperSubmission.getAuthors());</span>
-<span class="fc" id="L29">            statement.setString(4, paperSubmission.getAffiliations());</span>
-<span class="fc" id="L30">            statement.setString(5, paperSubmission.getPaperAbstract());</span>
-<span class="fc" id="L31">            statement.setString(6, paperSubmission.getKeywords());</span>
-<span class="fc" id="L32">            statement.setString(7, paperSubmission.getContactDetails());</span>
-<span class="fc" id="L33">            statement.setLong(8, paperSubmission.getManuscriptFileId());</span>
-<span class="fc" id="L34">            statement.setTimestamp(9, Timestamp.from(paperSubmission.getSubmittedAt()));</span>
-<span class="fc" id="L35">            statement.executeUpdate();</span>
-<span class="fc" id="L36">            try (ResultSet keys = statement.getGeneratedKeys()) {</span>
-<span class="fc bfc" id="L37" title="All 2 branches covered.">                if (!keys.next()) {</span>
-<span class="fc" id="L38">                    throw new IllegalStateException(&quot;Failed to read generated submission id&quot;);</span>
+<span class="fc" id="L24">        String sql = &quot;INSERT INTO paper_submissions (author_email, title, authors, affiliations, abstract_text, keywords, contact_details, manuscript_file_id, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="fc" id="L25">        try (Connection connection = dataSource.getConnection();</span>
+<span class="fc" id="L26">             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {</span>
+<span class="fc" id="L27">            statement.setString(1, paperSubmission.getAuthorEmail());</span>
+<span class="fc" id="L28">            statement.setString(2, paperSubmission.getTitle());</span>
+<span class="fc" id="L29">            statement.setString(3, paperSubmission.getAuthors());</span>
+<span class="fc" id="L30">            statement.setString(4, paperSubmission.getAffiliations());</span>
+<span class="fc" id="L31">            statement.setString(5, paperSubmission.getPaperAbstract());</span>
+<span class="fc" id="L32">            statement.setString(6, paperSubmission.getKeywords());</span>
+<span class="fc" id="L33">            statement.setString(7, paperSubmission.getContactDetails());</span>
+<span class="fc" id="L34">            statement.setLong(8, paperSubmission.getManuscriptFileId());</span>
+<span class="fc" id="L35">            statement.setTimestamp(9, Timestamp.from(paperSubmission.getSubmittedAt()));</span>
+<span class="fc" id="L36">            statement.executeUpdate();</span>
+<span class="fc" id="L37">            try (ResultSet keys = statement.getGeneratedKeys()) {</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">                if (!keys.next()) {</span>
+<span class="fc" id="L39">                    throw new IllegalStateException(&quot;Failed to read generated submission id&quot;);</span>
                 }
-<span class="fc" id="L40">                return keys.getLong(1);</span>
+<span class="fc" id="L41">                return keys.getLong(1);</span>
             }
-<span class="fc" id="L42">        } catch (SQLException e) {</span>
-<span class="fc" id="L43">            throw new IllegalStateException(&quot;Failed to save paper submission&quot;, e);</span>
+<span class="fc" id="L43">        } catch (SQLException e) {</span>
+<span class="fc" id="L44">            throw new IllegalStateException(&quot;Failed to save paper submission&quot;, e);</span>
         }
     }
 
     @Override
     public List&lt;PaperSubmission&gt; findAllByAuthorEmail(String authorEmail) {
-<span class="fc" id="L49">        String sql = &quot;SELECT submission_id, author_email, title, authors, affiliations, abstract_text, keywords, contact_details, manuscript_file_id, submitted_at FROM paper_submissions WHERE author_email = ? ORDER BY submitted_at DESC, submission_id DESC&quot;;</span>
-<span class="fc" id="L50">        try (Connection connection = dataSource.getConnection();</span>
-<span class="fc" id="L51">             PreparedStatement statement = connection.prepareStatement(sql)) {</span>
-<span class="fc" id="L52">            statement.setString(1, authorEmail);</span>
-<span class="fc" id="L53">            try (ResultSet resultSet = statement.executeQuery()) {</span>
-<span class="fc" id="L54">                List&lt;PaperSubmission&gt; submissions = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L55" title="All 2 branches covered.">                while (resultSet.next()) {</span>
-<span class="fc" id="L56">                    submissions.add(new PaperSubmission(</span>
-<span class="fc" id="L57">                            resultSet.getLong(&quot;submission_id&quot;),</span>
-<span class="fc" id="L58">                            resultSet.getString(&quot;author_email&quot;),</span>
-<span class="fc" id="L59">                            resultSet.getString(&quot;title&quot;),</span>
-<span class="fc" id="L60">                            resultSet.getString(&quot;authors&quot;),</span>
-<span class="fc" id="L61">                            resultSet.getString(&quot;affiliations&quot;),</span>
-<span class="fc" id="L62">                            resultSet.getString(&quot;abstract_text&quot;),</span>
-<span class="fc" id="L63">                            resultSet.getString(&quot;keywords&quot;),</span>
-<span class="fc" id="L64">                            resultSet.getString(&quot;contact_details&quot;),</span>
-<span class="fc" id="L65">                            resultSet.getLong(&quot;manuscript_file_id&quot;),</span>
-<span class="fc" id="L66">                            resultSet.getTimestamp(&quot;submitted_at&quot;).toInstant()</span>
+<span class="fc" id="L50">        String sql = &quot;SELECT submission_id, author_email, title, authors, affiliations, abstract_text, keywords, contact_details, manuscript_file_id, submitted_at FROM paper_submissions WHERE author_email = ? ORDER BY submitted_at DESC, submission_id DESC&quot;;</span>
+<span class="fc" id="L51">        try (Connection connection = dataSource.getConnection();</span>
+<span class="fc" id="L52">             PreparedStatement statement = connection.prepareStatement(sql)) {</span>
+<span class="fc" id="L53">            statement.setString(1, authorEmail);</span>
+<span class="fc" id="L54">            try (ResultSet resultSet = statement.executeQuery()) {</span>
+<span class="fc" id="L55">                List&lt;PaperSubmission&gt; submissions = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">                while (resultSet.next()) {</span>
+<span class="fc" id="L57">                    submissions.add(new PaperSubmission(</span>
+<span class="fc" id="L58">                            resultSet.getLong(&quot;submission_id&quot;),</span>
+<span class="fc" id="L59">                            resultSet.getString(&quot;author_email&quot;),</span>
+<span class="fc" id="L60">                            resultSet.getString(&quot;title&quot;),</span>
+<span class="fc" id="L61">                            resultSet.getString(&quot;authors&quot;),</span>
+<span class="fc" id="L62">                            resultSet.getString(&quot;affiliations&quot;),</span>
+<span class="fc" id="L63">                            resultSet.getString(&quot;abstract_text&quot;),</span>
+<span class="fc" id="L64">                            resultSet.getString(&quot;keywords&quot;),</span>
+<span class="fc" id="L65">                            resultSet.getString(&quot;contact_details&quot;),</span>
+<span class="fc" id="L66">                            resultSet.getLong(&quot;manuscript_file_id&quot;),</span>
+<span class="fc" id="L67">                            resultSet.getTimestamp(&quot;submitted_at&quot;).toInstant()</span>
                     ));
                 }
-<span class="fc" id="L69">                return submissions;</span>
+<span class="fc" id="L70">                return submissions;</span>
             }
-<span class="fc" id="L71">        } catch (SQLException e) {</span>
-<span class="fc" id="L72">            throw new IllegalStateException(&quot;Failed to list paper submissions&quot;, e);</span>
+<span class="fc" id="L72">        } catch (SQLException e) {</span>
+<span class="fc" id="L73">            throw new IllegalStateException(&quot;Failed to list paper submissions&quot;, e);</span>
+        }
+    }
+
+    @Override
+    public Optional&lt;PaperSubmission&gt; findBySubmissionId(long submissionId) {
+<span class="fc" id="L79">        String sql = &quot;SELECT submission_id, author_email, title, authors, affiliations, abstract_text, keywords, contact_details, manuscript_file_id, submitted_at FROM paper_submissions WHERE submission_id = ?&quot;;</span>
+<span class="fc" id="L80">        Connection connection = null;</span>
+<span class="fc" id="L81">        PreparedStatement statement = null;</span>
+<span class="fc" id="L82">        ResultSet resultSet = null;</span>
+        try {
+<span class="fc" id="L84">            connection = dataSource.getConnection();</span>
+<span class="fc" id="L85">            statement = connection.prepareStatement(sql);</span>
+<span class="fc" id="L86">            statement.setLong(1, submissionId);</span>
+<span class="fc" id="L87">            resultSet = statement.executeQuery();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">            if (!resultSet.next()) {</span>
+<span class="fc" id="L89">                return Optional.empty();</span>
+            }
+<span class="fc" id="L91">            return Optional.of(new PaperSubmission(</span>
+<span class="fc" id="L92">                    resultSet.getLong(&quot;submission_id&quot;),</span>
+<span class="fc" id="L93">                    resultSet.getString(&quot;author_email&quot;),</span>
+<span class="fc" id="L94">                    resultSet.getString(&quot;title&quot;),</span>
+<span class="fc" id="L95">                    resultSet.getString(&quot;authors&quot;),</span>
+<span class="fc" id="L96">                    resultSet.getString(&quot;affiliations&quot;),</span>
+<span class="fc" id="L97">                    resultSet.getString(&quot;abstract_text&quot;),</span>
+<span class="fc" id="L98">                    resultSet.getString(&quot;keywords&quot;),</span>
+<span class="fc" id="L99">                    resultSet.getString(&quot;contact_details&quot;),</span>
+<span class="fc" id="L100">                    resultSet.getLong(&quot;manuscript_file_id&quot;),</span>
+<span class="fc" id="L101">                    resultSet.getTimestamp(&quot;submitted_at&quot;).toInstant()</span>
+            ));
+<span class="fc" id="L103">        } catch (SQLException e) {</span>
+<span class="fc" id="L104">            throw new IllegalStateException(&quot;Failed to retrieve paper submission&quot;, e);</span>
+        } finally {
+<span class="fc" id="L106">            closeQuietly(resultSet);</span>
+<span class="fc" id="L107">            closeQuietly(statement);</span>
+<span class="fc" id="L108">            closeQuietly(connection);</span>
         }
     }
 
     @Override
     public long countAll() {
-<span class="fc" id="L78">        String sql = &quot;SELECT COUNT(1) FROM paper_submissions&quot;;</span>
-<span class="fc" id="L79">        try (Connection connection = dataSource.getConnection();</span>
-<span class="fc" id="L80">             PreparedStatement statement = connection.prepareStatement(sql);</span>
-<span class="fc" id="L81">             ResultSet resultSet = statement.executeQuery()) {</span>
-<span class="fc" id="L82">            resultSet.next();</span>
-<span class="fc" id="L83">            return resultSet.getLong(1);</span>
-<span class="fc" id="L84">        } catch (SQLException e) {</span>
-<span class="fc" id="L85">            throw new IllegalStateException(&quot;Failed to count paper submissions&quot;, e);</span>
+<span class="fc" id="L114">        String sql = &quot;SELECT COUNT(1) FROM paper_submissions&quot;;</span>
+<span class="fc" id="L115">        try (Connection connection = dataSource.getConnection();</span>
+<span class="fc" id="L116">             PreparedStatement statement = connection.prepareStatement(sql);</span>
+<span class="fc" id="L117">             ResultSet resultSet = statement.executeQuery()) {</span>
+<span class="fc" id="L118">            resultSet.next();</span>
+<span class="fc" id="L119">            return resultSet.getLong(1);</span>
+<span class="fc" id="L120">        } catch (SQLException e) {</span>
+<span class="fc" id="L121">            throw new IllegalStateException(&quot;Failed to count paper submissions&quot;, e);</span>
         }
     }
+
+    private void closeQuietly(AutoCloseable closeable) {
+        try {
+<span class="fc" id="L127">            closeable.close();</span>
+<span class="fc" id="L128">        } catch (Exception ignored) {</span>
+            // Deliberately ignore close failures while retrieving optional lookup data.
+<span class="fc" id="L130">        }</span>
+<span class="fc" id="L131">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -3,13 +3,16 @@ package com.ece493.cms.integration;
 import com.ece493.cms.controller.LoginServlet;
 import com.ece493.cms.controller.PaperSubmissionServlet;
 import com.ece493.cms.controller.PaperSubmissionListServlet;
+import com.ece493.cms.controller.PaperDetailsServlet;
 import com.ece493.cms.controller.RegistrationServlet;
 import com.ece493.cms.controller.ChangePasswordServlet;
 import com.ece493.cms.controller.DraftSaveServlet;
 import com.ece493.cms.controller.DraftViewServlet;
 import com.ece493.cms.controller.DraftListServlet;
 import com.ece493.cms.controller.FileValidationServlet;
+import com.ece493.cms.controller.InvitationResponseServlet;
 import com.ece493.cms.controller.RefereeAssignmentServlet;
+import com.ece493.cms.controller.ReviewDashboardServlet;
 import com.ece493.cms.db.Db;
 import com.ece493.cms.model.UserAccount;
 import com.ece493.cms.repository.JdbcPaperSubmissionDraftRepository;
@@ -35,6 +38,7 @@ import com.ece493.cms.service.InMemoryFileStorageService;
 import com.ece493.cms.service.FileValidationService;
 import com.ece493.cms.service.FileValidationServiceImpl;
 import com.ece493.cms.service.InMemoryNotificationService;
+import com.ece493.cms.service.InvitationResponseService;
 import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 import com.ece493.cms.service.RefereeAssignmentService;
@@ -52,11 +56,14 @@ public class RegistrationIntegrationSupport {
     protected ChangePasswordServlet changePasswordServlet;
     protected PaperSubmissionServlet paperSubmissionServlet;
     protected PaperSubmissionListServlet paperSubmissionListServlet;
+    protected PaperDetailsServlet paperDetailsServlet;
     protected DraftSaveServlet draftSaveServlet;
     protected DraftViewServlet draftViewServlet;
     protected DraftListServlet draftListServlet;
     protected FileValidationServlet fileValidationServlet;
     protected RefereeAssignmentServlet refereeAssignmentServlet;
+    protected InvitationResponseServlet invitationResponseServlet;
+    protected ReviewDashboardServlet reviewDashboardServlet;
     protected InMemoryFileStorageService fileStorageService;
     protected InMemoryNotificationService notificationService;
 
@@ -100,17 +107,30 @@ public class RegistrationIntegrationSupport {
                 new JdbcRefereeAssignmentRepository(dataSource),
                 notificationService
         );
+        InvitationResponseService invitationResponseService = new InvitationResponseService(
+                notificationService.invitationRepository(),
+                notificationService.invitationResponseRepository(),
+                notificationService.reviewAssignmentService(),
+                notificationService
+        );
 
         servlet = new RegistrationServlet(registrationService, loadRegisterHtml());
         loginServlet = new LoginServlet(authenticationService, loadLoginHtml());
         changePasswordServlet = new ChangePasswordServlet(passwordChangeService, loadChangePasswordHtml());
         paperSubmissionServlet = new PaperSubmissionServlet(paperSubmissionService, loadSubmitPaperHtml());
         paperSubmissionListServlet = new PaperSubmissionListServlet(new JdbcPaperSubmissionRepository(dataSource));
+        paperDetailsServlet = new PaperDetailsServlet(new JdbcPaperSubmissionRepository(dataSource), fileStorageService);
         draftSaveServlet = new DraftSaveServlet(draftSaveService);
         draftViewServlet = new DraftViewServlet(new JdbcPaperSubmissionDraftRepository(dataSource));
         draftListServlet = new DraftListServlet(new JdbcPaperSubmissionDraftRepository(dataSource));
         fileValidationServlet = new FileValidationServlet(fileValidationService);
         refereeAssignmentServlet = new RefereeAssignmentServlet(refereeAssignmentService, loadAssignRefereesHtml());
+        invitationResponseServlet = new InvitationResponseServlet(invitationResponseService);
+        reviewDashboardServlet = new ReviewDashboardServlet(
+                notificationService.invitationRepository(),
+                notificationService.reviewAssignmentService(),
+                new JdbcPaperSubmissionRepository(dataSource)
+        );
     }
 
     protected void stopApp() {
@@ -210,6 +230,24 @@ public class RegistrationIntegrationSupport {
         return response;
     }
 
+    protected ServletHttpTestSupport.ResponseCapture getPaperDetails(ServletHttpTestSupport.SessionCapture session, String submissionId) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        paperDetailsServlet.service(
+                ServletHttpTestSupport.getRequest(session, null, "/papers/details/" + submissionId),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getPaperFile(ServletHttpTestSupport.SessionCapture session, String fileId) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        paperDetailsServlet.service(
+                ServletHttpTestSupport.getRequest(session, null, "/papers/files/" + fileId),
+                response.asResponse()
+        );
+        return response;
+    }
+
     protected ServletHttpTestSupport.ResponseCapture postDraftSave(String payload, ServletHttpTestSupport.SessionCapture session) throws Exception {
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         draftSaveServlet.service(
@@ -263,6 +301,42 @@ public class RegistrationIntegrationSupport {
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         refereeAssignmentServlet.service(
                 ServletHttpTestSupport.postJsonRequest(payload, session, path),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getInvitation(String invitationId) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        invitationResponseServlet.service(
+                ServletHttpTestSupport.getRequest(null, null, "/invitations/" + invitationId),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postInvitationResponse(String invitationId, String payload) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        invitationResponseServlet.service(
+                ServletHttpTestSupport.postJsonRequest(payload, null, "/invitations/" + invitationId + "/response"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postInvitationApproval(String invitationId) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        invitationResponseServlet.service(
+                ServletHttpTestSupport.postJsonRequest("{}", null, "/invitations/" + invitationId + "/approval"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getReviewDashboard(ServletHttpTestSupport.SessionCapture session) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        reviewDashboardServlet.service(
+                ServletHttpTestSupport.getRequest(session, null, "/reviews/dashboard"),
                 response.asResponse()
         );
         return response;

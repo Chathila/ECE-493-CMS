@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -50,6 +51,7 @@ class PaperSubmissionListServletTest {
 
         assertEquals(200, response.getStatus());
         assertTrue(response.getBody().contains("\"submission_id\":2"));
+        assertTrue(response.getBody().contains("\"manuscript_file_id\":2"));
         assertTrue(response.getBody().contains("Paper A"));
     }
 
@@ -79,6 +81,13 @@ class PaperSubmissionListServletTest {
             @Override
             public List<PaperSubmission> findAllByAuthorEmail(String authorEmail) {
                 return submissions;
+            }
+
+            @Override
+            public Optional<PaperSubmission> findBySubmissionId(long submissionId) {
+                return submissions.stream()
+                        .filter(submission -> submission.getSubmissionId() == submissionId)
+                        .findFirst();
             }
 
             @Override

@@ -207,6 +207,14 @@ class PaperSubmissionServiceImplTest {
         }
 
         @Override
+        public java.util.Optional<PaperSubmission> findBySubmissionId(long submissionId) {
+            if (!saved || last == null || last.getSubmissionId() != submissionId) {
+                return java.util.Optional.empty();
+            }
+            return java.util.Optional.of(last);
+        }
+
+        @Override
         public long countAll() {
             return saved ? 1 : 0;
         }
@@ -276,6 +284,11 @@ class PaperSubmissionServiceImplTest {
                 throw new IllegalStateException("down");
             }
             return nextFileId;
+        }
+
+        @Override
+        public java.util.Optional<ManuscriptFile> findById(long fileId) {
+            return java.util.Optional.empty();
         }
     }
 }

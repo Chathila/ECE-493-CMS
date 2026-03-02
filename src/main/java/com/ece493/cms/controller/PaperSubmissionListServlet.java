@@ -41,7 +41,8 @@ public class PaperSubmissionListServlet extends HttpServlet {
             json.append("{")
                     .append("\"submission_id\":").append(submission.getSubmissionId()).append(",")
                     .append("\"title\":\"").append(escapeJson(nonNull(submission.getTitle()))).append("\",")
-                    .append("\"contact_details\":\"").append(escapeJson(nonNull(submission.getContactDetails()))).append("\"")
+                    .append("\"contact_details\":\"").append(escapeJson(nonNull(submission.getContactDetails()))).append("\",")
+                    .append("\"manuscript_file_id\":").append(submission.getManuscriptFileId())
                     .append("}");
         }
         json.append("]");
