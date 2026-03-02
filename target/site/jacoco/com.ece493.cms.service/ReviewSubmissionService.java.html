@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReviewSubmissionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.service</a> &gt; <span class="el_source">ReviewSubmissionService.java</span></div><h1>ReviewSubmissionService.java</h1><pre class="source lang-java linenums">package com.ece493.cms.service;
+
+import com.ece493.cms.model.Review;
+import com.ece493.cms.model.ReviewAssignmentRecord;
+import com.ece493.cms.model.ReviewSubmissionResult;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+public class ReviewSubmissionService {
+    private final ReviewAssignmentRepository reviewAssignmentRepository;
+    private final ReviewRepository reviewRepository;
+    private final ReviewValidationService reviewValidationService;
+    private final ReviewAuthorizationService reviewAuthorizationService;
+    private final EditorNotificationService editorNotificationService;
+
+    public ReviewSubmissionService(
+            ReviewAssignmentRepository reviewAssignmentRepository,
+            ReviewRepository reviewRepository,
+            ReviewValidationService reviewValidationService,
+            ReviewAuthorizationService reviewAuthorizationService,
+            EditorNotificationService editorNotificationService
+<span class="fc" id="L25">    ) {</span>
+<span class="fc" id="L26">        this.reviewAssignmentRepository = reviewAssignmentRepository;</span>
+<span class="fc" id="L27">        this.reviewRepository = reviewRepository;</span>
+<span class="fc" id="L28">        this.reviewValidationService = reviewValidationService;</span>
+<span class="fc" id="L29">        this.reviewAuthorizationService = reviewAuthorizationService;</span>
+<span class="fc" id="L30">        this.editorNotificationService = editorNotificationService;</span>
+<span class="fc" id="L31">    }</span>
+
+    public ReviewSubmissionResult submitReview(long assignmentId, String refereeEmail, Map&lt;String, String&gt; responses) {
+        Optional&lt;ReviewAssignmentRecord&gt; assignmentOptional;
+        try {
+<span class="fc" id="L36">            assignmentOptional = reviewAssignmentRepository.findByAssignmentId(assignmentId);</span>
+<span class="fc" id="L37">        } catch (IllegalStateException e) {</span>
+<span class="fc" id="L38">            return ReviewSubmissionResult.error(500, &quot;Review submission failed. Please retry later.&quot;);</span>
+<span class="fc" id="L39">        }</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (assignmentOptional.isEmpty()) {</span>
+<span class="fc" id="L41">            return ReviewSubmissionResult.error(403, &quot;Access denied.&quot;);</span>
+        }
+
+<span class="fc" id="L44">        ReviewAssignmentRecord assignment = assignmentOptional.get();</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (!reviewAuthorizationService.canSubmitReview(refereeEmail, assignment)) {</span>
+<span class="fc" id="L46">            return ReviewSubmissionResult.error(403, &quot;Access denied.&quot;);</span>
+        }
+
+<span class="fc" id="L49">        List&lt;String&gt; invalidFields = reviewValidationService.validate(responses);</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (!invalidFields.isEmpty()) {</span>
+<span class="fc" id="L51">            return ReviewSubmissionResult.validationError(invalidFields);</span>
+        }
+
+        Review savedReview;
+        try {
+<span class="fc" id="L56">            savedReview = reviewRepository.save(new Review(</span>
+                    0L,
+                    assignmentId,
+<span class="fc" id="L59">                    Instant.now(),</span>
+                    &quot;submitted&quot;,
+                    responses
+            ));
+<span class="fc" id="L63">        } catch (IllegalStateException e) {</span>
+<span class="fc" id="L64">            return ReviewSubmissionResult.error(500, &quot;Review submission failed. Please retry later.&quot;);</span>
+<span class="fc" id="L65">        }</span>
+
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (!reviewAssignmentRepository.markSubmitted(assignmentId)) {</span>
+<span class="fc" id="L68">            return ReviewSubmissionResult.error(500, &quot;Review submission failed. Please retry later.&quot;);</span>
+        }
+
+<span class="fc" id="L71">        editorNotificationService.notifyEditor(assignment.getEditorEmail(), &quot;review submitted&quot;);</span>
+<span class="fc" id="L72">        return ReviewSubmissionResult.created(savedReview.getReviewId());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

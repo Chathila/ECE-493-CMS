@@ -24,5 +24,10 @@ class ReviewAssignmentServiceTest {
         org.junit.jupiter.api.Assertions.assertTrue(service.markApproved(1L));
         org.junit.jupiter.api.Assertions.assertFalse(service.markApproved(2L));
         org.junit.jupiter.api.Assertions.assertFalse(service.markApproved(3L));
+        org.junit.jupiter.api.Assertions.assertTrue(service.markReviewSubmitted(1L));
+        assertEquals("submitted", service.getStatus(1L));
+        org.junit.jupiter.api.Assertions.assertTrue(service.markReviewSubmitted(1L));
+        org.junit.jupiter.api.Assertions.assertFalse(service.markReviewSubmitted(2L));
+        org.junit.jupiter.api.Assertions.assertFalse(service.markReviewSubmitted(3L));
     }
 }

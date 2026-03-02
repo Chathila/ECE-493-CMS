@@ -34,6 +34,14 @@ import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 import com.ece493.cms.service.RefereeAssignmentService;
 import com.ece493.cms.service.RefereeAssignmentServiceImpl;
+import com.ece493.cms.service.ReviewAuthorizationService;
+import com.ece493.cms.service.ReviewFormService;
+import com.ece493.cms.service.ReviewSubmissionService;
+import com.ece493.cms.service.InMemoryReviewAssignmentRepository;
+import com.ece493.cms.service.InMemoryReviewFormRepository;
+import com.ece493.cms.service.InMemoryReviewRepository;
+import com.ece493.cms.service.DefaultReviewValidationService;
+import com.ece493.cms.service.InMemoryEditorNotificationService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -64,6 +72,24 @@ public class CmsAppServer {
                 notificationService
         );
         DraftSaveService draftSaveService = createDraftSaveService(dataSource);
+        InMemoryReviewAssignmentRepository reviewAssignmentRepository = new InMemoryReviewAssignmentRepository(
+                notificationService.invitationRepository(),
+                notificationService.reviewAssignmentService()
+        );
+        ReviewAuthorizationService reviewAuthorizationService = new ReviewAuthorizationService();
+        ReviewFormService reviewFormService = new ReviewFormService(
+                reviewAssignmentRepository,
+                new InMemoryReviewFormRepository(),
+                new JdbcPaperSubmissionRepository(dataSource),
+                reviewAuthorizationService
+        );
+        ReviewSubmissionService reviewSubmissionService = new ReviewSubmissionService(
+                reviewAssignmentRepository,
+                new InMemoryReviewRepository(),
+                new DefaultReviewValidationService(),
+                reviewAuthorizationService,
+                new InMemoryEditorNotificationService()
+        );
         String registerHtml = loadRegisterHtml();
         String loginHtml = loadLoginHtml();
         String changePasswordHtml = loadChangePasswordHtml();
@@ -88,11 +114,13 @@ public class CmsAppServer {
         context.addServlet(new ServletHolder(paperDetailsServlet), "/papers/files/*");
         context.addServlet(new ServletHolder(new RefereeAssignmentServlet(refereeAssignmentService, assignRefereesHtml)), "/papers/*");
         context.addServlet(new ServletHolder(new InvitationResponseServlet(invitationResponseService)), "/invitations/*");
+        context.addServlet(new ServletHolder(new ReviewWorkflowServlet(reviewFormService, reviewSubmissionService)), "/assignments/*");
         context.addServlet(new ServletHolder(new ReviewDashboardServlet(
                 notificationService.invitationRepository(),
                 notificationService.reviewAssignmentService(),
                 new JdbcPaperSubmissionRepository(dataSource)
         )), "/reviews/dashboard");
+        context.addServlet(new ServletHolder(new StaticResourceServlet("web/review-form.html", "text/html; charset=UTF-8")), "/review-form");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home/*");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/styles.css", "text/css")), "/styles.css");

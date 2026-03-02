@@ -4,6 +4,7 @@ import com.ece493.cms.controller.LoginServlet;
 import com.ece493.cms.controller.PaperSubmissionServlet;
 import com.ece493.cms.controller.PaperSubmissionListServlet;
 import com.ece493.cms.controller.PaperDetailsServlet;
+import com.ece493.cms.controller.ReviewWorkflowServlet;
 import com.ece493.cms.controller.RegistrationServlet;
 import com.ece493.cms.controller.ChangePasswordServlet;
 import com.ece493.cms.controller.DraftSaveServlet;
@@ -43,6 +44,14 @@ import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 import com.ece493.cms.service.RefereeAssignmentService;
 import com.ece493.cms.service.RefereeAssignmentServiceImpl;
+import com.ece493.cms.service.ReviewAuthorizationService;
+import com.ece493.cms.service.ReviewFormService;
+import com.ece493.cms.service.ReviewSubmissionService;
+import com.ece493.cms.service.InMemoryReviewAssignmentRepository;
+import com.ece493.cms.service.InMemoryReviewFormRepository;
+import com.ece493.cms.service.InMemoryReviewRepository;
+import com.ece493.cms.service.DefaultReviewValidationService;
+import com.ece493.cms.service.InMemoryEditorNotificationService;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
@@ -63,9 +72,11 @@ public class RegistrationIntegrationSupport {
     protected FileValidationServlet fileValidationServlet;
     protected RefereeAssignmentServlet refereeAssignmentServlet;
     protected InvitationResponseServlet invitationResponseServlet;
+    protected ReviewWorkflowServlet reviewWorkflowServlet;
     protected ReviewDashboardServlet reviewDashboardServlet;
     protected InMemoryFileStorageService fileStorageService;
     protected InMemoryNotificationService notificationService;
+    protected InMemoryReviewRepository reviewRepository;
 
     protected void startApp() {
         dataSource = Db.createDataSource("jdbc:h2:mem:cms_it_" + System.nanoTime() + ";DB_CLOSE_DELAY=-1");
@@ -113,6 +124,25 @@ public class RegistrationIntegrationSupport {
                 notificationService.reviewAssignmentService(),
                 notificationService
         );
+        InMemoryReviewAssignmentRepository reviewAssignmentRepository = new InMemoryReviewAssignmentRepository(
+                notificationService.invitationRepository(),
+                notificationService.reviewAssignmentService()
+        );
+        ReviewAuthorizationService reviewAuthorizationService = new ReviewAuthorizationService();
+        ReviewFormService reviewFormService = new ReviewFormService(
+                reviewAssignmentRepository,
+                new InMemoryReviewFormRepository(),
+                new JdbcPaperSubmissionRepository(dataSource),
+                reviewAuthorizationService
+        );
+        reviewRepository = new InMemoryReviewRepository();
+        ReviewSubmissionService reviewSubmissionService = new ReviewSubmissionService(
+                reviewAssignmentRepository,
+                reviewRepository,
+                new DefaultReviewValidationService(),
+                reviewAuthorizationService,
+                new InMemoryEditorNotificationService()
+        );
 
         servlet = new RegistrationServlet(registrationService, loadRegisterHtml());
         loginServlet = new LoginServlet(authenticationService, loadLoginHtml());
@@ -126,6 +156,7 @@ public class RegistrationIntegrationSupport {
         fileValidationServlet = new FileValidationServlet(fileValidationService);
         refereeAssignmentServlet = new RefereeAssignmentServlet(refereeAssignmentService, loadAssignRefereesHtml());
         invitationResponseServlet = new InvitationResponseServlet(invitationResponseService);
+        reviewWorkflowServlet = new ReviewWorkflowServlet(reviewFormService, reviewSubmissionService);
         reviewDashboardServlet = new ReviewDashboardServlet(
                 notificationService.invitationRepository(),
                 notificationService.reviewAssignmentService(),
@@ -337,6 +368,28 @@ public class RegistrationIntegrationSupport {
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         reviewDashboardServlet.service(
                 ServletHttpTestSupport.getRequest(session, null, "/reviews/dashboard"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getReviewForm(String assignmentId, ServletHttpTestSupport.SessionCapture session) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        reviewWorkflowServlet.service(
+                ServletHttpTestSupport.getRequest(session, null, "/assignments/" + assignmentId + "/review-form"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postReviewSubmission(
+            String assignmentId,
+            String payload,
+            ServletHttpTestSupport.SessionCapture session
+    ) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        reviewWorkflowServlet.service(
+                ServletHttpTestSupport.postJsonRequest(payload, session, "/assignments/" + assignmentId + "/reviews"),
                 response.asResponse()
         );
         return response;

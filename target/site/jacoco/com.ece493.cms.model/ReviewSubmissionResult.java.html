@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReviewSubmissionResult.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.model</a> &gt; <span class="el_source">ReviewSubmissionResult.java</span></div><h1>ReviewSubmissionResult.java</h1><pre class="source lang-java linenums">package com.ece493.cms.model;
+
+import java.util.List;
+
+public class ReviewSubmissionResult {
+    private final int statusCode;
+    private final String message;
+    private final Long reviewId;
+    private final String status;
+    private final List&lt;String&gt; fields;
+
+<span class="fc" id="L12">    private ReviewSubmissionResult(int statusCode, String message, Long reviewId, String status, List&lt;String&gt; fields) {</span>
+<span class="fc" id="L13">        this.statusCode = statusCode;</span>
+<span class="fc" id="L14">        this.message = message;</span>
+<span class="fc" id="L15">        this.reviewId = reviewId;</span>
+<span class="fc" id="L16">        this.status = status;</span>
+<span class="fc bfc" id="L17" title="All 2 branches covered.">        this.fields = fields == null ? List.of() : List.copyOf(fields);</span>
+<span class="fc" id="L18">    }</span>
+
+    public static ReviewSubmissionResult created(long reviewId) {
+<span class="fc" id="L21">        return new ReviewSubmissionResult(201, &quot;Review submitted.&quot;, reviewId, &quot;submitted&quot;, List.of());</span>
+    }
+
+    public static ReviewSubmissionResult validationError(List&lt;String&gt; fields) {
+<span class="fc" id="L25">        return new ReviewSubmissionResult(400, &quot;Review validation failed.&quot;, null, null, fields);</span>
+    }
+
+    public static ReviewSubmissionResult error(int statusCode, String message) {
+<span class="fc" id="L29">        return new ReviewSubmissionResult(statusCode, message, null, null, List.of());</span>
+    }
+
+    public int getStatusCode() {
+<span class="fc" id="L33">        return statusCode;</span>
+    }
+
+    public String getMessage() {
+<span class="fc" id="L37">        return message;</span>
+    }
+
+    public Long getReviewId() {
+<span class="fc" id="L41">        return reviewId;</span>
+    }
+
+    public String getStatus() {
+<span class="fc" id="L45">        return status;</span>
+    }
+
+    public List&lt;String&gt; getFields() {
+<span class="fc" id="L49">        return fields;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

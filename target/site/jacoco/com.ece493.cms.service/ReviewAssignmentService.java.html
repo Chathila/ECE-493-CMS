@@ -29,8 +29,17 @@ import java.util.concurrent.ConcurrentHashMap;
 <span class="fc" id="L29">        return false;</span>
     }
 
+    public boolean markReviewSubmitted(long invitationId) {
+<span class="fc" id="L33">        String currentStatus = getStatus(invitationId);</span>
+<span class="fc bfc" id="L34" title="All 6 branches covered.">        if (&quot;accepted&quot;.equals(currentStatus) || &quot;approved&quot;.equals(currentStatus) || &quot;submitted&quot;.equals(currentStatus)) {</span>
+<span class="fc" id="L35">            assignmentStatusByInvitationId.put(invitationId, &quot;submitted&quot;);</span>
+<span class="fc" id="L36">            return true;</span>
+        }
+<span class="fc" id="L38">        return false;</span>
+    }
+
     public String getStatus(long invitationId) {
-<span class="fc" id="L33">        return assignmentStatusByInvitationId.getOrDefault(invitationId, &quot;pending&quot;);</span>
+<span class="fc" id="L42">        return assignmentStatusByInvitationId.getOrDefault(invitationId, &quot;pending&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

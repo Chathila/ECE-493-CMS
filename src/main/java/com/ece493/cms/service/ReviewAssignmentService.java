@@ -29,6 +29,15 @@ public class ReviewAssignmentService {
         return false;
     }
 
+    public boolean markReviewSubmitted(long invitationId) {
+        String currentStatus = getStatus(invitationId);
+        if ("accepted".equals(currentStatus) || "approved".equals(currentStatus) || "submitted".equals(currentStatus)) {
+            assignmentStatusByInvitationId.put(invitationId, "submitted");
+            return true;
+        }
+        return false;
+    }
+
     public String getStatus(long invitationId) {
         return assignmentStatusByInvitationId.getOrDefault(invitationId, "pending");
     }

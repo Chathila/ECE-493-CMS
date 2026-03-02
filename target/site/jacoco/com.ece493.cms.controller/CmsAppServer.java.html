@@ -34,6 +34,14 @@ import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 import com.ece493.cms.service.RefereeAssignmentService;
 import com.ece493.cms.service.RefereeAssignmentServiceImpl;
+import com.ece493.cms.service.ReviewAuthorizationService;
+import com.ece493.cms.service.ReviewFormService;
+import com.ece493.cms.service.ReviewSubmissionService;
+import com.ece493.cms.service.InMemoryReviewAssignmentRepository;
+import com.ece493.cms.service.InMemoryReviewFormRepository;
+import com.ece493.cms.service.InMemoryReviewRepository;
+import com.ece493.cms.service.DefaultReviewValidationService;
+import com.ece493.cms.service.InMemoryEditorNotificationService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -48,72 +56,92 @@ import java.util.Objects;
 public class CmsAppServer {
     private final Server server;
 
-<span class="nc" id="L51">    public CmsAppServer(int port, DataSource dataSource) {</span>
-<span class="nc" id="L52">        RegistrationService registrationService = createRegistrationService(dataSource);</span>
-<span class="nc" id="L53">        AuthenticationService authenticationService = createAuthenticationService(dataSource);</span>
-<span class="nc" id="L54">        PasswordChangeService passwordChangeService = createPasswordChangeService(dataSource);</span>
-<span class="nc" id="L55">        InMemoryFileStorageService fileStorageService = new InMemoryFileStorageService();</span>
-<span class="nc" id="L56">        InMemoryNotificationService notificationService = new InMemoryNotificationService();</span>
-<span class="nc" id="L57">        PaperSubmissionService paperSubmissionService = createPaperSubmissionService(dataSource, fileStorageService);</span>
-<span class="nc" id="L58">        FileValidationService fileValidationService = createFileValidationService(fileStorageService);</span>
-<span class="nc" id="L59">        RefereeAssignmentService refereeAssignmentService = createRefereeAssignmentService(dataSource, notificationService);</span>
-<span class="nc" id="L60">        InvitationResponseService invitationResponseService = new InvitationResponseService(</span>
-<span class="nc" id="L61">                notificationService.invitationRepository(),</span>
-<span class="nc" id="L62">                notificationService.invitationResponseRepository(),</span>
-<span class="nc" id="L63">                notificationService.reviewAssignmentService(),</span>
+<span class="nc" id="L59">    public CmsAppServer(int port, DataSource dataSource) {</span>
+<span class="nc" id="L60">        RegistrationService registrationService = createRegistrationService(dataSource);</span>
+<span class="nc" id="L61">        AuthenticationService authenticationService = createAuthenticationService(dataSource);</span>
+<span class="nc" id="L62">        PasswordChangeService passwordChangeService = createPasswordChangeService(dataSource);</span>
+<span class="nc" id="L63">        InMemoryFileStorageService fileStorageService = new InMemoryFileStorageService();</span>
+<span class="nc" id="L64">        InMemoryNotificationService notificationService = new InMemoryNotificationService();</span>
+<span class="nc" id="L65">        PaperSubmissionService paperSubmissionService = createPaperSubmissionService(dataSource, fileStorageService);</span>
+<span class="nc" id="L66">        FileValidationService fileValidationService = createFileValidationService(fileStorageService);</span>
+<span class="nc" id="L67">        RefereeAssignmentService refereeAssignmentService = createRefereeAssignmentService(dataSource, notificationService);</span>
+<span class="nc" id="L68">        InvitationResponseService invitationResponseService = new InvitationResponseService(</span>
+<span class="nc" id="L69">                notificationService.invitationRepository(),</span>
+<span class="nc" id="L70">                notificationService.invitationResponseRepository(),</span>
+<span class="nc" id="L71">                notificationService.reviewAssignmentService(),</span>
                 notificationService
         );
-<span class="nc" id="L66">        DraftSaveService draftSaveService = createDraftSaveService(dataSource);</span>
-<span class="nc" id="L67">        String registerHtml = loadRegisterHtml();</span>
-<span class="nc" id="L68">        String loginHtml = loadLoginHtml();</span>
-<span class="nc" id="L69">        String changePasswordHtml = loadChangePasswordHtml();</span>
-<span class="nc" id="L70">        String submitPaperHtml = loadSubmitPaperHtml();</span>
-<span class="nc" id="L71">        String assignRefereesHtml = loadAssignRefereesHtml();</span>
+<span class="nc" id="L74">        DraftSaveService draftSaveService = createDraftSaveService(dataSource);</span>
+<span class="nc" id="L75">        InMemoryReviewAssignmentRepository reviewAssignmentRepository = new InMemoryReviewAssignmentRepository(</span>
+<span class="nc" id="L76">                notificationService.invitationRepository(),</span>
+<span class="nc" id="L77">                notificationService.reviewAssignmentService()</span>
+        );
+<span class="nc" id="L79">        ReviewAuthorizationService reviewAuthorizationService = new ReviewAuthorizationService();</span>
+<span class="nc" id="L80">        ReviewFormService reviewFormService = new ReviewFormService(</span>
+                reviewAssignmentRepository,
+                new InMemoryReviewFormRepository(),
+                new JdbcPaperSubmissionRepository(dataSource),
+                reviewAuthorizationService
+        );
+<span class="nc" id="L86">        ReviewSubmissionService reviewSubmissionService = new ReviewSubmissionService(</span>
+                reviewAssignmentRepository,
+                new InMemoryReviewRepository(),
+                new DefaultReviewValidationService(),
+                reviewAuthorizationService,
+                new InMemoryEditorNotificationService()
+        );
+<span class="nc" id="L93">        String registerHtml = loadRegisterHtml();</span>
+<span class="nc" id="L94">        String loginHtml = loadLoginHtml();</span>
+<span class="nc" id="L95">        String changePasswordHtml = loadChangePasswordHtml();</span>
+<span class="nc" id="L96">        String submitPaperHtml = loadSubmitPaperHtml();</span>
+<span class="nc" id="L97">        String assignRefereesHtml = loadAssignRefereesHtml();</span>
 
-<span class="nc" id="L73">        this.server = new Server(port);</span>
-<span class="nc" id="L74">        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);</span>
-<span class="nc" id="L75">        context.setContextPath(&quot;/&quot;);</span>
-<span class="nc" id="L76">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/index.html&quot;, &quot;text/html; charset=UTF-8&quot;)), &quot;/&quot;);</span>
-<span class="nc" id="L77">        context.addServlet(new ServletHolder(new RegistrationServlet(registrationService, registerHtml)), &quot;/register&quot;);</span>
-<span class="nc" id="L78">        context.addServlet(new ServletHolder(new LoginServlet(authenticationService, loginHtml)), &quot;/login&quot;);</span>
-<span class="nc" id="L79">        context.addServlet(new ServletHolder(new ChangePasswordServlet(passwordChangeService, changePasswordHtml)), &quot;/account/password&quot;);</span>
-<span class="nc" id="L80">        context.addServlet(new ServletHolder(new PaperSubmissionServlet(paperSubmissionService, submitPaperHtml)), &quot;/papers/submit&quot;);</span>
-<span class="nc" id="L81">        context.addServlet(new ServletHolder(new PaperSubmissionListServlet(new JdbcPaperSubmissionRepository(dataSource))), &quot;/papers/submissions&quot;);</span>
-<span class="nc" id="L82">        context.addServlet(new ServletHolder(new FileValidationServlet(fileValidationService)), &quot;/papers/file/validate&quot;);</span>
-<span class="nc" id="L83">        context.addServlet(new ServletHolder(new DraftSaveServlet(draftSaveService)), &quot;/papers/draft/save&quot;);</span>
-<span class="nc" id="L84">        context.addServlet(new ServletHolder(new DraftViewServlet(new JdbcPaperSubmissionDraftRepository(dataSource))), &quot;/papers/draft&quot;);</span>
-<span class="nc" id="L85">        context.addServlet(new ServletHolder(new DraftListServlet(new JdbcPaperSubmissionDraftRepository(dataSource))), &quot;/papers/drafts&quot;);</span>
-<span class="nc" id="L86">        PaperDetailsServlet paperDetailsServlet = new PaperDetailsServlet(new JdbcPaperSubmissionRepository(dataSource), fileStorageService);</span>
-<span class="nc" id="L87">        context.addServlet(new ServletHolder(paperDetailsServlet), &quot;/papers/details/*&quot;);</span>
-<span class="nc" id="L88">        context.addServlet(new ServletHolder(paperDetailsServlet), &quot;/papers/files/*&quot;);</span>
-<span class="nc" id="L89">        context.addServlet(new ServletHolder(new RefereeAssignmentServlet(refereeAssignmentService, assignRefereesHtml)), &quot;/papers/*&quot;);</span>
-<span class="nc" id="L90">        context.addServlet(new ServletHolder(new InvitationResponseServlet(invitationResponseService)), &quot;/invitations/*&quot;);</span>
-<span class="nc" id="L91">        context.addServlet(new ServletHolder(new ReviewDashboardServlet(</span>
-<span class="nc" id="L92">                notificationService.invitationRepository(),</span>
-<span class="nc" id="L93">                notificationService.reviewAssignmentService(),</span>
+<span class="nc" id="L99">        this.server = new Server(port);</span>
+<span class="nc" id="L100">        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);</span>
+<span class="nc" id="L101">        context.setContextPath(&quot;/&quot;);</span>
+<span class="nc" id="L102">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/index.html&quot;, &quot;text/html; charset=UTF-8&quot;)), &quot;/&quot;);</span>
+<span class="nc" id="L103">        context.addServlet(new ServletHolder(new RegistrationServlet(registrationService, registerHtml)), &quot;/register&quot;);</span>
+<span class="nc" id="L104">        context.addServlet(new ServletHolder(new LoginServlet(authenticationService, loginHtml)), &quot;/login&quot;);</span>
+<span class="nc" id="L105">        context.addServlet(new ServletHolder(new ChangePasswordServlet(passwordChangeService, changePasswordHtml)), &quot;/account/password&quot;);</span>
+<span class="nc" id="L106">        context.addServlet(new ServletHolder(new PaperSubmissionServlet(paperSubmissionService, submitPaperHtml)), &quot;/papers/submit&quot;);</span>
+<span class="nc" id="L107">        context.addServlet(new ServletHolder(new PaperSubmissionListServlet(new JdbcPaperSubmissionRepository(dataSource))), &quot;/papers/submissions&quot;);</span>
+<span class="nc" id="L108">        context.addServlet(new ServletHolder(new FileValidationServlet(fileValidationService)), &quot;/papers/file/validate&quot;);</span>
+<span class="nc" id="L109">        context.addServlet(new ServletHolder(new DraftSaveServlet(draftSaveService)), &quot;/papers/draft/save&quot;);</span>
+<span class="nc" id="L110">        context.addServlet(new ServletHolder(new DraftViewServlet(new JdbcPaperSubmissionDraftRepository(dataSource))), &quot;/papers/draft&quot;);</span>
+<span class="nc" id="L111">        context.addServlet(new ServletHolder(new DraftListServlet(new JdbcPaperSubmissionDraftRepository(dataSource))), &quot;/papers/drafts&quot;);</span>
+<span class="nc" id="L112">        PaperDetailsServlet paperDetailsServlet = new PaperDetailsServlet(new JdbcPaperSubmissionRepository(dataSource), fileStorageService);</span>
+<span class="nc" id="L113">        context.addServlet(new ServletHolder(paperDetailsServlet), &quot;/papers/details/*&quot;);</span>
+<span class="nc" id="L114">        context.addServlet(new ServletHolder(paperDetailsServlet), &quot;/papers/files/*&quot;);</span>
+<span class="nc" id="L115">        context.addServlet(new ServletHolder(new RefereeAssignmentServlet(refereeAssignmentService, assignRefereesHtml)), &quot;/papers/*&quot;);</span>
+<span class="nc" id="L116">        context.addServlet(new ServletHolder(new InvitationResponseServlet(invitationResponseService)), &quot;/invitations/*&quot;);</span>
+<span class="nc" id="L117">        context.addServlet(new ServletHolder(new ReviewWorkflowServlet(reviewFormService, reviewSubmissionService)), &quot;/assignments/*&quot;);</span>
+<span class="nc" id="L118">        context.addServlet(new ServletHolder(new ReviewDashboardServlet(</span>
+<span class="nc" id="L119">                notificationService.invitationRepository(),</span>
+<span class="nc" id="L120">                notificationService.reviewAssignmentService(),</span>
                 new JdbcPaperSubmissionRepository(dataSource)
         )), &quot;/reviews/dashboard&quot;);
-<span class="nc" id="L96">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/home.html&quot;, &quot;text/html; charset=UTF-8&quot;)), &quot;/home&quot;);</span>
-<span class="nc" id="L97">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/home.html&quot;, &quot;text/html; charset=UTF-8&quot;)), &quot;/home/*&quot;);</span>
-<span class="nc" id="L98">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/styles.css&quot;, &quot;text/css&quot;)), &quot;/styles.css&quot;);</span>
-<span class="nc" id="L99">        server.setHandler(context);</span>
-<span class="nc" id="L100">    }</span>
+<span class="nc" id="L123">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/review-form.html&quot;, &quot;text/html; charset=UTF-8&quot;)), &quot;/review-form&quot;);</span>
+<span class="nc" id="L124">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/home.html&quot;, &quot;text/html; charset=UTF-8&quot;)), &quot;/home&quot;);</span>
+<span class="nc" id="L125">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/home.html&quot;, &quot;text/html; charset=UTF-8&quot;)), &quot;/home/*&quot;);</span>
+<span class="nc" id="L126">        context.addServlet(new ServletHolder(new StaticResourceServlet(&quot;web/styles.css&quot;, &quot;text/css&quot;)), &quot;/styles.css&quot;);</span>
+<span class="nc" id="L127">        server.setHandler(context);</span>
+<span class="nc" id="L128">    }</span>
 
     public void start() throws Exception {
-<span class="nc" id="L103">        server.start();</span>
-<span class="nc" id="L104">    }</span>
+<span class="nc" id="L131">        server.start();</span>
+<span class="nc" id="L132">    }</span>
 
     public void stop() throws Exception {
-<span class="nc" id="L107">        server.stop();</span>
-<span class="nc" id="L108">    }</span>
+<span class="nc" id="L135">        server.stop();</span>
+<span class="nc" id="L136">    }</span>
 
     public int port() {
-<span class="nc" id="L111">        return server.getURI().getPort();</span>
+<span class="nc" id="L139">        return server.getURI().getPort();</span>
     }
 
     public static RegistrationService createRegistrationService(DataSource dataSource) {
-<span class="nc" id="L115">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
-<span class="nc" id="L116">        return new RegistrationServiceImpl(</span>
+<span class="nc" id="L143">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
+<span class="nc" id="L144">        return new RegistrationServiceImpl(</span>
                 repository,
                 new DefaultEmailValidationService(),
                 new DefaultPasswordPolicyService(),
@@ -122,8 +150,8 @@ public class CmsAppServer {
     }
 
     public static AuthenticationService createAuthenticationService(DataSource dataSource) {
-<span class="nc" id="L125">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
-<span class="nc" id="L126">        return new AuthenticationServiceImpl(</span>
+<span class="nc" id="L153">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
+<span class="nc" id="L154">        return new AuthenticationServiceImpl(</span>
                 repository,
                 new PasswordHasher(),
                 new DefaultAccountStatusService(),
@@ -132,8 +160,8 @@ public class CmsAppServer {
     }
 
     public static PasswordChangeService createPasswordChangeService(DataSource dataSource) {
-<span class="nc" id="L135">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
-<span class="nc" id="L136">        return new PasswordChangeServiceImpl(</span>
+<span class="nc" id="L163">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
+<span class="nc" id="L164">        return new PasswordChangeServiceImpl(</span>
                 repository,
                 new DefaultPasswordPolicyService(),
                 new PasswordHasher(),
@@ -142,9 +170,9 @@ public class CmsAppServer {
     }
 
     public static PaperSubmissionService createPaperSubmissionService(DataSource dataSource, InMemoryFileStorageService fileStorageService) {
-<span class="nc" id="L145">        PaperSubmissionRepository repository = new JdbcPaperSubmissionRepository(dataSource);</span>
-<span class="nc" id="L146">        PaperSubmissionDraftRepository draftRepository = new JdbcPaperSubmissionDraftRepository(dataSource);</span>
-<span class="nc" id="L147">        return new PaperSubmissionServiceImpl(</span>
+<span class="nc" id="L173">        PaperSubmissionRepository repository = new JdbcPaperSubmissionRepository(dataSource);</span>
+<span class="nc" id="L174">        PaperSubmissionDraftRepository draftRepository = new JdbcPaperSubmissionDraftRepository(dataSource);</span>
+<span class="nc" id="L175">        return new PaperSubmissionServiceImpl(</span>
                 repository,
                 draftRepository,
                 new DefaultMetadataValidationService(),
@@ -153,18 +181,18 @@ public class CmsAppServer {
     }
 
     public static DraftSaveService createDraftSaveService(DataSource dataSource) {
-<span class="nc" id="L156">        PaperSubmissionDraftRepository repository = new JdbcPaperSubmissionDraftRepository(dataSource);</span>
-<span class="nc" id="L157">        return new DraftSaveServiceImpl(repository, new DefaultDraftValidationService());</span>
+<span class="nc" id="L184">        PaperSubmissionDraftRepository repository = new JdbcPaperSubmissionDraftRepository(dataSource);</span>
+<span class="nc" id="L185">        return new DraftSaveServiceImpl(repository, new DefaultDraftValidationService());</span>
     }
 
     public static FileValidationService createFileValidationService(InMemoryFileStorageService fileStorageService) {
-<span class="nc" id="L161">        return new FileValidationServiceImpl(fileStorageService);</span>
+<span class="nc" id="L189">        return new FileValidationServiceImpl(fileStorageService);</span>
     }
 
     public static RefereeAssignmentService createRefereeAssignmentService(DataSource dataSource, NotificationService notificationService) {
-<span class="nc" id="L165">        UserAccountRepository userAccountRepository = new JdbcUserAccountRepository(dataSource);</span>
-<span class="nc" id="L166">        RefereeAssignmentRepository refereeAssignmentRepository = new JdbcRefereeAssignmentRepository(dataSource);</span>
-<span class="nc" id="L167">        return new RefereeAssignmentServiceImpl(</span>
+<span class="nc" id="L193">        UserAccountRepository userAccountRepository = new JdbcUserAccountRepository(dataSource);</span>
+<span class="nc" id="L194">        RefereeAssignmentRepository refereeAssignmentRepository = new JdbcRefereeAssignmentRepository(dataSource);</span>
+<span class="nc" id="L195">        return new RefereeAssignmentServiceImpl(</span>
                 userAccountRepository,
                 refereeAssignmentRepository,
                 notificationService
@@ -172,27 +200,27 @@ public class CmsAppServer {
     }
 
     public static void main(String[] args) throws Exception {
-<span class="nc" id="L175">        int port = Integer.parseInt(System.getProperty(&quot;PORT&quot;, System.getenv().getOrDefault(&quot;PORT&quot;, &quot;8080&quot;)));</span>
-<span class="nc" id="L176">        DataSource dataSource = Db.createDataSource(&quot;jdbc:h2:mem:cms;MODE=PostgreSQL;DB_CLOSE_DELAY=-1&quot;);</span>
-<span class="nc" id="L177">        Db.runSchema(dataSource);</span>
-<span class="nc" id="L178">        seedDefaultTestUser(dataSource);</span>
+<span class="nc" id="L203">        int port = Integer.parseInt(System.getProperty(&quot;PORT&quot;, System.getenv().getOrDefault(&quot;PORT&quot;, &quot;8080&quot;)));</span>
+<span class="nc" id="L204">        DataSource dataSource = Db.createDataSource(&quot;jdbc:h2:mem:cms;MODE=PostgreSQL;DB_CLOSE_DELAY=-1&quot;);</span>
+<span class="nc" id="L205">        Db.runSchema(dataSource);</span>
+<span class="nc" id="L206">        seedDefaultTestUser(dataSource);</span>
 
-<span class="nc" id="L180">        CmsAppServer appServer = new CmsAppServer(port, dataSource);</span>
-<span class="nc" id="L181">        appServer.start();</span>
-<span class="nc" id="L182">        appServer.server.join();</span>
-<span class="nc" id="L183">    }</span>
+<span class="nc" id="L208">        CmsAppServer appServer = new CmsAppServer(port, dataSource);</span>
+<span class="nc" id="L209">        appServer.start();</span>
+<span class="nc" id="L210">        appServer.server.join();</span>
+<span class="nc" id="L211">    }</span>
 
     private static void seedDefaultTestUser(DataSource dataSource) {
-<span class="fc" id="L186">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
-<span class="fc" id="L187">        String defaultEmail = &quot;admin@user.com&quot;;</span>
-<span class="fc bfc" id="L188" title="All 2 branches covered.">        if (repository.existsByEmail(defaultEmail)) {</span>
-<span class="fc" id="L189">            return;</span>
+<span class="fc" id="L214">        UserAccountRepository repository = new JdbcUserAccountRepository(dataSource);</span>
+<span class="fc" id="L215">        String defaultEmail = &quot;admin@user.com&quot;;</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        if (repository.existsByEmail(defaultEmail)) {</span>
+<span class="fc" id="L217">            return;</span>
         }
 
-<span class="fc" id="L192">        PasswordHasher hasher = new PasswordHasher();</span>
-<span class="fc" id="L193">        String salt = hasher.generateSalt();</span>
-<span class="fc" id="L194">        String hash = hasher.hashPassword(&quot;monkey&quot;, salt);</span>
-<span class="fc" id="L195">        repository.save(new com.ece493.cms.model.UserAccount(</span>
+<span class="fc" id="L220">        PasswordHasher hasher = new PasswordHasher();</span>
+<span class="fc" id="L221">        String salt = hasher.generateSalt();</span>
+<span class="fc" id="L222">        String hash = hasher.hashPassword(&quot;monkey&quot;, salt);</span>
+<span class="fc" id="L223">        repository.save(new com.ece493.cms.model.UserAccount(</span>
                 0L,
                 defaultEmail,
                 hash,
@@ -200,38 +228,38 @@ public class CmsAppServer {
                 &quot;ACTIVE&quot;,
                 &quot;AUTHOR&quot;,
                 &quot;Admin User&quot;,
-<span class="fc" id="L203">                Instant.now()</span>
+<span class="fc" id="L231">                Instant.now()</span>
         ));
-<span class="fc" id="L205">    }</span>
+<span class="fc" id="L233">    }</span>
 
     private String loadRegisterHtml() {
-<span class="nc" id="L208">        return loadHtml(&quot;web/register.html&quot;, &quot;register&quot;);</span>
+<span class="nc" id="L236">        return loadHtml(&quot;web/register.html&quot;, &quot;register&quot;);</span>
     }
 
     private String loadLoginHtml() {
-<span class="nc" id="L212">        return loadHtml(&quot;web/login.html&quot;, &quot;login&quot;);</span>
+<span class="nc" id="L240">        return loadHtml(&quot;web/login.html&quot;, &quot;login&quot;);</span>
     }
 
     private String loadChangePasswordHtml() {
-<span class="nc" id="L216">        return loadHtml(&quot;web/change-password.html&quot;, &quot;change-password&quot;);</span>
+<span class="nc" id="L244">        return loadHtml(&quot;web/change-password.html&quot;, &quot;change-password&quot;);</span>
     }
 
     private String loadSubmitPaperHtml() {
-<span class="nc" id="L220">        return loadHtml(&quot;web/submit-paper.html&quot;, &quot;submit-paper&quot;);</span>
+<span class="nc" id="L248">        return loadHtml(&quot;web/submit-paper.html&quot;, &quot;submit-paper&quot;);</span>
     }
 
     private String loadAssignRefereesHtml() {
-<span class="nc" id="L224">        return loadHtml(&quot;web/assign-referees.html&quot;, &quot;assign-referees&quot;);</span>
+<span class="nc" id="L252">        return loadHtml(&quot;web/assign-referees.html&quot;, &quot;assign-referees&quot;);</span>
     }
 
     private String loadHtml(String resourcePath, String viewName) {
-<span class="nc" id="L228">        try (InputStream stream = Objects.requireNonNull(</span>
-<span class="nc" id="L229">                Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath),</span>
+<span class="nc" id="L256">        try (InputStream stream = Objects.requireNonNull(</span>
+<span class="nc" id="L257">                Thread.currentThread().getContextClassLoader().getResourceAsStream(resourcePath),</span>
                 &quot;Missing &quot; + viewName + &quot; view&quot;
         )) {
-<span class="nc" id="L232">            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);</span>
-<span class="nc" id="L233">        } catch (IOException e) {</span>
-<span class="nc" id="L234">            throw new IllegalStateException(&quot;Failed to read &quot; + viewName + &quot; view&quot;, e);</span>
+<span class="nc" id="L260">            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);</span>
+<span class="nc" id="L261">        } catch (IOException e) {</span>
+<span class="nc" id="L262">            throw new IllegalStateException(&quot;Failed to read &quot; + viewName + &quot; view&quot;, e);</span>
         }
     }
 }

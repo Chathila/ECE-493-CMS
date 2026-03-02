@@ -12,6 +12,7 @@
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/controller/RefereeAssignmentServlet.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/controller/RegistrationServlet.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/controller/ReviewDashboardServlet.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/controller/ReviewWorkflowServlet.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/controller/StaticResourceServlet.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/db/Db.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/DeliveryFailureRecord.java
@@ -35,7 +36,12 @@
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/RefereeAssignmentResult.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/RegistrationResult.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/RegistrationSubmission.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/Review.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/ReviewAssignmentRecord.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/ReviewForm.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/ReviewFormAccessResult.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/ReviewInvitation.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/ReviewSubmissionResult.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/ReviewerWorkload.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/model/UserAccount.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/repository/JdbcPaperSubmissionDraftRepository.java
@@ -58,6 +64,7 @@
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/DefaultInvitationValidationService.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/DefaultMetadataValidationService.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/DefaultPasswordPolicyService.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/DefaultReviewValidationService.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/DefaultWorkloadCheckService.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/DeliveryFailureRepository.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/DraftSaveService.java
@@ -75,7 +82,10 @@
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/InMemoryFileStorageService.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/InMemoryInvitationResponseRepository.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/InMemoryNotificationService.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/InMemoryReviewAssignmentRepository.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/InMemoryReviewFormRepository.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/InMemoryReviewInvitationRepository.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/InMemoryReviewRepository.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/InvitationComposer.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/InvitationResponseRepository.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/InvitationResponseService.java
@@ -91,7 +101,14 @@
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/RefereeAssignmentServiceImpl.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/RegistrationService.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/RegistrationServiceImpl.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/ReviewAssignmentRepository.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/ReviewAssignmentService.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/ReviewAuthorizationService.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/ReviewFormRepository.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/ReviewFormService.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/ReviewInvitationRepository.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/ReviewInvitationService.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/ReviewRepository.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/ReviewSubmissionService.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/ReviewValidationService.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/main/java/com/ece493/cms/service/WorkloadCheckService.java

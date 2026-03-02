@@ -202,6 +202,9 @@
     if (status === 'approved') {
       return 'Approval Submitted';
     }
+    if (status === 'submitted') {
+      return 'Review Submitted';
+    }
     if (status === 'rejected') {
       return 'Declined';
     }
@@ -259,8 +262,9 @@
               + `<button class="register-submit secondary-action" data-invitation-id="${request.invitation_id}" data-decision="accept" type="button">Accept Review Request</button>`
               + `<button class="register-submit secondary-action" data-invitation-id="${request.invitation_id}" data-decision="reject" type="button">Decline Invitation</button>`
             + `</div>`
-          : (request.status === 'accepted' || request.status === 'approved'
-            ? `<button class="register-submit secondary-action" data-request-details-id="${request.invitation_id}" type="button">View Paper Details</button>`
+          : (request.status === 'accepted' || request.status === 'approved' || request.status === 'submitted'
+            ? `<a class="action-link secondary" href="/review-form?assignmentId=${request.invitation_id}">Open Review Form</a>`
+              + `<button class="register-submit secondary-action" data-request-details-id="${request.invitation_id}" type="button">View Paper Details</button>`
               + `<div id="request-details-${request.invitation_id}" class="draft-panel" style="display:none;">`
                 + renderPaperDetails(request)
                 + downloadLink(request)
