@@ -168,6 +168,40 @@ class RefereeAssignmentServiceImplTest {
         assertEquals(1, assignmentRepo.saved.size());
     }
 
+    @Test
+    void usesDefaultWorkloadLimitWhenPolicyIsMissing() {
+        assertEquals(
+                RefereeAssignmentServiceImpl.DEFAULT_REFEREE_WORKLOAD_LIMIT,
+                RefereeAssignmentServiceImpl.resolveConfiguredWorkloadLimit(null)
+        );
+        assertEquals(
+                RefereeAssignmentServiceImpl.DEFAULT_REFEREE_WORKLOAD_LIMIT,
+                RefereeAssignmentServiceImpl.resolveConfiguredWorkloadLimit(" ")
+        );
+    }
+
+    @Test
+    void usesConfiguredWorkloadLimitWhenPolicyIsValid() {
+        assertEquals(7L, RefereeAssignmentServiceImpl.resolveConfiguredWorkloadLimit("7"));
+        assertEquals(8L, RefereeAssignmentServiceImpl.resolveConfiguredWorkloadLimit(" 8 "));
+    }
+
+    @Test
+    void fallsBackToDefaultWhenConfiguredWorkloadLimitIsInvalid() {
+        assertEquals(
+                RefereeAssignmentServiceImpl.DEFAULT_REFEREE_WORKLOAD_LIMIT,
+                RefereeAssignmentServiceImpl.resolveConfiguredWorkloadLimit("0")
+        );
+        assertEquals(
+                RefereeAssignmentServiceImpl.DEFAULT_REFEREE_WORKLOAD_LIMIT,
+                RefereeAssignmentServiceImpl.resolveConfiguredWorkloadLimit("-3")
+        );
+        assertEquals(
+                RefereeAssignmentServiceImpl.DEFAULT_REFEREE_WORKLOAD_LIMIT,
+                RefereeAssignmentServiceImpl.resolveConfiguredWorkloadLimit("abc")
+        );
+    }
+
     private RefereeAssignmentServiceImpl service(
             StubUserRepo userRepo,
             StubAssignmentRepo assignmentRepo,

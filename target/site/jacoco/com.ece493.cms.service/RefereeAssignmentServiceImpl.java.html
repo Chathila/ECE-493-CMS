@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RefereeAssignmentServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.service</a> &gt; <span class="el_source">RefereeAssignmentServiceImpl.java</span></div><h1>RefereeAssignmentServiceImpl.java</h1><pre class="source lang-java linenums">package com.ece493.cms.service;
 
 import com.ece493.cms.model.RefereeAssignmentResult;
+import com.ece493.cms.model.ReviewerWorkload;
 import com.ece493.cms.repository.RefereeAssignmentRepository;
 import com.ece493.cms.repository.UserAccountRepository;
 
@@ -11,60 +12,80 @@ import java.util.Set;
 
 public class RefereeAssignmentServiceImpl implements RefereeAssignmentService {
     public static final long DEFAULT_REFEREE_WORKLOAD_LIMIT = 5L;
+    static final String REFEREE_WORKLOAD_LIMIT_POLICY_KEY = &quot;cms.policy.reviewerWorkloadLimit&quot;;
 
     private final UserAccountRepository userAccountRepository;
     private final RefereeAssignmentRepository refereeAssignmentRepository;
     private final NotificationService notificationService;
+    private final WorkloadCheckService workloadCheckService;
 
     public RefereeAssignmentServiceImpl(
             UserAccountRepository userAccountRepository,
             RefereeAssignmentRepository refereeAssignmentRepository,
             NotificationService notificationService
-<span class="fc" id="L23">    ) {</span>
-<span class="fc" id="L24">        this.userAccountRepository = userAccountRepository;</span>
-<span class="fc" id="L25">        this.refereeAssignmentRepository = refereeAssignmentRepository;</span>
-<span class="fc" id="L26">        this.notificationService = notificationService;</span>
-<span class="fc" id="L27">    }</span>
+    ) {
+<span class="fc" id="L27">        this(</span>
+                userAccountRepository,
+                refereeAssignmentRepository,
+                notificationService,
+                new DefaultWorkloadCheckService(
+                        refereeAssignmentRepository,
+<span class="fc" id="L33">                        resolveConfiguredWorkloadLimit(System.getProperty(REFEREE_WORKLOAD_LIMIT_POLICY_KEY))</span>
+                )
+        );
+<span class="fc" id="L36">    }</span>
+
+    public RefereeAssignmentServiceImpl(
+            UserAccountRepository userAccountRepository,
+            RefereeAssignmentRepository refereeAssignmentRepository,
+            NotificationService notificationService,
+            WorkloadCheckService workloadCheckService
+<span class="fc" id="L43">    ) {</span>
+<span class="fc" id="L44">        this.userAccountRepository = userAccountRepository;</span>
+<span class="fc" id="L45">        this.refereeAssignmentRepository = refereeAssignmentRepository;</span>
+<span class="fc" id="L46">        this.notificationService = notificationService;</span>
+<span class="fc" id="L47">        this.workloadCheckService = workloadCheckService;</span>
+<span class="fc" id="L48">    }</span>
 
     @Override
     public RefereeAssignmentResult assignReferees(String editorEmail, String paperId, List&lt;String&gt; refereeEmails) {
-<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (isBlank(editorEmail)) {</span>
-<span class="fc" id="L32">            return RefereeAssignmentResult.error(401, &quot;You must log in to assign referees.&quot;);</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (isBlank(editorEmail)) {</span>
+<span class="fc" id="L53">            return RefereeAssignmentResult.error(401, &quot;You must log in to assign referees.&quot;);</span>
         }
-<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (isBlank(paperId)) {</span>
-<span class="fc" id="L35">            return RefereeAssignmentResult.error(400, &quot;Paper id is required.&quot;);</span>
-        }
-
-<span class="fc" id="L38">        List&lt;String&gt; normalizedEmails = normalizeRefereeEmails(refereeEmails);</span>
-<span class="fc bfc" id="L39" title="All 2 branches covered.">        if (normalizedEmails.isEmpty()) {</span>
-<span class="fc" id="L40">            return RefereeAssignmentResult.error(400, &quot;At least one referee email is required.&quot;);</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">        if (isBlank(paperId)) {</span>
+<span class="fc" id="L56">            return RefereeAssignmentResult.error(400, &quot;Paper id is required.&quot;);</span>
         }
 
-<span class="fc bfc" id="L43" title="All 2 branches covered.">        for (String refereeEmail : normalizedEmails) {</span>
-<span class="fc bfc" id="L44" title="All 2 branches covered.">            if (!userAccountRepository.existsByEmail(refereeEmail)) {</span>
-<span class="fc" id="L45">                return RefereeAssignmentResult.error(400, &quot;Invalid referee email address: &quot; + refereeEmail);</span>
+<span class="fc" id="L59">        List&lt;String&gt; normalizedEmails = normalizeRefereeEmails(refereeEmails);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (normalizedEmails.isEmpty()) {</span>
+<span class="fc" id="L61">            return RefereeAssignmentResult.error(400, &quot;At least one referee email is required.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        for (String refereeEmail : normalizedEmails) {</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            if (!userAccountRepository.existsByEmail(refereeEmail)) {</span>
+<span class="fc" id="L66">                return RefereeAssignmentResult.error(400, &quot;Invalid referee email address: &quot; + refereeEmail);</span>
             }
-<span class="fc" id="L47">        }</span>
+<span class="fc" id="L68">        }</span>
 
-<span class="fc bfc" id="L49" title="All 2 branches covered.">        for (String refereeEmail : normalizedEmails) {</span>
-            long currentLoad;
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        for (String refereeEmail : normalizedEmails) {</span>
+            ReviewerWorkload reviewerWorkload;
             try {
-<span class="fc" id="L52">                currentLoad = refereeAssignmentRepository.countAssignmentsByRefereeEmail(refereeEmail);</span>
-<span class="fc" id="L53">            } catch (IllegalStateException e) {</span>
-<span class="fc" id="L54">                return RefereeAssignmentResult.error(500, &quot;Referee workload check could not be completed. Please retry.&quot;);</span>
-<span class="fc" id="L55">            }</span>
-<span class="fc bfc" id="L56" title="All 2 branches covered.">            if (currentLoad &gt;= DEFAULT_REFEREE_WORKLOAD_LIMIT) {</span>
-<span class="fc" id="L57">                return RefereeAssignmentResult.error(409, &quot;Referee workload limit exceeded for: &quot; + refereeEmail);</span>
+<span class="fc" id="L73">                reviewerWorkload = workloadCheckService.getReviewerWorkload(refereeEmail);</span>
+<span class="fc" id="L74">            } catch (IllegalStateException e) {</span>
+<span class="fc" id="L75">                return RefereeAssignmentResult.error(500, &quot;Referee workload check could not be completed. Please retry.&quot;);</span>
+<span class="fc" id="L76">            }</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">            if (!reviewerWorkload.canAssign()) {</span>
+<span class="fc" id="L78">                return RefereeAssignmentResult.error(409, &quot;Referee workload limit exceeded for: &quot; + refereeEmail);</span>
             }
-<span class="fc" id="L59">        }</span>
+<span class="fc" id="L80">        }</span>
 
-<span class="fc" id="L61">        refereeAssignmentRepository.saveAssignments(paperId, normalizedEmails);</span>
+<span class="fc" id="L82">        refereeAssignmentRepository.saveAssignments(paperId, normalizedEmails);</span>
 
         try {
-<span class="fc" id="L64">            notificationService.sendReviewInvitations(paperId, normalizedEmails);</span>
-<span class="fc" id="L65">            return RefereeAssignmentResult.success(&quot;Referees assigned successfully and invitations sent.&quot;);</span>
-<span class="fc" id="L66">        } catch (IllegalStateException e) {</span>
-<span class="fc" id="L67">            return RefereeAssignmentResult.warning(</span>
+<span class="fc" id="L85">            notificationService.sendReviewInvitations(paperId, normalizedEmails);</span>
+<span class="fc" id="L86">            return RefereeAssignmentResult.success(&quot;Referees assigned successfully and invitations sent.&quot;);</span>
+<span class="fc" id="L87">        } catch (IllegalStateException e) {</span>
+<span class="fc" id="L88">            return RefereeAssignmentResult.warning(</span>
                     503,
                     &quot;Referees assigned successfully.&quot;,
                     &quot;Invitations were not sent due to notification service unavailability.&quot;
@@ -73,25 +94,37 @@ public class RefereeAssignmentServiceImpl implements RefereeAssignmentService {
     }
 
     private List&lt;String&gt; normalizeRefereeEmails(List&lt;String&gt; refereeEmails) {
-<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (refereeEmails == null) {</span>
-<span class="fc" id="L77">            return List.of();</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (refereeEmails == null) {</span>
+<span class="fc" id="L98">            return List.of();</span>
         }
 
-<span class="fc" id="L80">        Set&lt;String&gt; unique = new LinkedHashSet&lt;&gt;();</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (String email : refereeEmails) {</span>
-<span class="fc bfc" id="L82" title="All 2 branches covered.">            if (email == null) {</span>
-<span class="fc" id="L83">                continue;</span>
+<span class="fc" id="L101">        Set&lt;String&gt; unique = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        for (String email : refereeEmails) {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            if (email == null) {</span>
+<span class="fc" id="L104">                continue;</span>
             }
-<span class="fc" id="L85">            String normalized = email.trim();</span>
-<span class="fc bfc" id="L86" title="All 2 branches covered.">            if (!normalized.isEmpty()) {</span>
-<span class="fc" id="L87">                unique.add(normalized);</span>
+<span class="fc" id="L106">            String normalized = email.trim();</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">            if (!normalized.isEmpty()) {</span>
+<span class="fc" id="L108">                unique.add(normalized);</span>
             }
-<span class="fc" id="L89">        }</span>
-<span class="fc" id="L90">        return new ArrayList&lt;&gt;(unique);</span>
+<span class="fc" id="L110">        }</span>
+<span class="fc" id="L111">        return new ArrayList&lt;&gt;(unique);</span>
     }
 
     private boolean isBlank(String value) {
-<span class="fc bfc" id="L94" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
+<span class="fc bfc" id="L115" title="All 4 branches covered.">        return value == null || value.trim().isEmpty();</span>
+    }
+
+    public static long resolveConfiguredWorkloadLimit(String configuredLimitValue) {
+<span class="fc bfc" id="L119" title="All 4 branches covered.">        if (configuredLimitValue == null || configuredLimitValue.trim().isEmpty()) {</span>
+<span class="fc" id="L120">            return DEFAULT_REFEREE_WORKLOAD_LIMIT;</span>
+        }
+        try {
+<span class="fc" id="L123">            long parsedValue = Long.parseLong(configuredLimitValue.trim());</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">            return parsedValue &gt; 0 ? parsedValue : DEFAULT_REFEREE_WORKLOAD_LIMIT;</span>
+<span class="fc" id="L125">        } catch (NumberFormatException e) {</span>
+<span class="fc" id="L126">            return DEFAULT_REFEREE_WORKLOAD_LIMIT;</span>
+        }
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

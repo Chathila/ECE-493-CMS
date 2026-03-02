@@ -319,3 +319,51 @@ Both commands succeed in the final UC-05 state.
 ## Spec-Kit Command Note
 
 - `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-07 was implemented directly from existing spec-kit artifacts.
+
+---
+
+# Lab 3 Report Notes (UC-08 Run)
+
+## Scope Completed
+
+- Implemented UC-08 reviewer workload enforcement flow from:
+  - `specs/UC-08-enforce-reviewer-workload/spec.md`
+  - `specs/UC-08-enforce-reviewer-workload/plan.md`
+  - `specs/UC-08-enforce-reviewer-workload/tasks.md`
+  - `specs/UC-08-enforce-reviewer-workload/contracts/workload-check.openapi.yaml`
+  - `UC-08_tests.md`
+- Added dedicated workload-check model/service layer:
+  - `ReviewerWorkload` model
+  - `WorkloadCheckService` interface
+  - `DefaultWorkloadCheckService` implementation
+- Updated referee assignment enforcement to use workload-check service with:
+  - configurable workload limit policy (`cms.policy.reviewerWorkloadLimit`, default 5)
+  - blocking behavior when workload retrieval fails
+- Added UC-08 test coverage:
+  - Unit tests for workload-check service and workload-limit policy parsing
+  - Integration tests for under-limit, at-limit, and workload-retrieval-failure flows
+  - Acceptance tests mapped to UC-08 AT-01..AT-03
+- Added UC-08 traceability mapping.
+
+## Commands Run
+
+1. `/speckit.implement` (not available in this environment)
+2. `mvn test`
+3. `mvn verify`
+
+`mvn test` and `mvn verify` succeed in the final UC-08 state.
+
+## Coverage
+
+- JaCoCo report directory:
+  - `target/site/jacoco/index.html`
+- Final branch coverage:
+  - `BRANCH missed=0 covered=482 ratio=100.00%`
+
+## Traceability
+
+- `traceability/UC-08-traceability.md` maps AT-01..AT-03 to automated tests.
+
+## Spec-Kit Command Note
+
+- `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-08 was implemented directly from existing spec-kit artifacts.

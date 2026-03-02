@@ -1,6 +1,7 @@
 package com.ece493.cms.service;
 
 import com.ece493.cms.model.RefereeAssignmentResult;
+import com.ece493.cms.model.ReviewerWorkload;
 import com.ece493.cms.repository.RefereeAssignmentRepository;
 import com.ece493.cms.repository.UserAccountRepository;
 
@@ -11,19 +12,39 @@ import java.util.Set;
 
 public class RefereeAssignmentServiceImpl implements RefereeAssignmentService {
     public static final long DEFAULT_REFEREE_WORKLOAD_LIMIT = 5L;
+    static final String REFEREE_WORKLOAD_LIMIT_POLICY_KEY = "cms.policy.reviewerWorkloadLimit";
 
     private final UserAccountRepository userAccountRepository;
     private final RefereeAssignmentRepository refereeAssignmentRepository;
     private final NotificationService notificationService;
+    private final WorkloadCheckService workloadCheckService;
 
     public RefereeAssignmentServiceImpl(
             UserAccountRepository userAccountRepository,
             RefereeAssignmentRepository refereeAssignmentRepository,
             NotificationService notificationService
     ) {
+        this(
+                userAccountRepository,
+                refereeAssignmentRepository,
+                notificationService,
+                new DefaultWorkloadCheckService(
+                        refereeAssignmentRepository,
+                        resolveConfiguredWorkloadLimit(System.getProperty(REFEREE_WORKLOAD_LIMIT_POLICY_KEY))
+                )
+        );
+    }
+
+    public RefereeAssignmentServiceImpl(
+            UserAccountRepository userAccountRepository,
+            RefereeAssignmentRepository refereeAssignmentRepository,
+            NotificationService notificationService,
+            WorkloadCheckService workloadCheckService
+    ) {
         this.userAccountRepository = userAccountRepository;
         this.refereeAssignmentRepository = refereeAssignmentRepository;
         this.notificationService = notificationService;
+        this.workloadCheckService = workloadCheckService;
     }
 
     @Override
@@ -47,13 +68,13 @@ public class RefereeAssignmentServiceImpl implements RefereeAssignmentService {
         }
 
         for (String refereeEmail : normalizedEmails) {
-            long currentLoad;
+            ReviewerWorkload reviewerWorkload;
             try {
-                currentLoad = refereeAssignmentRepository.countAssignmentsByRefereeEmail(refereeEmail);
+                reviewerWorkload = workloadCheckService.getReviewerWorkload(refereeEmail);
             } catch (IllegalStateException e) {
                 return RefereeAssignmentResult.error(500, "Referee workload check could not be completed. Please retry.");
             }
-            if (currentLoad >= DEFAULT_REFEREE_WORKLOAD_LIMIT) {
+            if (!reviewerWorkload.canAssign()) {
                 return RefereeAssignmentResult.error(409, "Referee workload limit exceeded for: " + refereeEmail);
             }
         }
@@ -92,5 +113,17 @@ public class RefereeAssignmentServiceImpl implements RefereeAssignmentService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    public static long resolveConfiguredWorkloadLimit(String configuredLimitValue) {
+        if (configuredLimitValue == null || configuredLimitValue.trim().isEmpty()) {
+            return DEFAULT_REFEREE_WORKLOAD_LIMIT;
+        }
+        try {
+            long parsedValue = Long.parseLong(configuredLimitValue.trim());
+            return parsedValue > 0 ? parsedValue : DEFAULT_REFEREE_WORKLOAD_LIMIT;
+        } catch (NumberFormatException e) {
+            return DEFAULT_REFEREE_WORKLOAD_LIMIT;
+        }
     }
 }

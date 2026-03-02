@@ -16,6 +16,7 @@ ece-493-cms,com.ece493.cms.model,PaperSubmissionRequest,0,62,0,0,0,20,0,10,0,10
 ece-493-cms,com.ece493.cms.model,RegistrationResult,0,42,0,2,0,11,0,8,0,7
 ece-493-cms,com.ece493.cms.model,RefereeAssignment,27,0,0,0,10,0,5,0,5,0
 ece-493-cms,com.ece493.cms.model,PasswordChangeResult,0,35,0,0,0,10,0,6,0,6
+ece-493-cms,com.ece493.cms.model,ReviewerWorkload,0,31,0,2,0,9,0,6,0,5
 ece-493-cms,com.ece493.cms.model,RegistrationSubmission,21,0,0,0,8,0,4,0,4,0
 ece-493-cms,com.ece493.cms.model,Referee,21,0,0,0,8,0,4,0,4,0
 ece-493-cms,com.ece493.cms.model,FileValidationResult,0,27,0,0,0,8,0,5,0,5
@@ -25,6 +26,7 @@ ece-493-cms,com.ece493.cms.model,PaperSubmissionResult,8,43,0,0,1,12,1,7,1,7
 ece-493-cms,com.ece493.cms.security,PasswordHasher,7,51,0,0,2,11,0,4,0,4
 ece-493-cms,com.ece493.cms.service,RegistrationServiceImpl,0,104,0,18,0,23,0,12,0,3
 ece-493-cms,com.ece493.cms.service,DefaultEmailValidationService,0,20,0,4,0,4,0,6,0,4
+ece-493-cms,com.ece493.cms.service,DefaultWorkloadCheckService,0,50,0,6,0,13,0,5,0,2
 ece-493-cms,com.ece493.cms.service,FileValidationServiceImpl,0,84,0,20,0,18,0,13,0,3
 ece-493-cms,com.ece493.cms.service,PaperSubmissionServiceImpl,0,141,0,20,0,35,0,13,0,3
 ece-493-cms,com.ece493.cms.service,DraftSaveServiceImpl,0,252,0,22,0,51,0,16,0,5
@@ -35,7 +37,7 @@ ece-493-cms,com.ece493.cms.service,DefaultAuthenticationAvailabilityService,0,5,
 ece-493-cms,com.ece493.cms.service,FileStorageService,2,0,0,0,1,0,1,0,1,0
 ece-493-cms,com.ece493.cms.service,InMemoryFileStorageService,0,95,0,14,0,23,0,15,0,8
 ece-493-cms,com.ece493.cms.service,InMemoryNotificationService,0,35,0,2,0,10,0,5,0,4
-ece-493-cms,com.ece493.cms.service,RefereeAssignmentServiceImpl,0,157,0,26,0,41,0,17,0,4
+ece-493-cms,com.ece493.cms.service,RefereeAssignmentServiceImpl,0,195,0,32,0,51,0,22,0,6
 ece-493-cms,com.ece493.cms.service,DefaultPasswordPolicyService,0,61,0,18,0,14,0,11,0,2
 ece-493-cms,com.ece493.cms.service,AuthenticationServiceImpl,0,123,0,22,0,25,0,14,0,3
 ece-493-cms,com.ece493.cms.service,DefaultAccountStatusService,0,7,0,0,0,2,0,2,0,2
