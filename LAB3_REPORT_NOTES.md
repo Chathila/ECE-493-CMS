@@ -367,3 +367,56 @@ Both commands succeed in the final UC-05 state.
 ## Spec-Kit Command Note
 
 - `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-08 was implemented directly from existing spec-kit artifacts.
+
+---
+
+# Lab 3 Report Notes (UC-09 Run)
+
+## Scope Completed
+
+- Implemented UC-09 review invitation email flow from:
+  - `specs/UC-09-receive-review-invitation-email/spec.md`
+  - `specs/UC-09-receive-review-invitation-email/plan.md`
+  - `specs/UC-09-receive-review-invitation-email/tasks.md`
+  - `specs/UC-09-receive-review-invitation-email/contracts/review-invitation.openapi.yaml`
+  - `UC-09_tests.md`
+- Added invitation domain and supporting services:
+  - `ReviewInvitation` model
+  - `DeliveryFailureRecord` model
+  - `ReviewInvitationService` with duplicate suppression, invalid-email handling, and failure logging
+  - `InvitationComposer` with title/abstract/accept-reject instructions
+  - in-memory repositories/services for invitation storage, delivery failures, email sending, and editor notifications
+- Updated notification flow used by referee assignment to:
+  - send invitation content
+  - record delivery failures (invalid email or service outage)
+  - notify editor on failures
+  - suppress duplicate referee-paper invitations
+  - avoid automatic retries
+- Added UC-09 automated test coverage:
+  - acceptance tests for AT-01..AT-03
+  - integration tests for invitation flow
+  - unit tests for invitation service, validation, and notification behavior
+- Added UC-09 traceability mapping.
+
+## Commands Run
+
+1. `/speckit.implement` (not available in this environment)
+2. `mvn test`
+3. `mvn verify`
+
+`mvn test` and `mvn verify` succeed in the final UC-09 state.
+
+## Coverage
+
+- JaCoCo report directory:
+  - `target/site/jacoco/index.html`
+- Final branch coverage:
+  - `BRANCH missed=0 covered=510 ratio=100.00%`
+
+## Traceability
+
+- `traceability/UC-09-traceability.md` maps AT-01..AT-03 to automated tests.
+
+## Spec-Kit Command Note
+
+- `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-09 was implemented directly from existing spec-kit artifacts.

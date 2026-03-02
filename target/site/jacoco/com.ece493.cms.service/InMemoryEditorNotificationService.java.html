@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InMemoryEditorNotificationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.service</a> &gt; <span class="el_source">InMemoryEditorNotificationService.java</span></div><h1>InMemoryEditorNotificationService.java</h1><pre class="source lang-java linenums">package com.ece493.cms.service;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+<span class="fc" id="L7">public class InMemoryEditorNotificationService implements EditorNotificationService {</span>
+    public static final class EditorNotification {
+        private final String editorEmail;
+        private final String message;
+
+<span class="fc" id="L12">        public EditorNotification(String editorEmail, String message) {</span>
+<span class="fc" id="L13">            this.editorEmail = editorEmail;</span>
+<span class="fc" id="L14">            this.message = message;</span>
+<span class="fc" id="L15">        }</span>
+
+        public String getEditorEmail() {
+<span class="nc" id="L18">            return editorEmail;</span>
+        }
+
+        public String getMessage() {
+<span class="fc" id="L22">            return message;</span>
+        }
+    }
+
+<span class="fc" id="L26">    private final List&lt;EditorNotification&gt; notifications = new ArrayList&lt;&gt;();</span>
+
+    @Override
+    public void notifyEditor(String editorEmail, String message) {
+<span class="fc" id="L30">        notifications.add(new EditorNotification(editorEmail, message));</span>
+<span class="fc" id="L31">    }</span>
+
+    public List&lt;EditorNotification&gt; notifications() {
+<span class="fc" id="L34">        return Collections.unmodifiableList(notifications);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

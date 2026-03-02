@@ -1,26 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InMemoryNotificationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ece-493-cms</a> &gt; <a href="index.source.html" class="el_package">com.ece493.cms.service</a> &gt; <span class="el_source">InMemoryNotificationService.java</span></div><h1>InMemoryNotificationService.java</h1><pre class="source lang-java linenums">package com.ece493.cms.service;
 
+import com.ece493.cms.model.DeliveryFailureRecord;
+import com.ece493.cms.model.ReviewInvitation;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-<span class="fc" id="L6">public class InMemoryNotificationService implements NotificationService {</span>
-<span class="fc" id="L7">    private final AtomicLong sentInvitationCount = new AtomicLong();</span>
-<span class="fc" id="L8">    private volatile boolean available = true;</span>
+<span class="fc" id="L9">public class InMemoryNotificationService implements NotificationService {</span>
+<span class="fc" id="L10">    private final AtomicLong sentInvitationCount = new AtomicLong();</span>
+<span class="fc" id="L11">    private final InMemoryEmailDeliveryService emailDeliveryService = new InMemoryEmailDeliveryService();</span>
+<span class="fc" id="L12">    private final InMemoryEditorNotificationService editorNotificationService = new InMemoryEditorNotificationService();</span>
+<span class="fc" id="L13">    private final InMemoryReviewInvitationRepository reviewInvitationRepository = new InMemoryReviewInvitationRepository();</span>
+<span class="fc" id="L14">    private final InMemoryDeliveryFailureRepository deliveryFailureRepository = new InMemoryDeliveryFailureRepository();</span>
+<span class="fc" id="L15">    private final ReviewInvitationService reviewInvitationService = new ReviewInvitationService(</span>
+            reviewInvitationRepository,
+            deliveryFailureRepository,
+            emailDeliveryService,
+            editorNotificationService,
+            new DefaultInvitationValidationService(),
+            new InvitationComposer()
+    );
 
     @Override
-    public void sendReviewInvitations(String paperId, List&lt;String&gt; refereeEmails) {
-<span class="fc bfc" id="L12" title="All 2 branches covered.">        if (!available) {</span>
-<span class="fc" id="L13">            throw new IllegalStateException(&quot;Notification service unavailable&quot;);</span>
+    public void sendReviewInvitations(String editorEmail, String paperId, List&lt;String&gt; refereeEmails) {
+<span class="fc" id="L26">        String assignmentId = paperId + &quot;-assignment&quot;;</span>
+<span class="fc" id="L27">        String firstFailureMessage = null;</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        for (String refereeEmail : refereeEmails) {</span>
+<span class="fc" id="L29">            ReviewInvitationService.SendResult result = reviewInvitationService.sendInvitation(</span>
+                    editorEmail,
+                    assignmentId,
+                    paperId,
+                    refereeEmail
+            );
+<span class="fc bfc" id="L35" title="All 2 branches covered.">            if (result.getStatus() == ReviewInvitationService.SendStatus.SENT) {</span>
+<span class="fc" id="L36">                sentInvitationCount.incrementAndGet();</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">            } else if (result.getStatus() == ReviewInvitationService.SendStatus.INVALID_EMAIL</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">                    || result.getStatus() == ReviewInvitationService.SendStatus.DELIVERY_FAILURE) {</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">                if (firstFailureMessage == null) {</span>
+<span class="fc" id="L40">                    firstFailureMessage = result.getMessage();</span>
+                }
+            }
+<span class="fc" id="L43">        }</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (firstFailureMessage != null) {</span>
+<span class="fc" id="L45">            throw new IllegalStateException(firstFailureMessage);</span>
         }
-<span class="fc" id="L15">        sentInvitationCount.addAndGet(refereeEmails.size());</span>
-<span class="fc" id="L16">    }</span>
+<span class="fc" id="L47">    }</span>
 
     public void setAvailable(boolean available) {
-<span class="fc" id="L19">        this.available = available;</span>
-<span class="fc" id="L20">    }</span>
+<span class="fc" id="L50">        emailDeliveryService.setAvailable(available);</span>
+<span class="fc" id="L51">    }</span>
 
     public long sentInvitationCount() {
-<span class="fc" id="L23">        return sentInvitationCount.get();</span>
+<span class="fc" id="L54">        return sentInvitationCount.get();</span>
+    }
+
+    public boolean hasInvitationFor(String refereeEmail, String paperId) {
+<span class="fc" id="L58">        return reviewInvitationRepository.findByPaperIdAndRefereeEmail(paperId, refereeEmail).isPresent();</span>
+    }
+
+    public String invitationContent(String refereeEmail, String paperId) {
+<span class="fc" id="L62">        return reviewInvitationRepository.findByPaperIdAndRefereeEmail(paperId, refereeEmail)</span>
+<span class="fc" id="L63">                .map(ReviewInvitation::getContent)</span>
+<span class="fc" id="L64">                .orElse(null);</span>
+    }
+
+    public List&lt;DeliveryFailureRecord&gt; failureRecords() {
+<span class="fc" id="L68">        return deliveryFailureRepository.findAll();</span>
+    }
+
+    public List&lt;InMemoryEditorNotificationService.EditorNotification&gt; editorNotifications() {
+<span class="fc" id="L72">        return editorNotificationService.notifications();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

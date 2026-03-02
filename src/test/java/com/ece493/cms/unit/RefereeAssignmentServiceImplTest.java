@@ -274,7 +274,7 @@ class RefereeAssignmentServiceImplTest {
         private List<String> lastEmails = List.of();
 
         @Override
-        public void sendReviewInvitations(String paperId, List<String> refereeEmails) {
+        public void sendReviewInvitations(String editorEmail, String paperId, List<String> refereeEmails) {
             if (throwOnSend) {
                 throw new IllegalStateException("down");
             }

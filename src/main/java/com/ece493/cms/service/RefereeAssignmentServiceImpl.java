@@ -82,7 +82,7 @@ public class RefereeAssignmentServiceImpl implements RefereeAssignmentService {
         refereeAssignmentRepository.saveAssignments(paperId, normalizedEmails);
 
         try {
-            notificationService.sendReviewInvitations(paperId, normalizedEmails);
+            notificationService.sendReviewInvitations(editorEmail, paperId, normalizedEmails);
             return RefereeAssignmentResult.success("Referees assigned successfully and invitations sent.");
         } catch (IllegalStateException e) {
             return RefereeAssignmentResult.warning(

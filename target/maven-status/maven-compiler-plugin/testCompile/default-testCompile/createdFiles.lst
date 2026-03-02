@@ -19,6 +19,7 @@ com/ece493/cms/acceptance/UC03AcceptanceIT.class
 com/ece493/cms/unit/JdbcUserAccountRepositoryTest$2.class
 com/ece493/cms/unit/DefaultDraftValidationServiceTest.class
 com/ece493/cms/integration/WorkloadEnforcementEndpointIT.class
+com/ece493/cms/unit/DefaultInvitationValidationServiceTest.class
 com/ece493/cms/unit/DefaultMetadataValidationServiceTest.class
 com/ece493/cms/unit/JdbcPaperSubmissionDraftRepositoryTest$1.class
 com/ece493/cms/unit/DraftSaveServiceImplTest.class
@@ -29,11 +30,13 @@ com/ece493/cms/unit/FileValidationServletTest.class
 com/ece493/cms/unit/DefaultPasswordPolicyServiceTest.class
 com/ece493/cms/acceptance/UC07AcceptanceIT.class
 com/ece493/cms/unit/LoginResultTest.class
+com/ece493/cms/unit/InMemoryNotificationServiceTest.class
 com/ece493/cms/unit/PaperSubmissionServletTest.class
 com/ece493/cms/acceptance/UC01AcceptanceIT.class
 com/ece493/cms/unit/RegistrationServiceImplTest$1.class
 com/ece493/cms/unit/ChangePasswordServletTest.class
 com/ece493/cms/integration/RegistrationEndpointIT.class
+com/ece493/cms/integration/ReviewInvitationFlowEndpointIT.class
 com/ece493/cms/unit/JdbcUserAccountRepositoryTest$3.class
 com/ece493/cms/unit/DraftViewServletTest$1.class
 com/ece493/cms/unit/StaticResourceServletTest.class
@@ -52,6 +55,7 @@ com/ece493/cms/unit/InMemoryFileStorageServiceTest.class
 com/ece493/cms/integration/PaperSubmissionEndpointIT.class
 com/ece493/cms/unit/RegistrationServiceImplTest.class
 com/ece493/cms/unit/FileValidationServiceImplTest.class
+com/ece493/cms/unit/ReviewInvitationServiceTest.class
 com/ece493/cms/integration/WorkloadEnforcementEndpointIT$1.class
 com/ece493/cms/unit/DraftViewServletTest.class
 com/ece493/cms/integration/RefereeAssignmentEndpointIT.class
@@ -62,6 +66,7 @@ com/ece493/cms/unit/FileValidationServiceImplTest$StubStorage.class
 com/ece493/cms/integration/ServletHttpTestSupport.class
 com/ece493/cms/unit/PasswordChangeServiceImplTest$StubRepo.class
 com/ece493/cms/integration/DraftSaveEndpointIT.class
+com/ece493/cms/acceptance/UC09AcceptanceIT.class
 com/ece493/cms/unit/PaperSubmissionServletTest$CapturingSubmissionService.class
 com/ece493/cms/unit/JdbcPaperSubmissionDraftRepositoryTest$3.class
 com/ece493/cms/unit/PaperSubmissionServiceImplTest$StubStorage.class
