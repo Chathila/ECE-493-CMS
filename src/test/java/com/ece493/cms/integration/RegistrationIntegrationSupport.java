@@ -5,6 +5,7 @@ import com.ece493.cms.controller.PaperSubmissionServlet;
 import com.ece493.cms.controller.PaperSubmissionListServlet;
 import com.ece493.cms.controller.PaperDetailsServlet;
 import com.ece493.cms.controller.ReviewWorkflowServlet;
+import com.ece493.cms.controller.ScheduleServlet;
 import com.ece493.cms.controller.RegistrationServlet;
 import com.ece493.cms.controller.ChangePasswordServlet;
 import com.ece493.cms.controller.DraftSaveServlet;
@@ -40,9 +41,13 @@ import com.ece493.cms.service.FileValidationService;
 import com.ece493.cms.service.FileValidationServiceImpl;
 import com.ece493.cms.service.FinalDecisionNotificationService;
 import com.ece493.cms.service.FinalDecisionService;
+import com.ece493.cms.service.DeterministicSchedulingAlgorithm;
 import com.ece493.cms.service.InMemoryFinalDecisionRepository;
 import com.ece493.cms.service.InMemoryNotificationService;
 import com.ece493.cms.service.InMemoryNotificationFailureRepository;
+import com.ece493.cms.service.InMemoryScheduleRepository;
+import com.ece493.cms.service.InMemorySchedulingDataRepository;
+import com.ece493.cms.service.InMemorySessionRepository;
 import com.ece493.cms.service.InvitationResponseService;
 import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
@@ -57,6 +62,9 @@ import com.ece493.cms.service.InMemoryReviewRepository;
 import com.ece493.cms.service.DefaultReviewValidationService;
 import com.ece493.cms.service.InMemoryEditorNotificationService;
 import com.ece493.cms.service.InMemoryEmailDeliveryService;
+import com.ece493.cms.service.ScheduleEditService;
+import com.ece493.cms.service.ScheduleGenerationService;
+import com.ece493.cms.service.ScheduleValidationService;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
@@ -79,6 +87,7 @@ public class RegistrationIntegrationSupport {
     protected InvitationResponseServlet invitationResponseServlet;
     protected ReviewWorkflowServlet reviewWorkflowServlet;
     protected ReviewDashboardServlet reviewDashboardServlet;
+    protected ScheduleServlet scheduleServlet;
     protected InMemoryFileStorageService fileStorageService;
     protected InMemoryNotificationService notificationService;
     protected InMemoryReviewRepository reviewRepository;
@@ -86,6 +95,11 @@ public class RegistrationIntegrationSupport {
     protected InMemoryNotificationFailureRepository notificationFailureRepository;
     protected InMemoryEditorNotificationService finalDecisionEditorNotificationService;
     protected InMemoryEmailDeliveryService finalDecisionEmailDeliveryService;
+    protected InMemoryScheduleRepository scheduleRepository;
+    protected InMemorySessionRepository sessionRepository;
+    protected InMemorySchedulingDataRepository schedulingDataRepository;
+    protected DeterministicSchedulingAlgorithm schedulingAlgorithm;
+    protected ScheduleGenerationService scheduleGenerationService;
 
     protected void startApp() {
         dataSource = Db.createDataSource("jdbc:h2:mem:cms_it_" + System.nanoTime() + ";DB_CLOSE_DELAY=-1");
@@ -167,6 +181,21 @@ public class RegistrationIntegrationSupport {
                         finalDecisionEditorNotificationService
                 )
         );
+        scheduleRepository = new InMemoryScheduleRepository();
+        sessionRepository = new InMemorySessionRepository();
+        schedulingDataRepository = new InMemorySchedulingDataRepository();
+        schedulingAlgorithm = new DeterministicSchedulingAlgorithm();
+        scheduleGenerationService = new ScheduleGenerationService(
+                scheduleRepository,
+                sessionRepository,
+                schedulingDataRepository,
+                schedulingAlgorithm
+        );
+        ScheduleEditService scheduleEditService = new ScheduleEditService(
+                scheduleRepository,
+                sessionRepository,
+                new ScheduleValidationService()
+        );
 
         servlet = new RegistrationServlet(registrationService, loadRegisterHtml());
         loginServlet = new LoginServlet(authenticationService, loadLoginHtml());
@@ -186,6 +215,7 @@ public class RegistrationIntegrationSupport {
                 notificationService.reviewAssignmentService(),
                 new JdbcPaperSubmissionRepository(dataSource)
         );
+        scheduleServlet = new ScheduleServlet(scheduleGenerationService, scheduleEditService);
     }
 
     protected void stopApp() {
@@ -451,6 +481,37 @@ public class RegistrationIntegrationSupport {
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         refereeAssignmentServlet.service(
                 ServletHttpTestSupport.getRequest(session, null, "/papers/" + paperId + "/decision"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postScheduleGenerate(ServletHttpTestSupport.SessionCapture session) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        scheduleServlet.service(
+                ServletHttpTestSupport.postJsonRequest("{}", session, "/schedule/generate"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getSchedule(String scheduleId, ServletHttpTestSupport.SessionCapture session) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        scheduleServlet.service(
+                ServletHttpTestSupport.getRequest(session, null, "/schedule/" + scheduleId),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture putSchedule(
+            String scheduleId,
+            String payload,
+            ServletHttpTestSupport.SessionCapture session
+    ) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        scheduleServlet.service(
+                ServletHttpTestSupport.putJsonRequest(payload, session, "/schedule/" + scheduleId),
                 response.asResponse()
         );
         return response;

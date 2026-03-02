@@ -22,12 +22,16 @@ import com.ece493.cms.service.DraftSaveService;
 import com.ece493.cms.service.DraftSaveServiceImpl;
 import com.ece493.cms.service.FileValidationService;
 import com.ece493.cms.service.FileValidationServiceImpl;
+import com.ece493.cms.service.DeterministicSchedulingAlgorithm;
 import com.ece493.cms.service.FinalDecisionNotificationService;
 import com.ece493.cms.service.FinalDecisionService;
 import com.ece493.cms.service.InMemoryFinalDecisionRepository;
 import com.ece493.cms.service.InMemoryFileStorageService;
 import com.ece493.cms.service.InMemoryNotificationService;
 import com.ece493.cms.service.InMemoryNotificationFailureRepository;
+import com.ece493.cms.service.InMemoryScheduleRepository;
+import com.ece493.cms.service.InMemorySchedulingDataRepository;
+import com.ece493.cms.service.InMemorySessionRepository;
 import com.ece493.cms.service.InvitationResponseService;
 import com.ece493.cms.service.NotificationService;
 import com.ece493.cms.service.PasswordChangeService;
@@ -41,12 +45,15 @@ import com.ece493.cms.service.RefereeAssignmentServiceImpl;
 import com.ece493.cms.service.ReviewAuthorizationService;
 import com.ece493.cms.service.ReviewFormService;
 import com.ece493.cms.service.ReviewSubmissionService;
+import com.ece493.cms.service.ScheduleEditService;
+import com.ece493.cms.service.ScheduleGenerationService;
 import com.ece493.cms.service.InMemoryReviewAssignmentRepository;
 import com.ece493.cms.service.InMemoryReviewFormRepository;
 import com.ece493.cms.service.InMemoryReviewRepository;
 import com.ece493.cms.service.DefaultReviewValidationService;
 import com.ece493.cms.service.InMemoryEditorNotificationService;
 import com.ece493.cms.service.InMemoryEmailDeliveryService;
+import com.ece493.cms.service.ScheduleValidationService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -107,6 +114,20 @@ public class CmsAppServer {
                         new InMemoryEditorNotificationService()
                 )
         );
+        InMemoryScheduleRepository scheduleRepository = new InMemoryScheduleRepository();
+        InMemorySessionRepository sessionRepository = new InMemorySessionRepository();
+        InMemorySchedulingDataRepository schedulingDataRepository = new InMemorySchedulingDataRepository();
+        ScheduleGenerationService scheduleGenerationService = new ScheduleGenerationService(
+                scheduleRepository,
+                sessionRepository,
+                schedulingDataRepository,
+                new DeterministicSchedulingAlgorithm()
+        );
+        ScheduleEditService scheduleEditService = new ScheduleEditService(
+                scheduleRepository,
+                sessionRepository,
+                new ScheduleValidationService()
+        );
         String registerHtml = loadRegisterHtml();
         String loginHtml = loadLoginHtml();
         String changePasswordHtml = loadChangePasswordHtml();
@@ -137,6 +158,9 @@ public class CmsAppServer {
                 notificationService.reviewAssignmentService(),
                 new JdbcPaperSubmissionRepository(dataSource)
         )), "/reviews/dashboard");
+        context.addServlet(new ServletHolder(new ScheduleServlet(scheduleGenerationService, scheduleEditService)), "/schedule/*");
+        context.addServlet(new ServletHolder(new StaticResourceServlet("web/schedule.html", "text/html; charset=UTF-8")), "/schedule");
+        context.addServlet(new ServletHolder(new StaticResourceServlet("web/schedule-edit.html", "text/html; charset=UTF-8")), "/schedule-edit");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/review-form.html", "text/html; charset=UTF-8")), "/review-form");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home/*");

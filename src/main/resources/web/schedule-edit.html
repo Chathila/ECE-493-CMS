@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Schedule</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="register-page">
+<main class="register-shell">
+  <h1>Edit Schedule</h1>
+  <p class="register-subtitle">Load a schedule and submit updates.</p>
+  <label for="schedule-id">Schedule ID</label>
+  <input id="schedule-id" class="register-input" type="text" placeholder="1" />
+  <textarea id="payload" class="register-input" rows="8">{"sessions":[{"session_id":1,"paper_id":"1","room_id":"R1","time_slot_id":"T1"}]}</textarea>
+  <button id="update" class="register-submit">Update Schedule</button>
+  <pre id="result" class="register-feedback"></pre>
+</main>
+<script>
+  document.getElementById('update').addEventListener('click', async () => {
+    const scheduleId = document.getElementById('schedule-id').value.trim();
+    const payload = document.getElementById('payload').value;
+    const response = await fetch(`/schedule/${scheduleId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload
+    });
+    const json = await response.json().catch(() => ({}));
+    document.getElementById('result').textContent = JSON.stringify(json, null, 2);
+  });
+</script>
+</body>
+</html>

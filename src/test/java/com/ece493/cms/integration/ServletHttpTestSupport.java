@@ -55,6 +55,41 @@ public final class ServletHttpTestSupport {
         );
     }
 
+    public static HttpServletRequest putJsonRequest(String jsonBody) {
+        return putJsonRequest(jsonBody, null);
+    }
+
+    public static HttpServletRequest putJsonRequest(String jsonBody, SessionCapture sessionCapture) {
+        return putJsonRequest(jsonBody, sessionCapture, null);
+    }
+
+    public static HttpServletRequest putJsonRequest(String jsonBody, SessionCapture sessionCapture, String requestUri) {
+        return (HttpServletRequest) Proxy.newProxyInstance(
+                ServletHttpTestSupport.class.getClassLoader(),
+                new Class[]{HttpServletRequest.class},
+                (proxy, method, args) -> {
+                    String name = method.getName();
+                    if ("getReader".equals(name)) {
+                        return new BufferedReader(new StringReader(jsonBody));
+                    }
+                    if ("getMethod".equals(name)) {
+                        return "PUT";
+                    }
+                    if ("getRequestURI".equals(name)) {
+                        return requestUri;
+                    }
+                    if ("getSession".equals(name)) {
+                        boolean create = args != null && args.length == 1 && Boolean.TRUE.equals(args[0]);
+                        if (sessionCapture == null) {
+                            return create ? new SessionCapture().asSession() : null;
+                        }
+                        return sessionCapture.asSession();
+                    }
+                    return defaultValue(method.getReturnType());
+                }
+        );
+    }
+
     public static HttpServletRequest getRequest() {
         return getRequest(null, null, null);
     }
