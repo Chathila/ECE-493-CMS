@@ -12,6 +12,7 @@ public class InMemoryScheduleRepository implements ScheduleRepository {
     private final List<Schedule> schedules = new ArrayList<>();
     private boolean failOnSave;
     private boolean failOnUpdate;
+    private boolean failOnFindPublished;
 
     @Override
     public Schedule save(Schedule schedule) {
@@ -54,11 +55,29 @@ public class InMemoryScheduleRepository implements ScheduleRepository {
         return schedules.size();
     }
 
+    @Override
+    public Optional<Schedule> findPublished() {
+        if (failOnFindPublished) {
+            throw new IllegalStateException("Failed to retrieve schedule");
+        }
+        for (int i = schedules.size() - 1; i >= 0; i--) {
+            Schedule schedule = schedules.get(i);
+            if ("published".equalsIgnoreCase(schedule.getStatus())) {
+                return Optional.of(schedule);
+            }
+        }
+        return Optional.empty();
+    }
+
     public void setFailOnSave(boolean failOnSave) {
         this.failOnSave = failOnSave;
     }
 
     public void setFailOnUpdate(boolean failOnUpdate) {
         this.failOnUpdate = failOnUpdate;
+    }
+
+    public void setFailOnFindPublished(boolean failOnFindPublished) {
+        this.failOnFindPublished = failOnFindPublished;
     }
 }

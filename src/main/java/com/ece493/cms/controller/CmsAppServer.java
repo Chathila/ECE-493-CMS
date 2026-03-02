@@ -29,6 +29,7 @@ import com.ece493.cms.service.InMemoryFinalDecisionRepository;
 import com.ece493.cms.service.InMemoryFileStorageService;
 import com.ece493.cms.service.InMemoryNotificationService;
 import com.ece493.cms.service.InMemoryNotificationFailureRepository;
+import com.ece493.cms.service.InMemoryRegistrationPriceRepository;
 import com.ece493.cms.service.InMemoryScheduleRepository;
 import com.ece493.cms.service.InMemorySchedulingDataRepository;
 import com.ece493.cms.service.InMemorySessionRepository;
@@ -42,11 +43,13 @@ import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 import com.ece493.cms.service.RefereeAssignmentService;
 import com.ece493.cms.service.RefereeAssignmentServiceImpl;
+import com.ece493.cms.service.RegistrationPriceService;
 import com.ece493.cms.service.ReviewAuthorizationService;
 import com.ece493.cms.service.ReviewFormService;
 import com.ece493.cms.service.ReviewSubmissionService;
 import com.ece493.cms.service.ScheduleEditService;
 import com.ece493.cms.service.ScheduleGenerationService;
+import com.ece493.cms.service.ScheduleViewService;
 import com.ece493.cms.service.InMemoryReviewAssignmentRepository;
 import com.ece493.cms.service.InMemoryReviewFormRepository;
 import com.ece493.cms.service.InMemoryReviewRepository;
@@ -128,6 +131,8 @@ public class CmsAppServer {
                 sessionRepository,
                 new ScheduleValidationService()
         );
+        ScheduleViewService scheduleViewService = new ScheduleViewService(scheduleRepository, sessionRepository);
+        RegistrationPriceService registrationPriceService = new RegistrationPriceService(new InMemoryRegistrationPriceRepository());
         String registerHtml = loadRegisterHtml();
         String loginHtml = loadLoginHtml();
         String changePasswordHtml = loadChangePasswordHtml();
@@ -158,9 +163,13 @@ public class CmsAppServer {
                 notificationService.reviewAssignmentService(),
                 new JdbcPaperSubmissionRepository(dataSource)
         )), "/reviews/dashboard");
+        context.addServlet(new ServletHolder(new FinalScheduleServlet(scheduleViewService)), "/schedule/final");
+        context.addServlet(new ServletHolder(new RegistrationPriceServlet(registrationPriceService)), "/registration/prices");
         context.addServlet(new ServletHolder(new ScheduleServlet(scheduleGenerationService, scheduleEditService)), "/schedule/*");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/schedule.html", "text/html; charset=UTF-8")), "/schedule");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/schedule-edit.html", "text/html; charset=UTF-8")), "/schedule-edit");
+        context.addServlet(new ServletHolder(new StaticResourceServlet("web/final-schedule.html", "text/html; charset=UTF-8")), "/schedule/final/view");
+        context.addServlet(new ServletHolder(new StaticResourceServlet("web/registration-prices.html", "text/html; charset=UTF-8")), "/registration/prices/view");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/review-form.html", "text/html; charset=UTF-8")), "/review-form");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home");
         context.addServlet(new ServletHolder(new StaticResourceServlet("web/home.html", "text/html; charset=UTF-8")), "/home/*");

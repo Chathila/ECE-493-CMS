@@ -6,6 +6,8 @@ import com.ece493.cms.controller.PaperSubmissionListServlet;
 import com.ece493.cms.controller.PaperDetailsServlet;
 import com.ece493.cms.controller.ReviewWorkflowServlet;
 import com.ece493.cms.controller.ScheduleServlet;
+import com.ece493.cms.controller.FinalScheduleServlet;
+import com.ece493.cms.controller.RegistrationPriceServlet;
 import com.ece493.cms.controller.RegistrationServlet;
 import com.ece493.cms.controller.ChangePasswordServlet;
 import com.ece493.cms.controller.DraftSaveServlet;
@@ -45,6 +47,7 @@ import com.ece493.cms.service.DeterministicSchedulingAlgorithm;
 import com.ece493.cms.service.InMemoryFinalDecisionRepository;
 import com.ece493.cms.service.InMemoryNotificationService;
 import com.ece493.cms.service.InMemoryNotificationFailureRepository;
+import com.ece493.cms.service.InMemoryRegistrationPriceRepository;
 import com.ece493.cms.service.InMemoryScheduleRepository;
 import com.ece493.cms.service.InMemorySchedulingDataRepository;
 import com.ece493.cms.service.InMemorySessionRepository;
@@ -53,6 +56,7 @@ import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 import com.ece493.cms.service.RefereeAssignmentService;
 import com.ece493.cms.service.RefereeAssignmentServiceImpl;
+import com.ece493.cms.service.RegistrationPriceService;
 import com.ece493.cms.service.ReviewAuthorizationService;
 import com.ece493.cms.service.ReviewFormService;
 import com.ece493.cms.service.ReviewSubmissionService;
@@ -65,6 +69,7 @@ import com.ece493.cms.service.InMemoryEmailDeliveryService;
 import com.ece493.cms.service.ScheduleEditService;
 import com.ece493.cms.service.ScheduleGenerationService;
 import com.ece493.cms.service.ScheduleValidationService;
+import com.ece493.cms.service.ScheduleViewService;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
@@ -88,6 +93,8 @@ public class RegistrationIntegrationSupport {
     protected ReviewWorkflowServlet reviewWorkflowServlet;
     protected ReviewDashboardServlet reviewDashboardServlet;
     protected ScheduleServlet scheduleServlet;
+    protected FinalScheduleServlet finalScheduleServlet;
+    protected RegistrationPriceServlet registrationPriceServlet;
     protected InMemoryFileStorageService fileStorageService;
     protected InMemoryNotificationService notificationService;
     protected InMemoryReviewRepository reviewRepository;
@@ -100,6 +107,7 @@ public class RegistrationIntegrationSupport {
     protected InMemorySchedulingDataRepository schedulingDataRepository;
     protected DeterministicSchedulingAlgorithm schedulingAlgorithm;
     protected ScheduleGenerationService scheduleGenerationService;
+    protected InMemoryRegistrationPriceRepository registrationPriceRepository;
 
     protected void startApp() {
         dataSource = Db.createDataSource("jdbc:h2:mem:cms_it_" + System.nanoTime() + ";DB_CLOSE_DELAY=-1");
@@ -196,6 +204,9 @@ public class RegistrationIntegrationSupport {
                 sessionRepository,
                 new ScheduleValidationService()
         );
+        ScheduleViewService scheduleViewService = new ScheduleViewService(scheduleRepository, sessionRepository);
+        registrationPriceRepository = new InMemoryRegistrationPriceRepository();
+        RegistrationPriceService registrationPriceService = new RegistrationPriceService(registrationPriceRepository);
 
         servlet = new RegistrationServlet(registrationService, loadRegisterHtml());
         loginServlet = new LoginServlet(authenticationService, loadLoginHtml());
@@ -216,6 +227,8 @@ public class RegistrationIntegrationSupport {
                 new JdbcPaperSubmissionRepository(dataSource)
         );
         scheduleServlet = new ScheduleServlet(scheduleGenerationService, scheduleEditService);
+        finalScheduleServlet = new FinalScheduleServlet(scheduleViewService);
+        registrationPriceServlet = new RegistrationPriceServlet(registrationPriceService);
     }
 
     protected void stopApp() {
@@ -512,6 +525,24 @@ public class RegistrationIntegrationSupport {
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         scheduleServlet.service(
                 ServletHttpTestSupport.putJsonRequest(payload, session, "/schedule/" + scheduleId),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getFinalSchedule() throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        finalScheduleServlet.service(
+                ServletHttpTestSupport.getRequest(null, null, "/schedule/final"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getRegistrationPrices() throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        registrationPriceServlet.service(
+                ServletHttpTestSupport.getRequest(null, null, "/registration/prices"),
                 response.asResponse()
         );
         return response;

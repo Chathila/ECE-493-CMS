@@ -12,4 +12,8 @@ public interface ScheduleRepository {
     Schedule update(Schedule schedule);
 
     long countAll();
+
+    default Optional<Schedule> findPublished() {
+        return Optional.empty();
+    }
 }

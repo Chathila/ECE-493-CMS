@@ -3,6 +3,7 @@ ece-493-cms,com.ece493.cms.repository,JdbcPaperSubmissionRepository,0,281,0,6,0,
 ece-493-cms,com.ece493.cms.repository,JdbcPaperSubmissionDraftRepository,0,360,0,10,0,98,0,13,0,8
 ece-493-cms,com.ece493.cms.repository,JdbcRefereeAssignmentRepository,0,122,0,2,0,36,0,5,0,4
 ece-493-cms,com.ece493.cms.repository,JdbcUserAccountRepository,0,248,0,6,0,70,0,9,0,6
+ece-493-cms,com.ece493.cms.model,RegistrationPrice,3,18,0,0,1,7,1,3,1,3
 ece-493-cms,com.ece493.cms.model,MetadataValidationResult,0,27,0,0,0,8,0,5,0,5
 ece-493-cms,com.ece493.cms.model,DraftSaveRequest,0,45,0,0,0,16,0,8,0,8
 ece-493-cms,com.ece493.cms.model,FinalDecisionStatusResult,0,51,0,0,0,14,0,8,0,8
@@ -14,6 +15,8 @@ ece-493-cms,com.ece493.cms.model,PaperSubmissionDraft,0,57,0,0,0,20,0,10,0,10
 ece-493-cms,com.ece493.cms.model,TimeSlot,6,15,0,0,2,6,2,2,2,2
 ece-493-cms,com.ece493.cms.model,FinalDecisionSubmissionResult,0,43,0,0,0,12,0,7,0,7
 ece-493-cms,com.ece493.cms.model,RefereeAssignment,27,0,0,0,10,0,5,0,5,0
+ece-493-cms,com.ece493.cms.model,AttendeeCategory,15,0,0,0,6,0,3,0,3,0
+ece-493-cms,com.ece493.cms.model,FinalScheduleViewResult,0,35,0,0,0,10,0,6,0,6
 ece-493-cms,com.ece493.cms.model,PasswordChangeResult,0,35,0,0,0,10,0,6,0,6
 ece-493-cms,com.ece493.cms.model,Room,3,12,0,0,1,5,1,2,1,2
 ece-493-cms,com.ece493.cms.model,ReviewSubmissionResult,0,66,0,2,0,15,0,10,0,9
@@ -28,6 +31,7 @@ ece-493-cms,com.ece493.cms.model,DraftSaveResult,7,35,0,0,1,10,1,6,1,6
 ece-493-cms,com.ece493.cms.model,FinalDecisionNotificationResult,0,51,0,0,0,13,0,8,0,8
 ece-493-cms,com.ece493.cms.model,PaperSubmission,0,63,0,0,0,22,0,11,0,11
 ece-493-cms,com.ece493.cms.model,LoginSubmission,0,15,0,0,0,6,0,3,0,3
+ece-493-cms,com.ece493.cms.model,RegistrationPriceViewResult,0,40,0,2,0,10,0,7,0,6
 ece-493-cms,com.ece493.cms.model,ReviewFormAccessResult,0,43,0,0,0,12,0,7,0,7
 ece-493-cms,com.ece493.cms.model,DeliveryFailureRecord,3,24,0,0,1,9,1,4,1,4
 ece-493-cms,com.ece493.cms.model,ReviewForm,0,26,0,2,0,8,0,5,0,4
@@ -46,7 +50,9 @@ ece-493-cms,com.ece493.cms.model,InvitationResponse,3,24,0,0,1,9,1,4,1,4
 ece-493-cms,com.ece493.cms.model,LoginResult,0,58,0,2,0,14,0,10,0,9
 ece-493-cms,com.ece493.cms.model,PaperSubmissionResult,8,43,0,0,1,12,1,7,1,7
 ece-493-cms,com.ece493.cms.security,PasswordHasher,7,51,0,0,2,11,0,4,0,4
+ece-493-cms,com.ece493.cms.service,RegistrationPriceService,0,26,0,2,0,10,0,3,0,2
 ece-493-cms,com.ece493.cms.service,RegistrationServiceImpl,0,104,0,18,0,23,0,12,0,3
+ece-493-cms,com.ece493.cms.service,ScheduleRepository,2,0,0,0,1,0,1,0,1,0
 ece-493-cms,com.ece493.cms.service,FileValidationServiceImpl,0,84,0,20,0,18,0,13,0,3
 ece-493-cms,com.ece493.cms.service,PaperSubmissionServiceImpl,0,141,0,20,0,35,0,13,0,3
 ece-493-cms,com.ece493.cms.service,ScheduleGenerationService,0,234,0,24,0,63,0,20,0,8
@@ -66,10 +72,11 @@ ece-493-cms,com.ece493.cms.service,InMemoryFileStorageService,0,103,0,14,0,24,0,
 ece-493-cms,com.ece493.cms.service,InMemoryFinalDecisionRepository,0,128,0,10,0,35,0,11,0,6
 ece-493-cms,com.ece493.cms.service,ScheduleEditService,0,151,0,14,0,45,0,11,0,4
 ece-493-cms,com.ece493.cms.service,InMemoryNotificationService,0,204,0,12,0,45,0,23,0,17
-ece-493-cms,com.ece493.cms.service,InMemoryScheduleRepository,0,116,0,10,0,27,0,13,0,8
+ece-493-cms,com.ece493.cms.service,InMemoryScheduleRepository,0,154,0,16,0,36,0,18,0,10
 ece-493-cms,com.ece493.cms.service,RefereeAssignmentServiceImpl,0,196,0,32,0,51,0,22,0,6
 ece-493-cms,com.ece493.cms.service,DefaultPasswordPolicyService,0,61,0,18,0,14,0,11,0,2
 ece-493-cms,com.ece493.cms.service,FinalDecisionNotificationService,0,50,0,2,0,16,0,3,0,2
+ece-493-cms,com.ece493.cms.service,ScheduleViewService,0,50,0,2,0,18,0,3,0,2
 ece-493-cms,com.ece493.cms.service,InMemoryEditorNotificationService.EditorNotification,3,12,0,0,1,5,1,2,1,2
 ece-493-cms,com.ece493.cms.service,InMemorySchedulingDataRepository,0,63,0,6,0,13,0,10,0,7
 ece-493-cms,com.ece493.cms.service,NotificationService,6,0,0,0,2,0,1,0,1,0
@@ -85,6 +92,7 @@ ece-493-cms,com.ece493.cms.service,ReviewInvitationService,0,164,0,4,0,35,0,4,0,
 ece-493-cms,com.ece493.cms.service,ReviewAuthorizationService,0,83,0,30,0,14,0,19,0,4
 ece-493-cms,com.ece493.cms.service,InvitationComposer,0,16,0,0,0,5,0,2,0,2
 ece-493-cms,com.ece493.cms.service,ReviewFormService,0,101,0,8,0,32,0,6,0,2
+ece-493-cms,com.ece493.cms.service,InMemoryRegistrationPriceRepository,0,35,0,4,0,9,0,6,0,4
 ece-493-cms,com.ece493.cms.service,FileStorageService,4,0,0,0,2,0,2,0,2,0
 ece-493-cms,com.ece493.cms.service,InMemoryDeliveryFailureRepository,0,38,0,0,0,11,0,3,0,3
 ece-493-cms,com.ece493.cms.service,InMemoryEmailDeliveryService.SentEmail,6,15,0,0,2,6,2,2,2,2
@@ -97,12 +105,14 @@ ece-493-cms,com.ece493.cms.service,InMemoryReviewAssignmentRepository,0,56,0,6,0
 ece-493-cms,com.ece493.cms.service,AuthenticationServiceImpl,0,123,0,22,0,25,0,14,0,3
 ece-493-cms,com.ece493.cms.service,DefaultAccountStatusService,0,7,0,0,0,2,0,2,0,2
 ece-493-cms,com.ece493.cms.controller,DraftListServlet,0,128,0,10,0,29,0,9,0,4
+ece-493-cms,com.ece493.cms.controller,RegistrationPriceServlet,0,111,0,8,0,25,0,9,0,5
 ece-493-cms,com.ece493.cms.controller,RefereeAssignmentServlet,0,522,0,66,0,125,0,48,0,15
 ece-493-cms,com.ece493.cms.controller,ChangePasswordServlet,0,145,0,14,0,34,0,14,0,7
 ece-493-cms,com.ece493.cms.controller,LoginServlet,0,141,0,12,0,34,0,13,0,7
-ece-493-cms,com.ece493.cms.controller,CmsAppServer,646,38,0,2,103,10,18,2,18,1
+ece-493-cms,com.ece493.cms.controller,CmsAppServer,701,38,0,2,109,10,18,2,18,1
 ece-493-cms,com.ece493.cms.controller,FileValidationServlet,0,112,0,10,0,24,0,10,0,5
 ece-493-cms,com.ece493.cms.controller,ReviewDashboardServlet,0,637,0,42,0,108,0,33,0,12
+ece-493-cms,com.ece493.cms.controller,FinalScheduleServlet,0,132,0,8,0,29,0,9,0,5
 ece-493-cms,com.ece493.cms.controller,PaperSubmissionListServlet,0,138,0,12,0,30,0,10,0,4
 ece-493-cms,com.ece493.cms.controller,PaperSubmissionServlet,0,290,0,34,0,64,0,25,0,8
 ece-493-cms,com.ece493.cms.controller,InvitationResponseServlet,0,208,0,24,0,56,0,23,0,11

@@ -33,5 +33,15 @@ class InMemoryScheduleRepositoryTest {
         repository.setFailOnUpdate(false);
         assertThrows(IllegalStateException.class,
                 () -> repository.update(new Schedule(999L, "admin@cms.com", Instant.now(), Instant.now(), "updated", List.of())));
+
+        repository.setFailOnSave(false);
+        repository.save(new Schedule(0L, "admin@cms.com", Instant.now(), Instant.now(), "draft", List.of()));
+        repository.save(new Schedule(0L, "admin@cms.com", Instant.now(), Instant.now(), "published", List.of()));
+        assertEquals("published", repository.findPublished().orElseThrow().getStatus());
+
+        InMemoryScheduleRepository reverseCheck = new InMemoryScheduleRepository();
+        reverseCheck.save(new Schedule(0L, "admin@cms.com", Instant.now(), Instant.now(), "published", List.of()));
+        reverseCheck.save(new Schedule(0L, "admin@cms.com", Instant.now(), Instant.now(), "draft", List.of()));
+        assertEquals("published", reverseCheck.findPublished().orElseThrow().getStatus());
     }
 }
