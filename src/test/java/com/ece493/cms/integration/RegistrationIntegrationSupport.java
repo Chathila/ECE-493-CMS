@@ -38,7 +38,11 @@ import com.ece493.cms.service.PaperSubmissionServiceImpl;
 import com.ece493.cms.service.InMemoryFileStorageService;
 import com.ece493.cms.service.FileValidationService;
 import com.ece493.cms.service.FileValidationServiceImpl;
+import com.ece493.cms.service.FinalDecisionNotificationService;
+import com.ece493.cms.service.FinalDecisionService;
+import com.ece493.cms.service.InMemoryFinalDecisionRepository;
 import com.ece493.cms.service.InMemoryNotificationService;
+import com.ece493.cms.service.InMemoryNotificationFailureRepository;
 import com.ece493.cms.service.InvitationResponseService;
 import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
@@ -52,6 +56,7 @@ import com.ece493.cms.service.InMemoryReviewFormRepository;
 import com.ece493.cms.service.InMemoryReviewRepository;
 import com.ece493.cms.service.DefaultReviewValidationService;
 import com.ece493.cms.service.InMemoryEditorNotificationService;
+import com.ece493.cms.service.InMemoryEmailDeliveryService;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
@@ -77,6 +82,10 @@ public class RegistrationIntegrationSupport {
     protected InMemoryFileStorageService fileStorageService;
     protected InMemoryNotificationService notificationService;
     protected InMemoryReviewRepository reviewRepository;
+    protected InMemoryFinalDecisionRepository finalDecisionRepository;
+    protected InMemoryNotificationFailureRepository notificationFailureRepository;
+    protected InMemoryEditorNotificationService finalDecisionEditorNotificationService;
+    protected InMemoryEmailDeliveryService finalDecisionEmailDeliveryService;
 
     protected void startApp() {
         dataSource = Db.createDataSource("jdbc:h2:mem:cms_it_" + System.nanoTime() + ";DB_CLOSE_DELAY=-1");
@@ -143,6 +152,21 @@ public class RegistrationIntegrationSupport {
                 reviewAuthorizationService,
                 new InMemoryEditorNotificationService()
         );
+        finalDecisionRepository = new InMemoryFinalDecisionRepository();
+        notificationFailureRepository = new InMemoryNotificationFailureRepository();
+        finalDecisionEditorNotificationService = new InMemoryEditorNotificationService();
+        finalDecisionEmailDeliveryService = new InMemoryEmailDeliveryService();
+        FinalDecisionService finalDecisionService = new FinalDecisionService(
+                finalDecisionRepository,
+                new JdbcPaperSubmissionRepository(dataSource),
+                notificationService.invitationRepository(),
+                notificationService.reviewAssignmentService(),
+                new FinalDecisionNotificationService(
+                        finalDecisionEmailDeliveryService,
+                        notificationFailureRepository,
+                        finalDecisionEditorNotificationService
+                )
+        );
 
         servlet = new RegistrationServlet(registrationService, loadRegisterHtml());
         loginServlet = new LoginServlet(authenticationService, loadLoginHtml());
@@ -154,7 +178,7 @@ public class RegistrationIntegrationSupport {
         draftViewServlet = new DraftViewServlet(new JdbcPaperSubmissionDraftRepository(dataSource));
         draftListServlet = new DraftListServlet(new JdbcPaperSubmissionDraftRepository(dataSource));
         fileValidationServlet = new FileValidationServlet(fileValidationService);
-        refereeAssignmentServlet = new RefereeAssignmentServlet(refereeAssignmentService, loadAssignRefereesHtml());
+        refereeAssignmentServlet = new RefereeAssignmentServlet(refereeAssignmentService, finalDecisionService, loadAssignRefereesHtml());
         invitationResponseServlet = new InvitationResponseServlet(invitationResponseService);
         reviewWorkflowServlet = new ReviewWorkflowServlet(reviewFormService, reviewSubmissionService);
         reviewDashboardServlet = new ReviewDashboardServlet(
@@ -390,6 +414,43 @@ public class RegistrationIntegrationSupport {
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         reviewWorkflowServlet.service(
                 ServletHttpTestSupport.postJsonRequest(payload, session, "/assignments/" + assignmentId + "/reviews"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postFinalDecision(
+            String paperId,
+            String payload,
+            ServletHttpTestSupport.SessionCapture session
+    ) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        refereeAssignmentServlet.service(
+                ServletHttpTestSupport.postJsonRequest(payload, session, "/papers/" + paperId + "/decision"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postFinalDecisionNotify(
+            String paperId,
+            ServletHttpTestSupport.SessionCapture session
+    ) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        refereeAssignmentServlet.service(
+                ServletHttpTestSupport.postJsonRequest("{}", session, "/papers/" + paperId + "/decision/notify"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getFinalDecisionStatus(
+            String paperId,
+            ServletHttpTestSupport.SessionCapture session
+    ) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        refereeAssignmentServlet.service(
+                ServletHttpTestSupport.getRequest(session, null, "/papers/" + paperId + "/decision"),
                 response.asResponse()
         );
         return response;

@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.ece493.cms.unit.DefaultMetadataValidationServiceTest
 -------------------------------------------------------------------------------
-Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.024 s -- in com.ece493.cms.unit.DefaultMetadataValidationServiceTest
+Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in com.ece493.cms.unit.DefaultMetadataValidationServiceTest

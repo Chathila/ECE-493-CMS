@@ -22,8 +22,12 @@ import com.ece493.cms.service.DraftSaveService;
 import com.ece493.cms.service.DraftSaveServiceImpl;
 import com.ece493.cms.service.FileValidationService;
 import com.ece493.cms.service.FileValidationServiceImpl;
+import com.ece493.cms.service.FinalDecisionNotificationService;
+import com.ece493.cms.service.FinalDecisionService;
+import com.ece493.cms.service.InMemoryFinalDecisionRepository;
 import com.ece493.cms.service.InMemoryFileStorageService;
 import com.ece493.cms.service.InMemoryNotificationService;
+import com.ece493.cms.service.InMemoryNotificationFailureRepository;
 import com.ece493.cms.service.InvitationResponseService;
 import com.ece493.cms.service.NotificationService;
 import com.ece493.cms.service.PasswordChangeService;
@@ -42,6 +46,7 @@ import com.ece493.cms.service.InMemoryReviewFormRepository;
 import com.ece493.cms.service.InMemoryReviewRepository;
 import com.ece493.cms.service.DefaultReviewValidationService;
 import com.ece493.cms.service.InMemoryEditorNotificationService;
+import com.ece493.cms.service.InMemoryEmailDeliveryService;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -90,6 +95,18 @@ public class CmsAppServer {
                 reviewAuthorizationService,
                 new InMemoryEditorNotificationService()
         );
+        InMemoryFinalDecisionRepository finalDecisionRepository = new InMemoryFinalDecisionRepository();
+        FinalDecisionService finalDecisionService = new FinalDecisionService(
+                finalDecisionRepository,
+                new JdbcPaperSubmissionRepository(dataSource),
+                notificationService.invitationRepository(),
+                notificationService.reviewAssignmentService(),
+                new FinalDecisionNotificationService(
+                        new InMemoryEmailDeliveryService(),
+                        new InMemoryNotificationFailureRepository(),
+                        new InMemoryEditorNotificationService()
+                )
+        );
         String registerHtml = loadRegisterHtml();
         String loginHtml = loadLoginHtml();
         String changePasswordHtml = loadChangePasswordHtml();
@@ -112,7 +129,7 @@ public class CmsAppServer {
         PaperDetailsServlet paperDetailsServlet = new PaperDetailsServlet(new JdbcPaperSubmissionRepository(dataSource), fileStorageService);
         context.addServlet(new ServletHolder(paperDetailsServlet), "/papers/details/*");
         context.addServlet(new ServletHolder(paperDetailsServlet), "/papers/files/*");
-        context.addServlet(new ServletHolder(new RefereeAssignmentServlet(refereeAssignmentService, assignRefereesHtml)), "/papers/*");
+        context.addServlet(new ServletHolder(new RefereeAssignmentServlet(refereeAssignmentService, finalDecisionService, assignRefereesHtml)), "/papers/*");
         context.addServlet(new ServletHolder(new InvitationResponseServlet(invitationResponseService)), "/invitations/*");
         context.addServlet(new ServletHolder(new ReviewWorkflowServlet(reviewFormService, reviewSubmissionService)), "/assignments/*");
         context.addServlet(new ServletHolder(new ReviewDashboardServlet(

@@ -1,6 +1,10 @@
 package com.ece493.cms.controller;
 
+import com.ece493.cms.model.FinalDecisionNotificationResult;
+import com.ece493.cms.model.FinalDecisionStatusResult;
+import com.ece493.cms.model.FinalDecisionSubmissionResult;
 import com.ece493.cms.model.RefereeAssignmentResult;
+import com.ece493.cms.service.FinalDecisionService;
 import com.ece493.cms.service.RefereeAssignmentService;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,15 +20,35 @@ import java.util.regex.Pattern;
 
 public class RefereeAssignmentServlet extends HttpServlet {
     private final RefereeAssignmentService refereeAssignmentService;
+    private final FinalDecisionService finalDecisionService;
     private final String assignRefereesHtml;
 
     public RefereeAssignmentServlet(RefereeAssignmentService refereeAssignmentService, String assignRefereesHtml) {
+        this(refereeAssignmentService, null, assignRefereesHtml);
+    }
+
+    public RefereeAssignmentServlet(
+            RefereeAssignmentService refereeAssignmentService,
+            FinalDecisionService finalDecisionService,
+            String assignRefereesHtml
+    ) {
         this.refereeAssignmentService = refereeAssignmentService;
+        this.finalDecisionService = finalDecisionService;
         this.assignRefereesHtml = assignRefereesHtml;
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (finalDecisionService != null) {
+            String paperId = parseDecisionPaperId(req);
+            if (paperId != null) {
+                HttpSession session = req.getSession(false);
+                String viewerEmail = session == null ? null : (String) session.getAttribute("user_email");
+                FinalDecisionStatusResult result = finalDecisionService.getDecisionStatus(viewerEmail, paperId);
+                writeDecisionStatusResponse(resp, result);
+                return;
+            }
+        }
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType("text/html; charset=UTF-8");
         resp.getWriter().write(assignRefereesHtml);
@@ -33,14 +57,30 @@ public class RefereeAssignmentServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String body = readBody(req);
+        HttpSession session = req.getSession(false);
+        String editorEmail = session == null ? null : (String) session.getAttribute("user_email");
+
+        if (finalDecisionService != null) {
+            String notifyPaperId = parseDecisionNotifyPaperId(req);
+            if (notifyPaperId != null) {
+                FinalDecisionNotificationResult result = finalDecisionService.notifyDecision(editorEmail, notifyPaperId);
+                writeDecisionNotifyResponse(resp, result);
+                return;
+            }
+            String decisionPaperId = parseDecisionPaperId(req);
+            if (decisionPaperId != null) {
+                String decision = readTextField(body, "decision");
+                FinalDecisionSubmissionResult result = finalDecisionService.submitDecision(editorEmail, decisionPaperId, decision);
+                writeDecisionSubmitResponse(resp, result);
+                return;
+            }
+        }
+
         String paperId = parsePaperId(req);
         if (paperId == null) {
             paperId = readTextField(body, "paper_id");
         }
         List<String> refereeEmails = readArrayField(body, "referee_emails");
-
-        HttpSession session = req.getSession(false);
-        String editorEmail = session == null ? null : (String) session.getAttribute("user_email");
 
         RefereeAssignmentResult result = refereeAssignmentService.assignReferees(editorEmail, paperId, refereeEmails);
 
@@ -54,12 +94,75 @@ public class RefereeAssignmentServlet extends HttpServlet {
         resp.getWriter().write(payload);
     }
 
+    private void writeDecisionSubmitResponse(HttpServletResponse resp, FinalDecisionSubmissionResult result) throws IOException {
+        resp.setStatus(result.getStatusCode());
+        resp.setContentType("application/json; charset=UTF-8");
+        String payload = "{\"message\":\"" + escapeJson(nonNull(result.getMessage())) + "\"";
+        if (result.getPaperId() != null) {
+            payload += ",\"paper_id\":\"" + escapeJson(result.getPaperId()) + "\"";
+        }
+        if (result.getDecision() != null) {
+            payload += ",\"decision\":\"" + escapeJson(result.getDecision()) + "\"";
+        }
+        payload += "}";
+        resp.getWriter().write(payload);
+    }
+
+    private void writeDecisionNotifyResponse(HttpServletResponse resp, FinalDecisionNotificationResult result) throws IOException {
+        resp.setStatus(result.getStatusCode());
+        resp.setContentType("application/json; charset=UTF-8");
+        String payload = "{\"message\":\"" + escapeJson(nonNull(result.getMessage())) + "\"";
+        if (result.getPaperId() != null) {
+            payload += ",\"paper_id\":\"" + escapeJson(result.getPaperId()) + "\"";
+        }
+        if (result.getStatus() != null) {
+            payload += ",\"status\":\"" + escapeJson(result.getStatus()) + "\"";
+        }
+        payload += "}";
+        resp.getWriter().write(payload);
+    }
+
+    private void writeDecisionStatusResponse(HttpServletResponse resp, FinalDecisionStatusResult result) throws IOException {
+        resp.setStatus(result.getStatusCode());
+        resp.setContentType("application/json; charset=UTF-8");
+        String payload = "{\"message\":\"" + escapeJson(nonNull(result.getMessage())) + "\"";
+        if (result.getPaperId() != null) {
+            payload += ",\"paper_id\":\"" + escapeJson(result.getPaperId()) + "\"";
+        }
+        if (result.getDecision() != null) {
+            payload += ",\"decision\":\"" + escapeJson(result.getDecision()) + "\"";
+        }
+        if (result.getNotificationStatus() != null) {
+            payload += ",\"notification_status\":\"" + escapeJson(result.getNotificationStatus()) + "\"";
+        }
+        payload += "}";
+        resp.getWriter().write(payload);
+    }
+
     private String parsePaperId(HttpServletRequest req) {
         String uri = req.getRequestURI();
         if (uri == null) {
             return null;
         }
         Matcher matcher = Pattern.compile("^/papers/([^/]+)/referees/assign$").matcher(uri);
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
+    private String parseDecisionPaperId(HttpServletRequest req) {
+        String uri = req.getRequestURI();
+        if (uri == null) {
+            return null;
+        }
+        Matcher matcher = Pattern.compile("^/papers/([^/]+)/decision$").matcher(uri);
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
+    private String parseDecisionNotifyPaperId(HttpServletRequest req) {
+        String uri = req.getRequestURI();
+        if (uri == null) {
+            return null;
+        }
+        Matcher matcher = Pattern.compile("^/papers/([^/]+)/decision/notify$").matcher(uri);
         return matcher.find() ? matcher.group(1) : null;
     }
 
@@ -113,5 +216,9 @@ public class RefereeAssignmentServlet extends HttpServlet {
 
     private String escapeJson(String value) {
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private String nonNull(String value) {
+        return value == null ? "" : value;
     }
 }

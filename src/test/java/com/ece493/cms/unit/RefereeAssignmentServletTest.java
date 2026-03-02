@@ -1,8 +1,12 @@
 package com.ece493.cms.unit;
 
+import com.ece493.cms.model.FinalDecisionNotificationResult;
+import com.ece493.cms.model.FinalDecisionStatusResult;
+import com.ece493.cms.model.FinalDecisionSubmissionResult;
 import com.ece493.cms.controller.RefereeAssignmentServlet;
 import com.ece493.cms.integration.ServletHttpTestSupport;
 import com.ece493.cms.model.RefereeAssignmentResult;
+import com.ece493.cms.service.FinalDecisionService;
 import com.ece493.cms.service.RefereeAssignmentService;
 import org.junit.jupiter.api.Test;
 
@@ -159,6 +163,112 @@ class RefereeAssignmentServletTest {
 
         assertNull(nullBody);
         assertNull(emptyBody);
+    }
+
+    @Test
+    void routesDecisionEndpointsWhenDecisionServiceProvided() throws Exception {
+        FinalDecisionService decisionService = new FinalDecisionService(null, null, null, null, null) {
+            @Override
+            public FinalDecisionSubmissionResult submitDecision(String editorEmail, String paperId, String decision) {
+                return FinalDecisionSubmissionResult.created(paperId, decision == null ? "accept" : decision);
+            }
+
+            @Override
+            public FinalDecisionNotificationResult notifyDecision(String editorEmail, String paperId) {
+                return FinalDecisionNotificationResult.sent(paperId);
+            }
+
+            @Override
+            public FinalDecisionStatusResult getDecisionStatus(String viewerEmail, String paperId) {
+                return FinalDecisionStatusResult.found(paperId, "accept", "sent");
+            }
+        };
+        RefereeAssignmentServlet servlet = new RefereeAssignmentServlet(
+                (editorEmail, paperId, refereeEmails) -> RefereeAssignmentResult.success("ok"),
+                decisionService,
+                "<html></html>"
+        );
+        ServletHttpTestSupport.SessionCapture session = ServletHttpTestSupport.sessionCapture();
+        session.asSession().setAttribute("user_email", "editor@cms.com");
+        ServletHttpTestSupport.ResponseCapture submit = ServletHttpTestSupport.responseCapture();
+        ServletHttpTestSupport.ResponseCapture notify = ServletHttpTestSupport.responseCapture();
+        ServletHttpTestSupport.ResponseCapture status = ServletHttpTestSupport.responseCapture();
+        ServletHttpTestSupport.ResponseCapture htmlFallback = ServletHttpTestSupport.responseCapture();
+
+        servlet.service(
+                ServletHttpTestSupport.postJsonRequest("{\"decision\":\"accept\"}", session, "/papers/1/decision"),
+                submit.asResponse()
+        );
+        servlet.service(
+                ServletHttpTestSupport.postJsonRequest("{}", session, "/papers/1/decision/notify"),
+                notify.asResponse()
+        );
+        servlet.service(
+                ServletHttpTestSupport.getRequest(session, null, "/papers/1/decision"),
+                status.asResponse()
+        );
+        servlet.service(
+                ServletHttpTestSupport.getRequest(session, null, "/papers/assign"),
+                htmlFallback.asResponse()
+        );
+
+        assertEquals(201, submit.getStatus());
+        assertTrue(submit.getBody().contains("\"decision\":\"accept\""));
+        assertEquals(202, notify.getStatus());
+        assertTrue(notify.getBody().contains("\"status\":\"sent\""));
+        assertEquals(200, status.getStatus());
+        assertTrue(status.getBody().contains("\"notification_status\":\"sent\""));
+        assertEquals(200, htmlFallback.getStatus());
+        assertTrue(htmlFallback.getBody().contains("<html>"));
+    }
+
+    @Test
+    void parseDecisionPathsHandleMatchMissingAndNull() throws Exception {
+        RefereeAssignmentServlet servlet = new RefereeAssignmentServlet((editorEmail, paperId, refereeEmails) -> RefereeAssignmentResult.success("ok"), "<html></html>");
+        Method parseDecisionPaperId = RefereeAssignmentServlet.class.getDeclaredMethod("parseDecisionPaperId", jakarta.servlet.http.HttpServletRequest.class);
+        Method parseDecisionNotifyPaperId = RefereeAssignmentServlet.class.getDeclaredMethod("parseDecisionNotifyPaperId", jakarta.servlet.http.HttpServletRequest.class);
+        parseDecisionPaperId.setAccessible(true);
+        parseDecisionNotifyPaperId.setAccessible(true);
+
+        Object decision = parseDecisionPaperId.invoke(servlet, ServletHttpTestSupport.getRequest(null, null, "/papers/1/decision"));
+        Object noDecision = parseDecisionPaperId.invoke(servlet, ServletHttpTestSupport.getRequest(null, null, "/papers/1/referees/assign"));
+        Object nullDecision = parseDecisionPaperId.invoke(servlet, ServletHttpTestSupport.getRequest(null, null, null));
+        Object notify = parseDecisionNotifyPaperId.invoke(servlet, ServletHttpTestSupport.postJsonRequest("{}", null, "/papers/1/decision/notify"));
+        Object noNotify = parseDecisionNotifyPaperId.invoke(servlet, ServletHttpTestSupport.postJsonRequest("{}", null, "/papers/1/decision"));
+        Object nullNotify = parseDecisionNotifyPaperId.invoke(servlet, ServletHttpTestSupport.postJsonRequest("{}", null, null));
+
+        assertEquals("1", decision);
+        assertNull(noDecision);
+        assertNull(nullDecision);
+        assertEquals("1", notify);
+        assertNull(noNotify);
+        assertNull(nullNotify);
+    }
+
+    @Test
+    void writesDecisionNotifyErrorPayloadWithOnlyMessageWhenFieldsMissing() throws Exception {
+        FinalDecisionService decisionService = new FinalDecisionService(null, null, null, null, null) {
+            @Override
+            public FinalDecisionNotificationResult notifyDecision(String editorEmail, String paperId) {
+                return FinalDecisionNotificationResult.error(500, null);
+            }
+        };
+        RefereeAssignmentServlet servlet = new RefereeAssignmentServlet(
+                (editorEmail, paperId, refereeEmails) -> RefereeAssignmentResult.success("ok"),
+                decisionService,
+                "<html></html>"
+        );
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        ServletHttpTestSupport.SessionCapture session = ServletHttpTestSupport.sessionCapture();
+        session.asSession().setAttribute("user_email", "editor@cms.com");
+
+        servlet.service(
+                ServletHttpTestSupport.postJsonRequest("{}", session, "/papers/1/decision/notify"),
+                response.asResponse()
+        );
+
+        assertEquals(500, response.getStatus());
+        assertTrue(response.getBody().contains("\"message\":\"\""));
     }
 
     private String validPayload() {

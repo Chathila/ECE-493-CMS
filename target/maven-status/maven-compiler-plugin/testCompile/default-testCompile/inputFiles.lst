@@ -10,9 +10,13 @@
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/acceptance/UC10AcceptanceIT.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/acceptance/UC11AcceptanceIT.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/acceptance/UC12AcceptanceIT.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/acceptance/UC13AcceptanceIT.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/acceptance/UC14AcceptanceIT.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/integration/ChangePasswordEndpointIT.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/integration/DraftSaveEndpointIT.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/integration/FileValidationEndpointIT.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/integration/FinalDecisionEndpointIT.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/integration/FinalDecisionNotificationEndpointIT.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/integration/InvitationResponseEndpointIT.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/integration/LoginEndpointIT.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/integration/PaperDetailsEndpointIT.java
@@ -43,7 +47,10 @@
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/unit/DraftViewServletTest.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/unit/FileValidationServiceImplTest.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/unit/FileValidationServletTest.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/unit/FinalDecisionNotificationServiceTest.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/unit/FinalDecisionServiceTest.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/unit/InMemoryFileStorageServiceTest.java
+/Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/unit/InMemoryFinalDecisionRepositoryTest.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/unit/InMemoryInvitationResponseRepositoryTest.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/unit/InMemoryNotificationServiceTest.java
 /Users/chathilaratnatilake/Documents/University/WINTER 2026/ECE 493/ECE-493-CMS/src/test/java/com/ece493/cms/unit/InMemoryReviewAssignmentRepositoryTest.java
