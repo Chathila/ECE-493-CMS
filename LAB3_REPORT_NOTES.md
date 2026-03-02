@@ -220,3 +220,102 @@ Both commands succeed in the final UC-05 state.
 ## Spec-Kit Command Note
 
 - `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-05 was implemented directly from existing spec-kit artifacts.
+
+---
+
+# Lab 3 Report Notes (UC-06 Run)
+
+## Scope Completed
+
+- Implemented UC-06 validate-paper-file flow from:
+  - `specs/UC-06-validate-paper-file/spec.md`
+  - `specs/UC-06-validate-paper-file/plan.md`
+  - `specs/UC-06-validate-paper-file/tasks.md`
+  - `specs/UC-06-validate-paper-file/contracts/validate-file.openapi.yaml`
+  - `UC-06_tests.md`
+- Added `/papers/file/validate` POST endpoint behavior with:
+  - login/session precondition handling
+  - supported format validation (PDF/DOCX)
+  - max file size validation (20 MB)
+  - corrupted/unreadable file handling (unprocessable file)
+  - upload/system unavailable retry handling
+  - success confirmation response
+- Updated submit-paper UI flow to call file validation endpoint before final submit and show returned validation errors.
+- Added unit + integration + acceptance tests and UC-06 traceability.
+
+## Commands Run
+
+1. `/speckit.implement` (not available in this environment)
+2. `mvn test`
+3. `mvn verify`
+
+`mvn test` and `mvn verify` succeed in the final UC-06 state.
+
+## Coverage
+
+- JaCoCo report directory:
+  - `target/site/jacoco/index.html`
+- Final branch coverage:
+  - `BRANCH missed=0 covered=390 ratio=100.00%`
+
+## Traceability
+
+- `traceability/UC-06-traceability.md` maps AT-01..AT-04 to automated tests.
+
+## Spec-Kit Command Note
+
+- `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-06 was implemented directly from existing spec-kit artifacts.
+
+---
+
+# Lab 3 Report Notes (UC-07 Run)
+
+## Scope Completed
+
+- Ran coverage prompt (`prompts/test-coverage.txt`) before UC-07 implementation:
+  - `mvn clean verify`
+  - Branch coverage confirmed at 100%.
+- Implemented UC-07 assign-referees flow from:
+  - `specs/UC-07-assign-referees/spec.md`
+  - `specs/UC-07-assign-referees/plan.md`
+  - `specs/UC-07-assign-referees/tasks.md`
+  - `specs/UC-07-assign-referees/contracts/assign-referees.openapi.yaml`
+  - `UC-07_tests.md`
+- Added `/papers/{paper_id}/referees/assign` flow with:
+  - assignment interface page (`assign-referees.html`)
+  - referee email existence validation
+  - minimum one referee validation
+  - workload limit enforcement (default 5 from CMS policy/UC-08 clarification)
+  - assignment persistence in DB (`referee_assignments`)
+  - invitation sending hook and warning behavior when notifications fail
+- Added unit + integration + acceptance tests and UC-07 traceability.
+
+## Commands Run
+
+1. `mvn clean verify`
+2. `/speckit.implement` (not available in this environment)
+3. `mvn test`
+4. `mvn verify`
+
+`mvn test` and `mvn verify` succeed in the final UC-07 state.
+
+## Coverage
+
+- JaCoCo report directory:
+  - `target/site/jacoco/index.html`
+- Final branch coverage:
+  - `BRANCH missed=0 covered=450 ratio=100.00%`
+
+## Traceability
+
+- `traceability/UC-07-traceability.md` maps AT-01..AT-04 to automated tests.
+
+## Spec/Conflict Note
+
+- `UC-07_tests.md` AT-04 expects a per-paper maximum referee limit failure.
+- `specs/UC-07-assign-referees/clarifications.md` specifies no maximum referees per paper.
+- Implementation follows the clarification and documents this conflict in UC-07 traceability.
+
+## Spec-Kit Command Note
+
+- `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-07 was implemented directly from existing spec-kit artifacts.

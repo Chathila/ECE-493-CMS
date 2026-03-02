@@ -24,6 +24,11 @@
         <h2 class="dashboard-title">Papers</h2>
         <p class="dashboard-text">Manage all paper-related activities from this area.</p>
         <a class="action-link" href="/papers/submit">Submit Paper</a>
+        <a class="action-link secondary" href="/papers/1/referees/assign">Assign Referees</a>
+        <div id="submission-panel" class="draft-panel">
+          <p class="dashboard-text"><strong>Submitted Papers:</strong> <span id="submission-state">Checking submitted papers...</span></p>
+          <div id="submission-list"></div>
+        </div>
         <div id="draft-panel" class="draft-panel">
           <p class="dashboard-text"><strong>Drafts:</strong> <span id="draft-state">Checking saved drafts...</span></p>
           <div id="draft-list"></div>
@@ -109,6 +114,36 @@
     stateEl.textContent = 'Unable to load drafts right now.';
   }
 
+  async function loadSubmissionSummary() {
+    const stateEl = document.getElementById('submission-state');
+    const listEl = document.getElementById('submission-list');
+
+    const response = await fetch('/papers/submissions', { method: 'GET' });
+    if (response.status === 200) {
+      const submissions = await response.json();
+      if (!Array.isArray(submissions) || submissions.length === 0) {
+        stateEl.textContent = 'No submitted papers yet.';
+        listEl.innerHTML = '';
+        return;
+      }
+      stateEl.textContent = `${submissions.length} submitted paper(s).`;
+      listEl.innerHTML = submissions.map((submission) => (
+        `<div class="draft-item">`
+          + `<p class="dashboard-text"><strong>${submission.title || '(Untitled)'}</strong></p>`
+          + `<p class="dashboard-text">Contact: ${submission.contact_details || '(No contact)'}</p>`
+          + `<a class="action-link secondary" href="/papers/${submission.submission_id}/referees/assign">Add Referees</a>`
+        + `</div>`
+      )).join('');
+      return;
+    }
+    if (response.status === 401) {
+      stateEl.textContent = 'Log in to view submitted papers.';
+      return;
+    }
+    stateEl.textContent = 'Unable to load submitted papers right now.';
+  }
+
+  loadSubmissionSummary();
   loadDraftSummary();
 </script>
 </body>

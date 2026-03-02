@@ -60,7 +60,7 @@ public class PaperSubmissionServiceImpl implements PaperSubmissionService {
             return PaperSubmissionResult.error(503, "Manuscript upload failed. Please try again.");
         }
 
-        paperSubmissionRepository.save(new PaperSubmission(
+        long submissionId = paperSubmissionRepository.save(new PaperSubmission(
                 0L,
                 authorEmail,
                 request.getTitle(),
@@ -77,7 +77,7 @@ public class PaperSubmissionServiceImpl implements PaperSubmissionService {
             paperSubmissionDraftRepository.deleteByIdAndAuthorEmail(request.getDraftId(), authorEmail);
         }
 
-        return PaperSubmissionResult.success("Paper submitted successfully.", "/home");
+        return PaperSubmissionResult.success("Paper submitted successfully.", "/home", submissionId);
     }
 
     private boolean isBlank(String value) {

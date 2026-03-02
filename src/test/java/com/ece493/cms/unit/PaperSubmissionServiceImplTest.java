@@ -142,6 +142,7 @@ class PaperSubmissionServiceImplTest {
         assertTrue(repo.saved);
         assertEquals(9L, repo.last.getManuscriptFileId());
         assertEquals("/home", result.getRedirectLocation());
+        assertEquals(17L, result.getSubmissionId());
         assertNull(draftRepo.deletedDraftId);
     }
 
@@ -194,9 +195,15 @@ class PaperSubmissionServiceImplTest {
         private PaperSubmission last;
 
         @Override
-        public void save(PaperSubmission paperSubmission) {
+        public long save(PaperSubmission paperSubmission) {
             saved = true;
             last = paperSubmission;
+            return 17L;
+        }
+
+        @Override
+        public java.util.List<PaperSubmission> findAllByAuthorEmail(String authorEmail) {
+            return saved ? java.util.List.of(last) : java.util.List.of();
         }
 
         @Override

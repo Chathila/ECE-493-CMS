@@ -21,6 +21,10 @@ public final class ServletHttpTestSupport {
     }
 
     public static HttpServletRequest postJsonRequest(String jsonBody, SessionCapture sessionCapture) {
+        return postJsonRequest(jsonBody, sessionCapture, null);
+    }
+
+    public static HttpServletRequest postJsonRequest(String jsonBody, SessionCapture sessionCapture, String requestUri) {
         return (HttpServletRequest) Proxy.newProxyInstance(
                 ServletHttpTestSupport.class.getClassLoader(),
                 new Class[]{HttpServletRequest.class},
@@ -31,6 +35,9 @@ public final class ServletHttpTestSupport {
                     }
                     if ("getMethod".equals(name)) {
                         return "POST";
+                    }
+                    if ("getRequestURI".equals(name)) {
+                        return requestUri;
                     }
                     if ("getSession".equals(name)) {
                         boolean create = args != null && args.length == 1 && Boolean.TRUE.equals(args[0]);

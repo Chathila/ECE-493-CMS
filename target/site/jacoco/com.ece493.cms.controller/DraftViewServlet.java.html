@@ -41,7 +41,7 @@ public class DraftViewServlet extends HttpServlet {
 <span class="fc" id="L41">            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);</span>
 <span class="fc" id="L42">            writeJsonMessage(resp, &quot;Draft id must be numeric.&quot;);</span>
 <span class="fc" id="L43">            return;</span>
-        }
+<span class="fc" id="L44">        }</span>
 
 <span class="fc" id="L46">        Optional&lt;PaperSubmissionDraft&gt; draft = draftRepository.findByIdAndAuthorEmail(draftId, authorEmail);</span>
 <span class="fc bfc" id="L47" title="All 2 branches covered.">        if (draft.isEmpty()) {</span>
@@ -54,7 +54,7 @@ public class DraftViewServlet extends HttpServlet {
 <span class="fc" id="L54">        resp.setStatus(HttpServletResponse.SC_OK);</span>
 <span class="fc" id="L55">        resp.setContentType(&quot;application/json; charset=UTF-8&quot;);</span>
 <span class="fc" id="L56">        resp.getWriter().write(</span>
-<span class="fc" id="L57">                &quot;{&quot;</span>
+                &quot;{&quot;
 <span class="fc" id="L58">                        + &quot;\&quot;draft_id\&quot;:&quot; + value.getDraftId() + &quot;,&quot;</span>
 <span class="fc" id="L59">                        + &quot;\&quot;title\&quot;:\&quot;&quot; + escapeJson(value.getTitle()) + &quot;\&quot;,&quot;</span>
 <span class="fc" id="L60">                        + &quot;\&quot;authors\&quot;:\&quot;&quot; + escapeJson(nullToEmpty(value.getAuthors())) + &quot;\&quot;,&quot;</span>

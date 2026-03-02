@@ -4,10 +4,14 @@ import com.ece493.cms.db.Db;
 import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Statement;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -24,6 +28,35 @@ class DbTest {
     @Test
     void runSchemaWrapsSqlException() {
         assertThrows(IllegalStateException.class, () -> Db.runSchema(failingDataSource()));
+    }
+
+    @Test
+    void runSchemaHandlesEmptySplitSegments() {
+        ClassLoader original = Thread.currentThread().getContextClassLoader();
+        ClassLoader custom = new ClassLoader(original) {
+            @Override
+            public InputStream getResourceAsStream(String name) {
+                if ("db/schema.sql".equals(name)) {
+                    String sql = "CREATE TABLE IF NOT EXISTS t1 (id INT);;CREATE TABLE IF NOT EXISTS t2 (id INT);";
+                    return new ByteArrayInputStream(sql.getBytes(StandardCharsets.UTF_8));
+                }
+                return super.getResourceAsStream(name);
+            }
+        };
+        Thread.currentThread().setContextClassLoader(custom);
+        try {
+            DataSource dataSource = Db.createDataSource("jdbc:h2:mem:db_schema_segments;DB_CLOSE_DELAY=-1");
+            // Verifies schema parsing tolerates empty commands from consecutive ';'
+            Db.runSchema(dataSource);
+            try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
+                statement.execute("SELECT COUNT(1) FROM t1");
+                statement.execute("SELECT COUNT(1) FROM t2");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            Thread.currentThread().setContextClassLoader(original);
+        }
     }
 
     private DataSource failingDataSource() {

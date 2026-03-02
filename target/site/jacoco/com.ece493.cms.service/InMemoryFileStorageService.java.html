@@ -50,12 +50,17 @@ import java.util.concurrent.atomic.AtomicLong;
 <span class="fc" id="L50">        return id;</span>
     }
 
+    @Override
+    public boolean isAvailable() {
+<span class="fc" id="L55">        return available;</span>
+    }
+
     public void setAvailable(boolean available) {
-<span class="fc" id="L54">        this.available = available;</span>
-<span class="fc" id="L55">    }</span>
+<span class="fc" id="L59">        this.available = available;</span>
+<span class="fc" id="L60">    }</span>
 
     public long storedFileCount() {
-<span class="fc" id="L58">        return storage.size();</span>
+<span class="fc" id="L63">        return storage.size();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

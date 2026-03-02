@@ -4,31 +4,41 @@ public class PaperSubmissionResult {
     private final int statusCode;
     private final String message;
     private final String redirectLocation;
+    private final Long submissionId;
 
-<span class="fc" id="L8">    private PaperSubmissionResult(int statusCode, String message, String redirectLocation) {</span>
-<span class="fc" id="L9">        this.statusCode = statusCode;</span>
-<span class="fc" id="L10">        this.message = message;</span>
-<span class="fc" id="L11">        this.redirectLocation = redirectLocation;</span>
-<span class="fc" id="L12">    }</span>
+<span class="fc" id="L9">    private PaperSubmissionResult(int statusCode, String message, String redirectLocation, Long submissionId) {</span>
+<span class="fc" id="L10">        this.statusCode = statusCode;</span>
+<span class="fc" id="L11">        this.message = message;</span>
+<span class="fc" id="L12">        this.redirectLocation = redirectLocation;</span>
+<span class="fc" id="L13">        this.submissionId = submissionId;</span>
+<span class="fc" id="L14">    }</span>
 
     public static PaperSubmissionResult success(String message, String redirectLocation) {
-<span class="fc" id="L15">        return new PaperSubmissionResult(200, message, redirectLocation);</span>
+<span class="nc" id="L17">        return new PaperSubmissionResult(200, message, redirectLocation, null);</span>
+    }
+
+    public static PaperSubmissionResult success(String message, String redirectLocation, Long submissionId) {
+<span class="fc" id="L21">        return new PaperSubmissionResult(200, message, redirectLocation, submissionId);</span>
     }
 
     public static PaperSubmissionResult error(int statusCode, String message) {
-<span class="fc" id="L19">        return new PaperSubmissionResult(statusCode, message, null);</span>
+<span class="fc" id="L25">        return new PaperSubmissionResult(statusCode, message, null, null);</span>
     }
 
     public int getStatusCode() {
-<span class="fc" id="L23">        return statusCode;</span>
+<span class="fc" id="L29">        return statusCode;</span>
     }
 
     public String getMessage() {
-<span class="fc" id="L27">        return message;</span>
+<span class="fc" id="L33">        return message;</span>
     }
 
     public String getRedirectLocation() {
-<span class="fc" id="L31">        return redirectLocation;</span>
+<span class="fc" id="L37">        return redirectLocation;</span>
+    }
+
+    public Long getSubmissionId() {
+<span class="fc" id="L41">        return submissionId;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

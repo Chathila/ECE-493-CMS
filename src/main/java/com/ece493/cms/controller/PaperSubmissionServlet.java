@@ -67,6 +67,9 @@ public class PaperSubmissionServlet extends HttpServlet {
         if (result.getRedirectLocation() != null) {
             payload += ",\"redirect\":\"" + escapeJson(result.getRedirectLocation()) + "\"";
         }
+        if (result.getSubmissionId() != null) {
+            payload += ",\"submission_id\":" + result.getSubmissionId();
+        }
         payload += "}";
         resp.getWriter().write(payload);
     }

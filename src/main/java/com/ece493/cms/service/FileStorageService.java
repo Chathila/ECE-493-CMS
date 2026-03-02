@@ -10,4 +10,8 @@ public interface FileStorageService {
     long computeFileSizeBytes(String contentBase64);
 
     long store(ManuscriptFile manuscriptFile);
+
+    default boolean isAvailable() {
+        return true;
+    }
 }

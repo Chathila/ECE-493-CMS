@@ -2,15 +2,19 @@ package com.ece493.cms.integration;
 
 import com.ece493.cms.controller.LoginServlet;
 import com.ece493.cms.controller.PaperSubmissionServlet;
+import com.ece493.cms.controller.PaperSubmissionListServlet;
 import com.ece493.cms.controller.RegistrationServlet;
 import com.ece493.cms.controller.ChangePasswordServlet;
 import com.ece493.cms.controller.DraftSaveServlet;
 import com.ece493.cms.controller.DraftViewServlet;
 import com.ece493.cms.controller.DraftListServlet;
+import com.ece493.cms.controller.FileValidationServlet;
+import com.ece493.cms.controller.RefereeAssignmentServlet;
 import com.ece493.cms.db.Db;
 import com.ece493.cms.model.UserAccount;
 import com.ece493.cms.repository.JdbcPaperSubmissionDraftRepository;
 import com.ece493.cms.repository.JdbcPaperSubmissionRepository;
+import com.ece493.cms.repository.JdbcRefereeAssignmentRepository;
 import com.ece493.cms.repository.JdbcUserAccountRepository;
 import com.ece493.cms.security.PasswordHasher;
 import com.ece493.cms.service.AuthenticationService;
@@ -28,8 +32,13 @@ import com.ece493.cms.service.PasswordChangeServiceImpl;
 import com.ece493.cms.service.PaperSubmissionService;
 import com.ece493.cms.service.PaperSubmissionServiceImpl;
 import com.ece493.cms.service.InMemoryFileStorageService;
+import com.ece493.cms.service.FileValidationService;
+import com.ece493.cms.service.FileValidationServiceImpl;
+import com.ece493.cms.service.InMemoryNotificationService;
 import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
+import com.ece493.cms.service.RefereeAssignmentService;
+import com.ece493.cms.service.RefereeAssignmentServiceImpl;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
@@ -42,10 +51,14 @@ public class RegistrationIntegrationSupport {
     protected LoginServlet loginServlet;
     protected ChangePasswordServlet changePasswordServlet;
     protected PaperSubmissionServlet paperSubmissionServlet;
+    protected PaperSubmissionListServlet paperSubmissionListServlet;
     protected DraftSaveServlet draftSaveServlet;
     protected DraftViewServlet draftViewServlet;
     protected DraftListServlet draftListServlet;
+    protected FileValidationServlet fileValidationServlet;
+    protected RefereeAssignmentServlet refereeAssignmentServlet;
     protected InMemoryFileStorageService fileStorageService;
+    protected InMemoryNotificationService notificationService;
 
     protected void startApp() {
         dataSource = Db.createDataSource("jdbc:h2:mem:cms_it_" + System.nanoTime() + ";DB_CLOSE_DELAY=-1");
@@ -80,14 +93,24 @@ public class RegistrationIntegrationSupport {
                 new JdbcPaperSubmissionDraftRepository(dataSource),
                 new DefaultDraftValidationService()
         );
+        FileValidationService fileValidationService = new FileValidationServiceImpl(fileStorageService);
+        notificationService = new InMemoryNotificationService();
+        RefereeAssignmentService refereeAssignmentService = new RefereeAssignmentServiceImpl(
+                new JdbcUserAccountRepository(dataSource),
+                new JdbcRefereeAssignmentRepository(dataSource),
+                notificationService
+        );
 
         servlet = new RegistrationServlet(registrationService, loadRegisterHtml());
         loginServlet = new LoginServlet(authenticationService, loadLoginHtml());
         changePasswordServlet = new ChangePasswordServlet(passwordChangeService, loadChangePasswordHtml());
         paperSubmissionServlet = new PaperSubmissionServlet(paperSubmissionService, loadSubmitPaperHtml());
+        paperSubmissionListServlet = new PaperSubmissionListServlet(new JdbcPaperSubmissionRepository(dataSource));
         draftSaveServlet = new DraftSaveServlet(draftSaveService);
         draftViewServlet = new DraftViewServlet(new JdbcPaperSubmissionDraftRepository(dataSource));
         draftListServlet = new DraftListServlet(new JdbcPaperSubmissionDraftRepository(dataSource));
+        fileValidationServlet = new FileValidationServlet(fileValidationService);
+        refereeAssignmentServlet = new RefereeAssignmentServlet(refereeAssignmentService, loadAssignRefereesHtml());
     }
 
     protected void stopApp() {
@@ -178,6 +201,15 @@ public class RegistrationIntegrationSupport {
         return response;
     }
 
+    protected ServletHttpTestSupport.ResponseCapture getPaperSubmissions(ServletHttpTestSupport.SessionCapture session) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        paperSubmissionListServlet.service(
+                ServletHttpTestSupport.getRequest(session),
+                response.asResponse()
+        );
+        return response;
+    }
+
     protected ServletHttpTestSupport.ResponseCapture postDraftSave(String payload, ServletHttpTestSupport.SessionCapture session) throws Exception {
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         draftSaveServlet.service(
@@ -209,6 +241,28 @@ public class RegistrationIntegrationSupport {
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         paperSubmissionServlet.service(
                 ServletHttpTestSupport.getRequest(),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postFileValidation(String payload, ServletHttpTestSupport.SessionCapture session) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        fileValidationServlet.service(
+                ServletHttpTestSupport.postJsonRequest(payload, session),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postRefereeAssignment(
+            String payload,
+            ServletHttpTestSupport.SessionCapture session,
+            String path
+    ) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        refereeAssignmentServlet.service(
+                ServletHttpTestSupport.postJsonRequest(payload, session, path),
                 response.asResponse()
         );
         return response;
@@ -255,6 +309,17 @@ public class RegistrationIntegrationSupport {
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to load submit-paper view", e);
+        }
+    }
+
+    private String loadAssignRefereesHtml() {
+        try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream("web/assign-referees.html")) {
+            if (stream == null) {
+                throw new IllegalStateException("Missing assign-referees view");
+            }
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to load assign-referees view", e);
         }
     }
 }

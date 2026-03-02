@@ -16,12 +16,12 @@ public class PaperSubmissionServiceImpl implements PaperSubmissionService {
     private final MetadataValidationService metadataValidationService;
     private final FileStorageService fileStorageService;
 
-<span class="fc" id="L19">    public PaperSubmissionServiceImpl(</span>
+    public PaperSubmissionServiceImpl(
             PaperSubmissionRepository paperSubmissionRepository,
             PaperSubmissionDraftRepository paperSubmissionDraftRepository,
             MetadataValidationService metadataValidationService,
             FileStorageService fileStorageService
-    ) {
+<span class="fc" id="L24">    ) {</span>
 <span class="fc" id="L25">        this.paperSubmissionRepository = paperSubmissionRepository;</span>
 <span class="fc" id="L26">        this.paperSubmissionDraftRepository = paperSubmissionDraftRepository;</span>
 <span class="fc" id="L27">        this.metadataValidationService = metadataValidationService;</span>
@@ -58,18 +58,18 @@ public class PaperSubmissionServiceImpl implements PaperSubmissionService {
 <span class="fc" id="L58">            fileId = fileStorageService.store(manuscriptFile);</span>
 <span class="fc" id="L59">        } catch (IllegalStateException e) {</span>
 <span class="fc" id="L60">            return PaperSubmissionResult.error(503, &quot;Manuscript upload failed. Please try again.&quot;);</span>
-        }
+<span class="fc" id="L61">        }</span>
 
-<span class="fc" id="L63">        paperSubmissionRepository.save(new PaperSubmission(</span>
-<span class="fc" id="L64">                0L,</span>
-<span class="fc" id="L65">                authorEmail,</span>
+<span class="fc" id="L63">        long submissionId = paperSubmissionRepository.save(new PaperSubmission(</span>
+                0L,
+                authorEmail,
 <span class="fc" id="L66">                request.getTitle(),</span>
 <span class="fc" id="L67">                request.getAuthors(),</span>
 <span class="fc" id="L68">                request.getAffiliations(),</span>
 <span class="fc" id="L69">                request.getPaperAbstract(),</span>
 <span class="fc" id="L70">                request.getKeywords(),</span>
 <span class="fc" id="L71">                request.getContactDetails(),</span>
-<span class="fc" id="L72">                fileId,</span>
+                fileId,
 <span class="fc" id="L73">                Instant.now()</span>
         ));
 
@@ -77,7 +77,7 @@ public class PaperSubmissionServiceImpl implements PaperSubmissionService {
 <span class="fc" id="L77">            paperSubmissionDraftRepository.deleteByIdAndAuthorEmail(request.getDraftId(), authorEmail);</span>
         }
 
-<span class="fc" id="L80">        return PaperSubmissionResult.success(&quot;Paper submitted successfully.&quot;, &quot;/home&quot;);</span>
+<span class="fc" id="L80">        return PaperSubmissionResult.success(&quot;Paper submitted successfully.&quot;, &quot;/home&quot;, submissionId);</span>
     }
 
     private boolean isBlank(String value) {

@@ -39,7 +39,7 @@ public class DraftSaveServiceImpl implements DraftSaveService {
 
 <span class="fc" id="L40">        PaperSubmissionDraft draft = new PaperSubmissionDraft(</span>
 <span class="fc" id="L41">                existingDraft.map(PaperSubmissionDraft::getDraftId).orElse(0L),</span>
-<span class="fc" id="L42">                authorEmail,</span>
+                authorEmail,
 <span class="fc" id="L43">                request.getTitle().trim(),</span>
 <span class="fc" id="L44">                normalize(request.getAuthors()),</span>
 <span class="fc" id="L45">                normalize(request.getAffiliations()),</span>
@@ -52,13 +52,13 @@ public class DraftSaveServiceImpl implements DraftSaveService {
         try {
 <span class="fc bfc" id="L53" title="All 2 branches covered.">            if (existingDraft.isPresent()) {</span>
 <span class="fc" id="L54">                draftRepository.update(draft);</span>
-<span class="fc" id="L55">            } else {</span>
+            } else {
 <span class="fc" id="L56">                long createdId = draftRepository.save(draft);</span>
 <span class="fc" id="L57">                return DraftSaveResult.success(&quot;Draft saved successfully.&quot;, createdId);</span>
             }
 <span class="fc" id="L59">        } catch (IllegalStateException e) {</span>
 <span class="fc" id="L60">            return DraftSaveResult.error(500, &quot;Draft could not be saved due to a storage error. Please try again.&quot;);</span>
-        }
+<span class="fc" id="L61">        }</span>
 
 <span class="fc bfc" id="L63" title="All 2 branches covered.">        if (noChanges) {</span>
 <span class="fc" id="L64">            return DraftSaveResult.success(&quot;Draft saved successfully. No changes were detected.&quot;, draft.getDraftId());</span>

@@ -33,6 +33,7 @@ class PaperSubmissionEndpointIT extends RegistrationIntegrationSupport {
 
         assertEquals(200, response.getStatus());
         assertTrue(response.getBody().contains("Paper submitted successfully"));
+        assertTrue(response.getBody().contains("\"submission_id\":"));
         assertEquals(1L, new JdbcPaperSubmissionRepository(dataSource).countAll());
         assertEquals(1L, fileStorageService.storedFileCount());
     }
@@ -100,6 +101,17 @@ class PaperSubmissionEndpointIT extends RegistrationIntegrationSupport {
         assertEquals(503, response.getStatus());
         assertTrue(response.getBody().contains("Please try again"));
         assertEquals(0L, new JdbcPaperSubmissionRepository(dataSource).countAll());
+    }
+
+    @Test
+    void getPaperSubmissionsReturnsSubmittedPapers() throws Exception {
+        postPaperSubmission(validPayload(), loggedInSession("author@cms.com"));
+
+        ServletHttpTestSupport.ResponseCapture response = getPaperSubmissions(loggedInSession("author@cms.com"));
+
+        assertEquals(200, response.getStatus());
+        assertTrue(response.getBody().contains("Valid Paper"));
+        assertTrue(response.getBody().contains("\"submission_id\":"));
     }
 
     private String validPayload() {

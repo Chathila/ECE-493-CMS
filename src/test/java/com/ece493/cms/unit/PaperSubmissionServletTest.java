@@ -26,7 +26,7 @@ class PaperSubmissionServletTest {
 
     @Test
     void postReturnsJsonWithRedirectWhenSuccessful() throws Exception {
-        CapturingSubmissionService service = new CapturingSubmissionService(PaperSubmissionResult.success("ok", "/home"));
+        CapturingSubmissionService service = new CapturingSubmissionService(PaperSubmissionResult.success("ok", "/home", 11L));
         PaperSubmissionServlet servlet = new PaperSubmissionServlet(service, "<html></html>");
         ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
         ServletHttpTestSupport.SessionCapture session = ServletHttpTestSupport.sessionCapture();
@@ -36,6 +36,7 @@ class PaperSubmissionServletTest {
 
         assertEquals(200, response.getStatus());
         assertTrue(response.getBody().contains("redirect"));
+        assertTrue(response.getBody().contains("\"submission_id\":11"));
         assertNotNull(service.capturedRequest);
         assertEquals(10L, service.capturedRequest.getDraftId());
     }
