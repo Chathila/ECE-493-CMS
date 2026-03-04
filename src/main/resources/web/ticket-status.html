@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirmation Ticket</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="register-page">
+<main class="register-shell">
+  <header class="register-header">
+    <p class="register-kicker">UC-20</p>
+    <h1 class="register-title">Confirmation Ticket Access</h1>
+    <p class="register-subtitle">View ticket details directly from CMS by ticket ID.</p>
+  </header>
+  <section class="register-content stack-gap">
+    <div class="register-form">
+      <label for="ticket-id">Ticket ID</label>
+      <input id="ticket-id" type="text" placeholder="Enter ticket id" />
+      <button id="load-ticket" class="register-submit" type="button">View Ticket</button>
+    </div>
+    <p id="status" class="register-status"></p>
+    <pre id="result" class="register-feedback"></pre>
+    <p class="inline-nav">Back to <a href="/home?tab=conference">dashboard conference tab</a> or <a href="/registration/payments/view">payment page</a>.</p>
+  </section>
+</main>
+<script>
+  async function loadTicket() {
+    const ticketId = document.getElementById('ticket-id').value.trim();
+    const resultEl = document.getElementById('result');
+    const statusEl = document.getElementById('status');
+
+    if (!ticketId) {
+      statusEl.textContent = 'Ticket ID is required.';
+      statusEl.className = 'register-status error';
+      return;
+    }
+
+    resultEl.textContent = 'Loading ticket...';
+    statusEl.textContent = '';
+
+    try {
+      const response = await fetch(`/tickets/${encodeURIComponent(ticketId)}`);
+      const data = await response.json().catch(() => ({}));
+      resultEl.textContent = JSON.stringify(data, null, 2);
+      if (response.status === 200) {
+        statusEl.textContent = 'Ticket loaded successfully.';
+        statusEl.className = 'register-status success';
+      } else {
+        statusEl.textContent = data.message || `Ticket lookup failed (${response.status}).`;
+        statusEl.className = 'register-status error';
+      }
+    } catch (error) {
+      resultEl.textContent = '';
+      statusEl.textContent = `Ticket lookup failed: ${error.message}`;
+      statusEl.className = 'register-status error';
+    }
+  }
+
+  document.getElementById('load-ticket').addEventListener('click', loadTicket);
+</script>
+</body>
+</html>

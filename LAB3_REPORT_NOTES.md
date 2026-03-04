@@ -767,3 +767,56 @@ All commands succeed in the final UC-18 state.
 ## Spec-Kit Command Note
 
 - `/speckit.implement` CLI command is not available in this environment (`/speckit.implement: no such file or directory`), so UC-18 was implemented directly from existing spec-kit artifacts.
+
+---
+
+# Lab 3 Report Notes (UC-19 and UC-20 Run)
+
+## Scope Completed
+
+- Implemented UC-19 pay-registration-fee flow from:
+  - `specs/UC-19-pay-registration-fee/spec.md`
+  - `specs/UC-19-pay-registration-fee/plan.md`
+  - `specs/UC-19-pay-registration-fee/tasks.md`
+  - `specs/UC-19-pay-registration-fee/contracts/payment-processing.openapi.yaml`
+  - `UC-19_tests.md`
+- Added `/registration/payments` POST endpoint behavior with:
+  - login/session precondition handling
+  - payment detail validation
+  - provider outcomes: approved, declined, unavailable
+  - successful payment confirmation recording
+- Implemented UC-20 payment-confirmation-ticket flow from:
+  - `specs/UC-20-payment-confirmation-ticket/spec.md`
+  - `specs/UC-20-payment-confirmation-ticket/plan.md`
+  - `specs/UC-20-payment-confirmation-ticket/tasks.md`
+  - `specs/UC-20-payment-confirmation-ticket/contracts/ticket-delivery.openapi.yaml`
+  - `UC-20_tests.md`
+- Added `/payments/{payment_id}/ticket` POST and `/tickets/{ticket_id}` GET endpoint behavior with:
+  - ticket generation and storage after successful payment
+  - email + in-system delivery attempt handling
+  - delivery failure logging and attendee-facing failure message
+  - ticket retrieval for view/download access from CMS even before successful delivery
+- Added static view pages:
+  - `src/main/resources/web/payment.html`
+  - `src/main/resources/web/ticket-status.html`
+- Added unit + integration + acceptance tests for UC-19/UC-20 and traceability files:
+  - `traceability/UC-19-traceability.md`
+  - `traceability/UC-20-traceability.md`
+
+## Commands Run
+
+1. `mvn test`
+2. `mvn verify`
+
+Both commands succeed in the final UC-19/UC-20 state.
+
+## Coverage
+
+- JaCoCo report directory:
+  - `target/site/jacoco/index.html`
+- Final branch coverage:
+  - `BRANCH missed=0 covered=1146 ratio=100.00%`
+
+## Spec-Kit Command Note
+
+- `/speckit.implement` CLI command is not available in this environment, so UC-19 and UC-20 were implemented directly from existing spec-kit artifacts.

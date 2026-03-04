@@ -7,9 +7,11 @@ import com.ece493.cms.controller.PaperDetailsServlet;
 import com.ece493.cms.controller.ReviewWorkflowServlet;
 import com.ece493.cms.controller.ScheduleServlet;
 import com.ece493.cms.controller.FinalScheduleServlet;
+import com.ece493.cms.controller.RegistrationPaymentServlet;
 import com.ece493.cms.controller.RegistrationPriceServlet;
 import com.ece493.cms.controller.RegistrationServlet;
 import com.ece493.cms.controller.ChangePasswordServlet;
+import com.ece493.cms.controller.TicketServlet;
 import com.ece493.cms.controller.DraftSaveServlet;
 import com.ece493.cms.controller.DraftViewServlet;
 import com.ece493.cms.controller.DraftListServlet;
@@ -47,11 +49,18 @@ import com.ece493.cms.service.DeterministicSchedulingAlgorithm;
 import com.ece493.cms.service.InMemoryFinalDecisionRepository;
 import com.ece493.cms.service.InMemoryNotificationService;
 import com.ece493.cms.service.InMemoryNotificationFailureRepository;
+import com.ece493.cms.service.InMemoryPaymentRepository;
+import com.ece493.cms.service.InMemoryPaymentService;
 import com.ece493.cms.service.InMemoryRegistrationPriceRepository;
 import com.ece493.cms.service.InMemoryScheduleRepository;
 import com.ece493.cms.service.InMemorySchedulingDataRepository;
 import com.ece493.cms.service.InMemorySessionRepository;
+import com.ece493.cms.service.InMemoryTicketDeliveryService;
+import com.ece493.cms.service.InMemoryTicketFailureRepository;
+import com.ece493.cms.service.InMemoryTicketRepository;
 import com.ece493.cms.service.InvitationResponseService;
+import com.ece493.cms.service.PaymentProcessingService;
+import com.ece493.cms.service.PaymentServiceDecision;
 import com.ece493.cms.service.RegistrationService;
 import com.ece493.cms.service.RegistrationServiceImpl;
 import com.ece493.cms.service.RefereeAssignmentService;
@@ -70,6 +79,7 @@ import com.ece493.cms.service.ScheduleEditService;
 import com.ece493.cms.service.ScheduleGenerationService;
 import com.ece493.cms.service.ScheduleValidationService;
 import com.ece493.cms.service.ScheduleViewService;
+import com.ece493.cms.service.TicketService;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
@@ -95,6 +105,8 @@ public class RegistrationIntegrationSupport {
     protected ScheduleServlet scheduleServlet;
     protected FinalScheduleServlet finalScheduleServlet;
     protected RegistrationPriceServlet registrationPriceServlet;
+    protected RegistrationPaymentServlet registrationPaymentServlet;
+    protected TicketServlet ticketServlet;
     protected InMemoryFileStorageService fileStorageService;
     protected InMemoryNotificationService notificationService;
     protected InMemoryReviewRepository reviewRepository;
@@ -108,6 +120,11 @@ public class RegistrationIntegrationSupport {
     protected DeterministicSchedulingAlgorithm schedulingAlgorithm;
     protected ScheduleGenerationService scheduleGenerationService;
     protected InMemoryRegistrationPriceRepository registrationPriceRepository;
+    protected InMemoryPaymentRepository paymentRepository;
+    protected InMemoryPaymentService paymentService;
+    protected InMemoryTicketRepository ticketRepository;
+    protected InMemoryTicketFailureRepository ticketFailureRepository;
+    protected InMemoryTicketDeliveryService ticketDeliveryService;
 
     protected void startApp() {
         dataSource = Db.createDataSource("jdbc:h2:mem:cms_it_" + System.nanoTime() + ";DB_CLOSE_DELAY=-1");
@@ -207,6 +224,18 @@ public class RegistrationIntegrationSupport {
         ScheduleViewService scheduleViewService = new ScheduleViewService(scheduleRepository, sessionRepository);
         registrationPriceRepository = new InMemoryRegistrationPriceRepository();
         RegistrationPriceService registrationPriceService = new RegistrationPriceService(registrationPriceRepository);
+        paymentRepository = new InMemoryPaymentRepository();
+        paymentService = new InMemoryPaymentService();
+        PaymentProcessingService paymentProcessingService = new PaymentProcessingService(paymentRepository, paymentService);
+        ticketRepository = new InMemoryTicketRepository();
+        ticketFailureRepository = new InMemoryTicketFailureRepository();
+        ticketDeliveryService = new InMemoryTicketDeliveryService();
+        TicketService ticketService = new TicketService(
+                paymentRepository,
+                ticketRepository,
+                ticketFailureRepository,
+                ticketDeliveryService
+        );
 
         servlet = new RegistrationServlet(registrationService, loadRegisterHtml());
         loginServlet = new LoginServlet(authenticationService, loadLoginHtml());
@@ -229,6 +258,8 @@ public class RegistrationIntegrationSupport {
         scheduleServlet = new ScheduleServlet(scheduleGenerationService, scheduleEditService);
         finalScheduleServlet = new FinalScheduleServlet(scheduleViewService);
         registrationPriceServlet = new RegistrationPriceServlet(registrationPriceService);
+        registrationPaymentServlet = new RegistrationPaymentServlet(paymentProcessingService);
+        ticketServlet = new TicketServlet(ticketService);
     }
 
     protected void stopApp() {
@@ -546,6 +577,40 @@ public class RegistrationIntegrationSupport {
                 response.asResponse()
         );
         return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postRegistrationPayment(
+            String payload,
+            ServletHttpTestSupport.SessionCapture session
+    ) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        registrationPaymentServlet.service(
+                ServletHttpTestSupport.postJsonRequest(payload, session, "/registration/payments"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture postGenerateTicket(String paymentId) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        ticketServlet.service(
+                ServletHttpTestSupport.postJsonRequest("{}", null, "/payments/" + paymentId + "/ticket"),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected ServletHttpTestSupport.ResponseCapture getTicket(String ticketId) throws Exception {
+        ServletHttpTestSupport.ResponseCapture response = ServletHttpTestSupport.responseCapture();
+        ticketServlet.service(
+                ServletHttpTestSupport.getRequest(null, null, "/tickets/" + ticketId),
+                response.asResponse()
+        );
+        return response;
+    }
+
+    protected void setPaymentDecision(PaymentServiceDecision decision) {
+        paymentService.setNextDecision(decision);
     }
 
     private String loadRegisterHtml() {

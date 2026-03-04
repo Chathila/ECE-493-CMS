@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.ece493.cms.acceptance.UC12AcceptanceIT
 -------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.105 s -- in com.ece493.cms.acceptance.UC12AcceptanceIT
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.180 s -- in com.ece493.cms.acceptance.UC12AcceptanceIT

@@ -16,6 +16,7 @@
   <section class="register-content">
     <nav class="tab-nav" aria-label="Dashboard sections">
       <button class="tab-btn active" data-tab="papers" type="button">Papers</button>
+      <button class="tab-btn" data-tab="conference" type="button">Conference</button>
       <button class="tab-btn" data-tab="profile" type="button">Profile</button>
     </nav>
 
@@ -40,6 +41,81 @@
         <div id="editor-review-panel" class="draft-panel">
           <p class="dashboard-text"><strong>Editor Review Status:</strong> <span id="editor-review-state">Checking referee approvals...</span></p>
           <div id="editor-review-list"></div>
+        </div>
+      </article>
+    </div>
+
+    <div class="tab-pane" data-pane="conference">
+      <article class="dashboard-card">
+        <h2 class="dashboard-title">Conference Operations</h2>
+        <p class="dashboard-text">View pricing, pay registration, generate/access tickets, and test schedule endpoints.</p>
+
+        <div class="prototype-grid">
+          <section class="draft-item">
+            <p class="dashboard-text"><strong>Registration Pricing</strong></p>
+            <div class="dual-actions">
+              <button id="load-prices" class="register-submit secondary-action" type="button">Load Prices</button>
+              <a class="action-link secondary" href="/registration/prices/view">Open Prices Page</a>
+            </div>
+            <pre id="prices-result" class="register-feedback"></pre>
+          </section>
+
+          <section class="draft-item">
+            <p class="dashboard-text"><strong>Registration Payment + Ticket</strong></p>
+            <div class="register-form compact-form">
+              <label for="payment-type">Registration Type</label>
+              <select id="payment-type">
+                <option value="student">Student</option>
+                <option value="author">Author</option>
+                <option value="regular" selected>Regular</option>
+              </select>
+              <label for="payment-method">Payment Method</label>
+              <select id="payment-method">
+                <option value="card" selected>Card</option>
+                <option value="debit">Debit</option>
+              </select>
+              <label for="payment-name">Cardholder Name</label>
+              <input id="payment-name" type="text" value="Attendee One" placeholder="Cardholder name">
+              <label for="payment-last4">Card Last 4 Digits</label>
+              <input id="payment-last4" type="text" value="4242" placeholder="4242" maxlength="4">
+              <label for="payment-token">Payment Token</label>
+              <input id="payment-token" type="text" value="tok_demo_success" placeholder="token">
+            </div>
+            <div class="triple-actions">
+              <button id="submit-payment" class="register-submit" type="button">Submit Payment</button>
+              <button id="generate-ticket" class="register-submit secondary-action" type="button" disabled>Generate Ticket</button>
+              <a class="action-link secondary" href="/registration/payments/view">Open Payment Page</a>
+            </div>
+            <p id="payment-state" class="dashboard-text">No payment submitted yet.</p>
+            <pre id="payment-result" class="register-feedback"></pre>
+          </section>
+
+          <section class="draft-item">
+            <p class="dashboard-text"><strong>Ticket Access</strong></p>
+            <div class="register-form compact-form">
+              <label for="ticket-id-input">Ticket ID</label>
+              <input id="ticket-id-input" type="text" placeholder="Enter ticket id">
+            </div>
+            <div class="dual-actions">
+              <button id="view-ticket" class="register-submit secondary-action" type="button">View Ticket</button>
+              <a class="action-link secondary" href="/tickets/view">Open Ticket Page</a>
+            </div>
+            <pre id="ticket-result" class="register-feedback"></pre>
+          </section>
+
+          <section class="draft-item">
+            <p class="dashboard-text"><strong>Schedule APIs</strong></p>
+            <div class="triple-actions">
+              <button id="generate-schedule" class="register-submit secondary-action" type="button">Generate Schedule</button>
+              <button id="load-final-schedule" class="register-submit secondary-action" type="button">Load Final Schedule</button>
+              <a class="action-link secondary" href="/schedule/final/view">Final Schedule Page</a>
+            </div>
+            <div class="dual-actions">
+              <a class="action-link secondary" href="/schedule">Schedule Editor API Page</a>
+              <a class="action-link secondary" href="/schedule-edit">Schedule Edit UI</a>
+            </div>
+            <pre id="schedule-result" class="register-feedback"></pre>
+          </section>
         </div>
       </article>
     </div>
@@ -79,6 +155,7 @@
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabPanes = document.querySelectorAll('.tab-pane');
   const requestedTab = params.get('tab');
+  let lastPaymentId = '';
 
   function activateTab(target) {
     tabButtons.forEach((b) => b.classList.toggle('active', b.dataset.tab === target));
@@ -89,8 +166,30 @@
     button.addEventListener('click', () => activateTab(button.dataset.tab));
   });
 
-  if (requestedTab === 'papers' || requestedTab === 'profile') {
+  if (requestedTab === 'papers' || requestedTab === 'profile' || requestedTab === 'conference') {
     activateTab(requestedTab);
+  }
+
+  function textOrPlaceholder(value, placeholder) {
+    return value && value.trim() ? value : placeholder;
+  }
+
+  function renderPaperDetails(item) {
+    return (
+      `<p class="dashboard-text"><strong>Paper:</strong> ${textOrPlaceholder(item.paper_title, '(Untitled)')}</p>`
+      + `<p class="dashboard-text"><strong>Authors:</strong> ${textOrPlaceholder(item.authors, '(Not provided)')}</p>`
+      + `<p class="dashboard-text"><strong>Affiliations:</strong> ${textOrPlaceholder(item.affiliations, '(Not provided)')}</p>`
+      + `<p class="dashboard-text"><strong>Abstract:</strong> ${textOrPlaceholder(item.abstract_text, '(Not provided)')}</p>`
+      + `<p class="dashboard-text"><strong>Keywords:</strong> ${textOrPlaceholder(item.keywords, '(Not provided)')}</p>`
+      + `<p class="dashboard-text"><strong>Contact:</strong> ${textOrPlaceholder(item.contact_details, '(Not provided)')}</p>`
+    );
+  }
+
+  function downloadLink(item) {
+    if (!item.download_url || !item.download_url.trim()) {
+      return '';
+    }
+    return `<a class="action-link secondary" href="${item.download_url}" target="_blank" rel="noopener">Download File</a>`;
   }
 
   async function loadDraftSummary() {
@@ -171,28 +270,6 @@
       return;
     }
     stateEl.textContent = 'Unable to load submitted papers right now.';
-  }
-
-  function textOrPlaceholder(value, placeholder) {
-    return value && value.trim() ? value : placeholder;
-  }
-
-  function renderPaperDetails(item) {
-    return (
-      `<p class="dashboard-text"><strong>Paper:</strong> ${textOrPlaceholder(item.paper_title, '(Untitled)')}</p>`
-      + `<p class="dashboard-text"><strong>Authors:</strong> ${textOrPlaceholder(item.authors, '(Not provided)')}</p>`
-      + `<p class="dashboard-text"><strong>Affiliations:</strong> ${textOrPlaceholder(item.affiliations, '(Not provided)')}</p>`
-      + `<p class="dashboard-text"><strong>Abstract:</strong> ${textOrPlaceholder(item.abstract_text, '(Not provided)')}</p>`
-      + `<p class="dashboard-text"><strong>Keywords:</strong> ${textOrPlaceholder(item.keywords, '(Not provided)')}</p>`
-      + `<p class="dashboard-text"><strong>Contact:</strong> ${textOrPlaceholder(item.contact_details, '(Not provided)')}</p>`
-    );
-  }
-
-  function downloadLink(item) {
-    if (!item.download_url || !item.download_url.trim()) {
-      return '';
-    }
-    return `<a class="action-link secondary" href="${item.download_url}" target="_blank" rel="noopener">Download File</a>`;
   }
 
   function prettyStatus(status) {
@@ -356,6 +433,130 @@
     requestStateEl.textContent = 'Unable to load review requests right now.';
     editorStateEl.textContent = 'Unable to load editor review status right now.';
   }
+
+  async function loadRegistrationPrices() {
+    const resultEl = document.getElementById('prices-result');
+    resultEl.textContent = 'Loading...';
+    try {
+      const response = await fetch('/registration/prices');
+      const data = await response.json().catch(() => ({}));
+      resultEl.textContent = JSON.stringify(data, null, 2);
+    } catch (error) {
+      resultEl.textContent = `Failed to load prices: ${error.message}`;
+    }
+  }
+
+  async function submitRegistrationPayment() {
+    const type = document.getElementById('payment-type').value.trim();
+    const paymentMethod = document.getElementById('payment-method').value.trim();
+    const paymentName = document.getElementById('payment-name').value.trim();
+    const paymentLast4 = document.getElementById('payment-last4').value.trim();
+    const paymentToken = document.getElementById('payment-token').value.trim();
+    const resultEl = document.getElementById('payment-result');
+    const stateEl = document.getElementById('payment-state');
+    const generateBtn = document.getElementById('generate-ticket');
+    const paymentDetails = {
+      method: paymentMethod || 'card',
+      name: paymentName,
+      card_last4: paymentLast4,
+      token: paymentToken || 'tok_demo_success'
+    };
+
+    resultEl.textContent = 'Submitting payment...';
+    try {
+      const response = await fetch('/registration/payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registration_type: type, payment_details: paymentDetails })
+      });
+      const data = await response.json().catch(() => ({}));
+      resultEl.textContent = JSON.stringify(data, null, 2);
+      lastPaymentId = data.payment_id || '';
+      generateBtn.disabled = !lastPaymentId;
+      stateEl.textContent = lastPaymentId
+        ? `Payment successful. Payment ID ${lastPaymentId} ready for ticket generation.`
+        : `Payment result: ${data.message || response.status}`;
+    } catch (error) {
+      resultEl.textContent = `Payment request failed: ${error.message}`;
+      stateEl.textContent = 'Payment request failed.';
+      generateBtn.disabled = true;
+    }
+  }
+
+  async function generateTicketFromPayment() {
+    const paymentStateEl = document.getElementById('payment-state');
+    const paymentResultEl = document.getElementById('payment-result');
+    if (!lastPaymentId) {
+      paymentStateEl.textContent = 'Submit a successful payment first.';
+      return;
+    }
+
+    paymentResultEl.textContent = `Generating ticket for payment ${lastPaymentId}...`;
+    try {
+      const response = await fetch(`/payments/${encodeURIComponent(lastPaymentId)}/ticket`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
+      });
+      const data = await response.json().catch(() => ({}));
+      paymentResultEl.textContent = JSON.stringify(data, null, 2);
+      if (data.ticket_id) {
+        document.getElementById('ticket-id-input').value = data.ticket_id;
+      }
+      paymentStateEl.textContent = data.message || 'Ticket request completed.';
+    } catch (error) {
+      paymentResultEl.textContent = `Ticket generation failed: ${error.message}`;
+      paymentStateEl.textContent = 'Ticket generation failed.';
+    }
+  }
+
+  async function loadTicketById() {
+    const ticketId = document.getElementById('ticket-id-input').value.trim();
+    const resultEl = document.getElementById('ticket-result');
+    if (!ticketId) {
+      resultEl.textContent = 'Enter a ticket ID.';
+      return;
+    }
+    resultEl.textContent = 'Loading ticket...';
+    try {
+      const response = await fetch(`/tickets/${encodeURIComponent(ticketId)}`);
+      const data = await response.json().catch(() => ({}));
+      resultEl.textContent = JSON.stringify(data, null, 2);
+    } catch (error) {
+      resultEl.textContent = `Failed to load ticket: ${error.message}`;
+    }
+  }
+
+  async function generateSchedule() {
+    const resultEl = document.getElementById('schedule-result');
+    resultEl.textContent = 'Generating schedule...';
+    try {
+      const response = await fetch('/schedule/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const data = await response.json().catch(() => ({}));
+      resultEl.textContent = JSON.stringify(data, null, 2);
+    } catch (error) {
+      resultEl.textContent = `Failed to generate schedule: ${error.message}`;
+    }
+  }
+
+  async function loadFinalSchedule() {
+    const resultEl = document.getElementById('schedule-result');
+    resultEl.textContent = 'Loading final schedule...';
+    try {
+      const response = await fetch('/schedule/final');
+      const data = await response.json().catch(() => ({}));
+      resultEl.textContent = JSON.stringify(data, null, 2);
+    } catch (error) {
+      resultEl.textContent = `Failed to load final schedule: ${error.message}`;
+    }
+  }
+
+  document.getElementById('load-prices').addEventListener('click', loadRegistrationPrices);
+  document.getElementById('submit-payment').addEventListener('click', submitRegistrationPayment);
+  document.getElementById('generate-ticket').addEventListener('click', generateTicketFromPayment);
+  document.getElementById('view-ticket').addEventListener('click', loadTicketById);
+  document.getElementById('generate-schedule').addEventListener('click', generateSchedule);
+  document.getElementById('load-final-schedule').addEventListener('click', loadFinalSchedule);
 
   loadSubmissionSummary();
   loadDraftSummary();

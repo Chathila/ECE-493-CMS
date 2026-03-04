@@ -8,26 +8,153 @@
 </head>
 <body class="register-page">
 <main class="register-shell">
-  <h1>Edit Schedule</h1>
-  <p class="register-subtitle">Load a schedule and submit updates.</p>
-  <label for="schedule-id">Schedule ID</label>
-  <input id="schedule-id" class="register-input" type="text" placeholder="1" />
-  <textarea id="payload" class="register-input" rows="8">{"sessions":[{"session_id":1,"paper_id":"1","room_id":"R1","time_slot_id":"T1"}]}</textarea>
-  <button id="update" class="register-submit">Update Schedule</button>
-  <pre id="result" class="register-feedback"></pre>
+  <header class="register-header">
+    <p class="register-kicker">UC-16</p>
+    <h1 class="register-title">Edit Schedule</h1>
+    <p class="register-subtitle">Load a schedule and edit sessions using form fields.</p>
+  </header>
+  <section class="register-content stack-gap">
+    <div class="register-form compact-form">
+      <label for="schedule-id">Schedule ID</label>
+      <input id="schedule-id" class="register-input" type="text" placeholder="1" value="1" />
+      <div class="dual-actions">
+        <button id="load" class="register-submit secondary-action" type="button">Load Schedule</button>
+        <button id="add-row" class="register-submit secondary-action" type="button">Add Session Row</button>
+      </div>
+    </div>
+
+    <div id="session-rows" class="stack-gap"></div>
+
+    <button id="update" class="register-submit" type="button">Update Schedule</button>
+    <p id="status" class="register-status"></p>
+    <pre id="result" class="register-feedback"></pre>
+    <p class="inline-nav">Back to <a href="/home?tab=conference">dashboard conference tab</a>.</p>
+  </section>
 </main>
 <script>
-  document.getElementById('update').addEventListener('click', async () => {
-    const scheduleId = document.getElementById('schedule-id').value.trim();
-    const payload = document.getElementById('payload').value;
-    const response = await fetch(`/schedule/${scheduleId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload
+  const sessionRows = document.getElementById('session-rows');
+
+  function createSessionRow(session = {}) {
+    const id = session.session_id || '';
+    const paper = session.paper_id || '';
+    const room = session.room_id || '';
+    const slot = session.time_slot_id || '';
+
+    const row = document.createElement('div');
+    row.className = 'draft-item';
+    row.innerHTML = `
+      <div class="register-form compact-form">
+        <label>Session ID</label>
+        <input data-field="session_id" type="number" min="1" value="${id}">
+        <label>Paper ID</label>
+        <input data-field="paper_id" type="text" value="${paper}" placeholder="1">
+        <label>Room ID</label>
+        <input data-field="room_id" type="text" value="${room}" placeholder="Room-A">
+        <label>Time Slot ID</label>
+        <input data-field="time_slot_id" type="text" value="${slot}" placeholder="09:00">
+        <button class="register-submit secondary-action" data-remove-row="true" type="button">Remove Row</button>
+      </div>
+    `;
+
+    row.querySelector('[data-remove-row]').addEventListener('click', () => {
+      row.remove();
     });
-    const json = await response.json().catch(() => ({}));
-    document.getElementById('result').textContent = JSON.stringify(json, null, 2);
-  });
+
+    sessionRows.appendChild(row);
+  }
+
+  function collectPayload() {
+    const sessions = Array.from(sessionRows.children).map((row, index) => {
+      const read = (name) => {
+        const input = row.querySelector(`[data-field="${name}"]`);
+        return input ? input.value.trim() : '';
+      };
+      const sessionIdRaw = read('session_id');
+      return {
+        session_id: Number(sessionIdRaw || (index + 1)),
+        paper_id: read('paper_id'),
+        room_id: read('room_id'),
+        time_slot_id: read('time_slot_id')
+      };
+    });
+    return { sessions };
+  }
+
+  async function loadSchedule() {
+    const scheduleId = document.getElementById('schedule-id').value.trim();
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    if (!scheduleId) {
+      statusEl.textContent = 'Schedule ID is required.';
+      statusEl.className = 'register-status error';
+      return;
+    }
+
+    resultEl.textContent = 'Loading schedule...';
+    try {
+      const response = await fetch(`/schedule/${encodeURIComponent(scheduleId)}`);
+      const json = await response.json().catch(() => ({}));
+      resultEl.textContent = JSON.stringify(json, null, 2);
+      sessionRows.innerHTML = '';
+
+      if (response.status === 200 && json.schedule && Array.isArray(json.schedule.sessions)) {
+        json.schedule.sessions.forEach((session) => createSessionRow(session));
+        if (json.schedule.sessions.length === 0) {
+          createSessionRow();
+        }
+        statusEl.textContent = 'Schedule loaded.';
+        statusEl.className = 'register-status success';
+      } else {
+        statusEl.textContent = json.message || 'Unable to load schedule.';
+        statusEl.className = 'register-status error';
+      }
+    } catch (error) {
+      resultEl.textContent = '';
+      statusEl.textContent = `Load failed: ${error.message}`;
+      statusEl.className = 'register-status error';
+    }
+  }
+
+  async function updateSchedule() {
+    const scheduleId = document.getElementById('schedule-id').value.trim();
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    if (!scheduleId) {
+      statusEl.textContent = 'Schedule ID is required.';
+      statusEl.className = 'register-status error';
+      return;
+    }
+
+    const payload = collectPayload();
+    resultEl.textContent = 'Updating schedule...';
+
+    try {
+      const response = await fetch(`/schedule/${encodeURIComponent(scheduleId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await response.json().catch(() => ({}));
+      resultEl.textContent = JSON.stringify(json, null, 2);
+      if (response.status === 200) {
+        statusEl.textContent = 'Schedule updated successfully.';
+        statusEl.className = 'register-status success';
+      } else {
+        statusEl.textContent = json.message || 'Schedule update failed.';
+        statusEl.className = 'register-status error';
+      }
+    } catch (error) {
+      resultEl.textContent = '';
+      statusEl.textContent = `Update failed: ${error.message}`;
+      statusEl.className = 'register-status error';
+    }
+  }
+
+  document.getElementById('load').addEventListener('click', loadSchedule);
+  document.getElementById('add-row').addEventListener('click', () => createSessionRow());
+  document.getElementById('update').addEventListener('click', updateSchedule);
+
+  createSessionRow({ session_id: 1, paper_id: '1', room_id: 'Room-A', time_slot_id: '09:00' });
 </script>
 </body>
 </html>
