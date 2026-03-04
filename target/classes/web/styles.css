@@ -1,0 +1,340 @@
+:root {
+  --font-heading: "Segoe UI", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Source Sans Pro", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  --bg-canvas: #f4f6fb;
+  --bg-panel: #ffffff;
+  --bg-input: #f9fbff;
+  --border-soft: #d6ddea;
+
+  --text-strong: #182236;
+  --text-muted: #4e5f7a;
+
+  --brand-primary: #0f6b8a;
+  --brand-primary-hover: #0c5973;
+  --brand-accent: #f2a33a;
+
+  --state-error: #b3362d;
+  --state-success: #247347;
+
+  --shadow-soft: 0 14px 30px rgba(24, 34, 54, 0.12);
+  --radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(circle at 12% 12%, #ffffff 0%, var(--bg-canvas) 45%, #e9eef9 100%);
+  color: var(--text-strong);
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.register-shell {
+  width: 100%;
+  max-width: 460px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+
+.register-header {
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.register-kicker {
+  margin: 0 0 8px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+}
+
+.register-title {
+  margin: 0 0 8px;
+  font-family: var(--font-heading);
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.register-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.register-content {
+  padding: 20px 28px 24px;
+}
+
+.register-form {
+  display: grid;
+  gap: 14px;
+}
+
+.register-form label {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.register-form input,
+.register-form select,
+.register-form textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  color: var(--text-strong);
+  font: inherit;
+  padding: 11px 12px;
+}
+
+.register-form input:focus,
+.register-form select:focus,
+.register-form textarea:focus {
+  outline: 2px solid color-mix(in srgb, var(--brand-primary) 35%, transparent);
+  outline-offset: 1px;
+  border-color: var(--brand-primary);
+}
+
+.register-submit {
+  margin-top: 4px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--brand-primary);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.register-submit:hover {
+  background: var(--brand-primary-hover);
+}
+
+.dual-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.secondary-action {
+  background: color-mix(in srgb, var(--brand-primary) 12%, #fff);
+  color: var(--brand-primary);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, #fff);
+}
+
+.secondary-action:hover {
+  background: color-mix(in srgb, var(--brand-primary) 20%, #fff);
+}
+
+.register-status {
+  min-height: 22px;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.register-status.error {
+  color: var(--state-error);
+}
+
+.register-status.success {
+  color: var(--state-success);
+}
+
+.inline-nav {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.inline-nav a {
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+.stack-gap {
+  display: grid;
+  gap: 12px;
+}
+
+.action-link {
+  display: inline-block;
+  background: var(--brand-primary);
+  color: #fff;
+  border-radius: 10px;
+  text-decoration: none;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  padding: 12px 14px;
+}
+
+.action-link:hover {
+  background: var(--brand-primary-hover);
+}
+
+.action-link.secondary {
+  background: color-mix(in srgb, var(--brand-primary) 12%, #fff);
+  color: var(--brand-primary);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 35%, #fff);
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-tabs {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-card {
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: color-mix(in srgb, #fff 92%, var(--brand-primary) 8%);
+  padding: 14px;
+}
+
+.dashboard-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-family: var(--font-heading);
+}
+
+.dashboard-text {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+body.dashboard-page {
+  display: block;
+  padding: 0;
+}
+
+.dashboard-shell {
+  max-width: min(1120px, 100vw);
+  min-height: 100vh;
+  border-radius: 0;
+  margin: 0 auto;
+}
+
+.tab-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.tab-btn {
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  color: var(--text-muted);
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #fff;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+.dashboard-footer-nav {
+  margin-top: 16px;
+}
+
+.draft-panel {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.draft-item {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.prototype-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.compact-form {
+  gap: 10px;
+}
+
+.register-feedback {
+  margin: 8px 0 0;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  background: var(--bg-input);
+  color: var(--text-strong);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 48px;
+}
+
+.triple-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .register-header,
+  .register-content {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .register-title {
+    font-size: 24px;
+  }
+
+  .prototype-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .triple-actions {
+    grid-template-columns: 1fr;
+  }
+}
